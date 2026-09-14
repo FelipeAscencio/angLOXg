@@ -9,30 +9,36 @@ import (
 	"github.com/FelipeAscencio/angLOXg/internal/lox"
 )
 
-func runLoxWrapper(this js.Value, args []js.Value) any {
-	if len(args) == 0 {
-		return "Error: no hay código"
-	}
-
-	code := args[0].String()
-	var buf bytes.Buffer
-	lox.Run(code, &buf)
-	return buf.String()
-}
-
-func evalLoxWrapper(this js.Value, args []js.Value) any {
+// ejecutar corre código Lox capturando toda la salida en un buffer, para poder
+// devolvérsela a JavaScript como un string.
+func ejecutar(args []js.Value) string {
 	if len(args) == 0 {
 		return ""
 	}
 
-	code := args[0].String()
 	var buf bytes.Buffer
-	lox.Run(code, &buf)
+	lox.Ejecutar(args[0].String(), &buf)
+
 	return buf.String()
 }
 
+// ejecutarDesdeEditor alimenta el panel del editor del playground.
+func ejecutarDesdeEditor(this js.Value, args []js.Value) any {
+	return ejecutar(args)
+}
+
+// ejecutarDesdeRepl alimenta el panel del REPL del playground.
+func ejecutarDesdeRepl(this js.Value, args []js.Value) any {
+	return ejecutar(args)
+}
+
 func main() {
-	js.Global().Set("runLox", js.FuncOf(runLoxWrapper))
-	js.Global().Set("evalLox", js.FuncOf(evalLoxWrapper))
+	// Los nombres globales quedan en inglés porque son los que busca la página
+	// web en "web/app.js".
+	js.Global().Set("runLox", js.FuncOf(ejecutarDesdeEditor))
+	js.Global().Set("evalLox", js.FuncOf(ejecutarDesdeRepl))
+
+	// Bloqueamos para siempre: si main termina, el runtime de Go se apaga y las
+	// funciones que acabamos de exponer dejan de existir.
 	select {}
 }

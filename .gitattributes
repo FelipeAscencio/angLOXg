@@ -1,0 +1,9 @@
+# Normalizamos los finales de línea a LF en todo el repositorio.
+#
+# Go exige LF: cualquier archivo .go guardado con CRLF hace fallar a "gofmt -l",
+# y con él a cualquier chequeo de formato que corra en CI.
+* text=auto eol=lf
+
+# Binarios: nunca hay que tocarles los finales de línea.
+*.png binary
+*.wasm binary
