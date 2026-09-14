@@ -5,6 +5,8 @@ import (
 	"io"
 
 	"github.com/FelipeAscencio/angLOXg/internal/escaner"
+	"github.com/FelipeAscencio/angLOXg/internal/parser"
+	"github.com/FelipeAscencio/angLOXg/internal/sintaxis"
 	"github.com/FelipeAscencio/angLOXg/internal/token"
 )
 
@@ -14,14 +16,27 @@ import (
 // Toda la salida, incluidos los mensajes de error, va a "salida" y no a la
 // salida de errores del proceso.
 func Ejecutar(fuente string, salida io.Writer) bool {
-	tokens, ok := escanearFuente(fuente, salida)
+	sentencias, ok := parsearFuente(fuente, salida)
 	if !ok {
 		return false
 	}
 
-	// TODO: acá van el parser y el intérprete. Hasta que existan, el modo de
-	// ejecución vuelca los tokens igual que el modo de escaneo.
-	imprimirTokens(tokens, salida)
+	// TODO: acá va el intérprete. Hasta que exista, el modo de ejecución vuelca
+	// el árbol igual que el modo de parseo.
+	imprimirArbol(sentencias, salida)
+
+	return true
+}
+
+// Parsear escanea y parsea código Lox, y vuelca el árbol de sintaxis en
+// "salida", sin ejecutarlo. Es lo que corre el CLI con "--arbol".
+func Parsear(fuente string, salida io.Writer) bool {
+	sentencias, ok := parsearFuente(fuente, salida)
+	if !ok {
+		return false
+	}
+
+	imprimirArbol(sentencias, salida)
 
 	return true
 }
@@ -54,5 +69,28 @@ func escanearFuente(fuente string, salida io.Writer) ([]token.Token, bool) {
 func imprimirTokens(tokens []token.Token, salida io.Writer) {
 	for _, tok := range tokens {
 		fmt.Fprintln(salida, tok)
+	}
+}
+
+// parsearFuente encadena el escáner con el parser y reporta las fallas de
+// cualquiera de los dos.
+func parsearFuente(fuente string, salida io.Writer) ([]sintaxis.Stmt, bool) {
+	tokens, ok := escanearFuente(fuente, salida)
+	if !ok {
+		return nil, false
+	}
+
+	sentencias, errores := parser.Nuevo(tokens).Parsear()
+	for _, err := range errores {
+		fmt.Fprintln(salida, err)
+	}
+
+	return sentencias, len(errores) == 0
+}
+
+// imprimirArbol vuelca el árbol de cada sentencia, una por línea.
+func imprimirArbol(sentencias []sintaxis.Stmt, salida io.Writer) {
+	for _, sentencia := range sentencias {
+		fmt.Fprintln(salida, sintaxis.RepresentarSentencia(sentencia))
 	}
 }

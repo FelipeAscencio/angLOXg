@@ -22,8 +22,11 @@ func main() {
 	modoEscaneo := flag.Bool("escaneo", false,
 		"mostrar los tokens producidos por el escáner en lugar de ejecutar el código")
 
+	modoArbol := flag.Bool("arbol", false,
+		"mostrar el árbol de sintaxis en lugar de ejecutar el código")
+
 	flag.Usage = func() {
-		fmt.Fprintln(os.Stderr, "uso: angloxg [--escaneo] [script.lox]")
+		fmt.Fprintln(os.Stderr, "uso: angloxg [--escaneo | --arbol] [script.lox]")
 		fmt.Fprintln(os.Stderr, "\nSin argumentos, abre la consola interactiva (REPL).")
 		fmt.Fprintln(os.Stderr, "\nOpciones:")
 		flag.PrintDefaults()
@@ -37,21 +40,21 @@ func main() {
 	}
 
 	if flag.NArg() == 1 {
-		os.Exit(ejecutarArchivo(flag.Arg(0), *modoEscaneo))
+		os.Exit(ejecutarArchivo(flag.Arg(0), *modoEscaneo, *modoArbol))
 	}
 
-	os.Exit(ejecutarConsola(*modoEscaneo))
+	os.Exit(ejecutarConsola(*modoEscaneo, *modoArbol))
 }
 
 // ejecutarArchivo corre un script completo y devuelve el código de salida.
-func ejecutarArchivo(ruta string, modoEscaneo bool) int {
+func ejecutarArchivo(ruta string, modoEscaneo, modoArbol bool) int {
 	fuente, err := os.ReadFile(ruta)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "no se pudo leer %q: %v\n", ruta, err)
 		return salidaSinArchivo
 	}
 
-	if !despachar(string(fuente), os.Stdout, modoEscaneo) {
+	if !despachar(string(fuente), os.Stdout, modoEscaneo, modoArbol) {
 		return salidaErrorDeDatos
 	}
 
@@ -63,7 +66,7 @@ func ejecutarArchivo(ruta string, modoEscaneo bool) int {
 //
 // Un error no corta la sesión: se reporta y se sigue esperando la próxima
 // sentencia.
-func ejecutarConsola(modoEscaneo bool) int {
+func ejecutarConsola(modoEscaneo, modoArbol bool) int {
 	fmt.Println("=== angLOXg ===")
 	fmt.Println("Intérprete de Lox escrito en Go")
 
@@ -76,7 +79,7 @@ func ejecutarConsola(modoEscaneo bool) int {
 			break
 		}
 
-		despachar(entrada.Text(), os.Stdout, modoEscaneo)
+		despachar(entrada.Text(), os.Stdout, modoEscaneo, modoArbol)
 	}
 
 	if err := entrada.Err(); err != nil {
@@ -92,10 +95,15 @@ func ejecutarConsola(modoEscaneo bool) int {
 
 // despachar manda el fuente al modo correspondiente e informa si salió todo
 // bien.
-func despachar(fuente string, salida io.Writer, modoEscaneo bool) bool {
-	if modoEscaneo {
+func despachar(fuente string, salida io.Writer, modoEscaneo, modoArbol bool) bool {
+	switch {
+	case modoEscaneo:
 		return lox.Escanear(fuente, salida)
-	}
 
-	return lox.Ejecutar(fuente, salida)
+	case modoArbol:
+		return lox.Parsear(fuente, salida)
+
+	default:
+		return lox.Ejecutar(fuente, salida)
+	}
 }

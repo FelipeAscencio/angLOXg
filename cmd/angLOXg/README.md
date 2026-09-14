@@ -58,6 +58,30 @@ EOF
 
 El flag también funciona en el REPL.
 
+### 4. Modo de árbol de sintaxis
+
+Con `--arbol` el programa se detiene después del parser y muestra el árbol que armó, en lugar de ejecutar el código:
+
+```bash
+go run ./cmd/angLOXg --arbol script.lox
+```
+
+Cada sentencia se escribe como una S-expresión: el operador adelante y los operandos atrás, entre paréntesis. Así se ve de un vistazo cómo quedó agrupado el programa, que es justo lo que no se puede deducir mirando la lista de tokens.
+
+Por ejemplo, `print 1 + 2 * 3;` produce:
+
+```
+(print (+ 1 (* 2 3)))
+```
+
+La multiplicación queda adentro de la suma: ésa es la precedencia de operadores hecha visible.
+
+Los bucles `for` no tienen nodo propio, se traducen a un `while`. Por eso `for (var i = 0; i < 3; i = i + 1) print i;` se muestra así:
+
+```
+(block (var i 0) (while (< i 3) (block (print i) (expr (= i (+ i 1))))))
+```
+
 ## Compilación
 
 Si preferís generar el binario ejecutable para no depender del comando `go run`:
@@ -67,7 +91,7 @@ go build -o angloxg ./cmd/angLOXg
 ```
 
 ```bash
-./angloxg [--escaneo] [ruta_al_script.lox]
+./angloxg [--escaneo | --arbol] [ruta_al_script.lox]
 ```
 
 ## Códigos de salida
@@ -76,7 +100,7 @@ go build -o angloxg ./cmd/angLOXg
 |:---|:---|
 | `0` | Todo salió bien. |
 | `64` | Error en la invocación del programa (argumentos de más). |
-| `65` | El código Lox tenía errores. |
+| `65` | El código Lox tenía errores léxicos o de sintaxis. |
 | `66` | No se pudo leer el script indicado. |
 
 ## Tests
