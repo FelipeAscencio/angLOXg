@@ -22,3 +22,6 @@ vendor/
 
 # Editores y entornos de desarrollo
 .vscode/
+
+# Archivo de pruebas dummy para el desarrollo
+prueba.lox

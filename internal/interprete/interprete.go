@@ -13,12 +13,14 @@ import (
 // ========================
 
 type Interprete struct {
-	Salida io.Writer
+	Salida  io.Writer
+	entorno *Entorno
 }
 
 func NuevoInterprete(salida io.Writer) *Interprete {
 	return &Interprete{
-		Salida: salida,
+		Salida:  salida,
+		entorno: NuevoEntorno(nil),
 	}
 }
 
@@ -52,6 +54,37 @@ func (i *Interprete) Ejecutar(stmt sintaxis.Stmt) error {
 		}
 
 		return nil
+	case *sintaxis.Var:
+		var valor any
+		var err error
+		if s.Initializer != nil {
+			valor, err = i.Evaluar(s.Initializer)
+			if err != nil {
+				return err
+			}
+		}
+
+		i.entorno.Definir(s.Name.Lexema, valor)
+		return nil
+	case *sintaxis.Block:
+		return i.ejecutarBloque(s.Statements, NuevoEntorno(i.entorno))
+	}
+	
+	return nil
+}
+
+// ejecutarBloque ejecuta una lista de sentencias bajo un entorno específico (scope local).
+func (i *Interprete) ejecutarBloque(sentencias []sintaxis.Stmt, entornoLocal *Entorno) error {
+	entornoAnterior := i.entorno
+	defer func() {
+		i.entorno = entornoAnterior
+	}()
+
+	i.entorno = entornoLocal
+	for _, sentencia := range sentencias {
+		if err := i.Ejecutar(sentencia); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -151,6 +184,21 @@ func (i *Interprete) Evaluar(expr sintaxis.Expr) (any, error) {
 		case token.EQUAL_EQUAL:
 			return i.esIgual(izquierda, derecha), nil
 		}
+		
+	case *sintaxis.Variable:
+		return i.entorno.Obtener(e.Name)
+
+	case *sintaxis.Assign:
+		valor, err := i.Evaluar(e.Value)
+		if err != nil {
+			return nil, err
+		}
+		
+		if err := i.entorno.Asignar(e.Name, valor); err != nil {
+			return nil, err
+		}
+		
+		return valor, nil
 	}
 
 	return nil, nil
