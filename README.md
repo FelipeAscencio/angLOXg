@@ -8,7 +8,7 @@ Esta implementación sigue los conceptos y la arquitectura del libro *Crafting I
 
 **Enlaces rápidos**
 
-* 📖  [Documentación oficial](https://FelipeAscencio.github.io/angLOXg/)
+* 📖 [ Documentación oficial](https://FelipeAscencio.github.io/angLOXg/)
 * ▶️ [Playground web interactivo](https://FelipeAscencio.github.io/angLOXg/web/)
 
 ## Prerrequisitos e instalación
