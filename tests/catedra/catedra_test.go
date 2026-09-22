@@ -10,6 +10,7 @@ import (
 	"github.com/FelipeAscencio/angLOXg/internal/lox"
 )
 
+// Ejecuta de forma automatizada todos los archivos de prueba (.lox) provistos por la cátedra.
 func TestCatedra(t *testing.T) {
 	archivos, err := filepath.Glob("*.lox")
 	if err != nil {

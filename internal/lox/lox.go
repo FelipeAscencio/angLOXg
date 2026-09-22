@@ -7,33 +7,26 @@ import (
 	"github.com/FelipeAscencio/angLOXg/internal/escaner"
 	"github.com/FelipeAscencio/angLOXg/internal/interprete"
 	"github.com/FelipeAscencio/angLOXg/internal/parser"
+	"github.com/FelipeAscencio/angLOXg/internal/semantica"
 	"github.com/FelipeAscencio/angLOXg/internal/sintaxis"
 	"github.com/FelipeAscencio/angLOXg/internal/token"
-	"github.com/FelipeAscencio/angLOXg/internal/semantica"
 )
 
-// Ejecutar corre código Lox y escribe la salida en "salida". Devuelve false si
-// el código tenía errores.
-//
-// Toda la salida, incluidos los mensajes de error, va a "salida" y no a la
-// salida de errores del proceso.
+// Ejecuta código Lox completo y escribe la salida o errores en el escritor provisto.
 func Ejecutar(fuente string, salida io.Writer) bool {
 	sentencias, ok := parsearFuente(fuente, salida)
 	if !ok {
 		return false
 	}
 
-	// 1. Instanciamos el intérprete y el analizador semántico.
 	intp := interprete.NuevoInterprete(salida)
 	analizador := semantica.Nuevo(intp)
 
-	// 2. Ejecutamos la fase de análisis semántico.
 	if err := analizador.Resolver(sentencias); err != nil {
 		fmt.Fprintln(salida, err.Error())
 		return false
 	}
 
-	// 3. Ejecutamos el intérprete.
 	if err := intp.Interpretar(sentencias); err != nil {
 		fmt.Fprintln(salida, err.Error())
 		return false
@@ -42,8 +35,7 @@ func Ejecutar(fuente string, salida io.Writer) bool {
 	return true
 }
 
-// Resolver escanea, parsea, y realiza el análisis semántico sin ejecutar.
-// Es lo que corre el CLI con "--resolucion".
+// Ejecuta las fases de escaneo, parseo y análisis semántico sin llegar a interpretar.
 func Resolver(fuente string, salida io.Writer) bool {
 	sentencias, ok := parsearFuente(fuente, salida)
 	if !ok {
@@ -61,8 +53,7 @@ func Resolver(fuente string, salida io.Writer) bool {
 	return true
 }
 
-// Parsear escanea y parsea código Lox, y vuelca el árbol de sintaxis en
-// "salida", sin ejecutarlo. Es lo que corre el CLI con "--arbol".
+// Escanea y parsea código Lox, imprimiendo el árbol sintáctico (AST) resultante.
 func Parsear(fuente string, salida io.Writer) bool {
 	sentencias, ok := parsearFuente(fuente, salida)
 	if !ok {
@@ -74,8 +65,7 @@ func Parsear(fuente string, salida io.Writer) bool {
 	return true
 }
 
-// Escanear escanea código Lox y vuelca los tokens en "salida", sin ejecutarlo.
-// Es lo que corre el CLI con "--escaneo".
+// Escanea código Lox e imprime los tokens generados por la fase léxica.
 func Escanear(fuente string, salida io.Writer) bool {
 	tokens, ok := escanearFuente(fuente, salida)
 	if !ok {
@@ -87,26 +77,25 @@ func Escanear(fuente string, salida io.Writer) bool {
 	return true
 }
 
-// escanearFuente corre el escáner y reporta las fallas léxicas que encontró.
+// ==============================
+// Funciones auxiliares internas.
+// ==============================
+
 func escanearFuente(fuente string, salida io.Writer) ([]token.Token, bool) {
 	tokens, errores := escaner.Nuevo(fuente).EscanearTokens()
 	for _, err := range errores {
 		fmt.Fprintln(salida, err)
 	}
 
-	// Con errores léxicos los tokens no son confiables y el proceso se corta.
 	return tokens, len(errores) == 0
 }
 
-// imprimirTokens vuelca la lista de tokens, uno por línea.
 func imprimirTokens(tokens []token.Token, salida io.Writer) {
 	for _, tok := range tokens {
 		fmt.Fprintln(salida, tok)
 	}
 }
 
-// parsearFuente encadena el escáner con el parser y reporta las fallas de
-// cualquiera de los dos.
 func parsearFuente(fuente string, salida io.Writer) ([]sintaxis.Stmt, bool) {
 	tokens, ok := escanearFuente(fuente, salida)
 	if !ok {
@@ -121,7 +110,6 @@ func parsearFuente(fuente string, salida io.Writer) ([]sintaxis.Stmt, bool) {
 	return sentencias, len(errores) == 0
 }
 
-// imprimirArbol vuelca el árbol de cada sentencia, una por línea.
 func imprimirArbol(sentencias []sintaxis.Stmt, salida io.Writer) {
 	for _, sentencia := range sentencias {
 		fmt.Fprintln(salida, sintaxis.RepresentarSentencia(sentencia))

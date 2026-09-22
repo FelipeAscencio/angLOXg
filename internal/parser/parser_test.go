@@ -8,22 +8,15 @@ import (
 	"github.com/FelipeAscencio/angLOXg/internal/sintaxis"
 )
 
-// casoDeParseo es una entrada de una tabla de pruebas: un fuente y la
-// representación del árbol que tiene que salir de parsearlo.
+// Representa una entrada de prueba para expresiones individuales.
 type casoDeParseo struct {
-	nombre string
-	fuente string
-
-	// Representación esperada del árbol. Vacía si se espera que falle.
+	nombre   string
+	fuente   string
 	esperado string
-
-	// Subcadenas que tienen que aparecer en los errores, una por error y en
-	// orden. Si es nil, el parseo tiene que terminar sin fallas.
-	errores []string
+	errores  []string
 }
 
-// representarExpresion escanea y parsea una expresión suelta, y devuelve su
-// representación junto con los errores de sintaxis.
+// Escanea y parsea una expresión suelta, retornando su representación y errores.
 func representarExpresion(t *testing.T, fuente string) (string, []error) {
 	t.Helper()
 
@@ -40,7 +33,7 @@ func representarExpresion(t *testing.T, fuente string) (string, []error) {
 	return sintaxis.Representar(expresion), errores
 }
 
-// correrCasosDeExpresion ejecuta una tabla de pruebas de expresiones.
+// Ejecuta una tabla de pruebas para expresiones.
 func correrCasosDeExpresion(t *testing.T, casos []casoDeParseo) {
 	t.Helper()
 
@@ -56,7 +49,7 @@ func correrCasosDeExpresion(t *testing.T, casos []casoDeParseo) {
 	}
 }
 
-// verificarErrores chequea que las fallas de sintaxis sean las esperadas.
+// Verifica que los errores de sintaxis coincidan con los esperados.
 func verificarErrores(t *testing.T, obtenidos []error, esperados []string) {
 	t.Helper()
 
@@ -73,8 +66,7 @@ func verificarErrores(t *testing.T, obtenidos []error, esperados []string) {
 	}
 }
 
-// casoDePrograma es una tabla de pruebas para un programa entero, que puede
-// tener varias sentencias.
+// Representa una tabla de prueba para un programa completo con múltiples sentencias.
 type casoDePrograma struct {
 	nombre   string
 	fuente   string
@@ -82,8 +74,7 @@ type casoDePrograma struct {
 	errores  []string
 }
 
-// representarPrograma escanea y parsea un programa entero, y devuelve la
-// representación de cada sentencia junto con los errores de sintaxis.
+// Escanea y parsea un programa entero, retornando las sentencias representadas y sus errores.
 func representarPrograma(t *testing.T, fuente string) ([]string, []error) {
 	t.Helper()
 
@@ -102,7 +93,7 @@ func representarPrograma(t *testing.T, fuente string) ([]string, []error) {
 	return representadas, errores
 }
 
-// correrCasosDePrograma ejecuta una tabla de pruebas de programas.
+// Ejecuta una tabla de pruebas para programas completos.
 func correrCasosDePrograma(t *testing.T, casos []casoDePrograma) {
 	t.Helper()
 

@@ -8,6 +8,7 @@ import (
 	"github.com/FelipeAscencio/angLOXg/internal/lox"
 )
 
+// Verifica la cobertura de errores de ejecución, casos límite y comportamientos especiales de Lox.
 func TestCoberturaDeErroresYExtremos(t *testing.T) {
 	casos := []struct {
 		nombre string

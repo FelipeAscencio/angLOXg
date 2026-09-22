@@ -1,3 +1,4 @@
+// Referencias a los elementos del DOM de la interfaz web.
 const outputContainer = document.getElementById("output");
 const codeInput = document.getElementById("code-input");
 const runBtn = document.getElementById("run-btn");
@@ -8,6 +9,7 @@ const replInput = document.getElementById("repl-input");
 const replHistory = document.getElementById("repl-history");
 const replClearBtn = document.getElementById("repl-clear-btn");
 
+// Inicialización del entorno WebAssembly y carga del motor de Go.
 const go = new Go();
 WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((result) => {
     go.run(result.instance);
@@ -17,6 +19,7 @@ WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((resu
     outputContainer.style.color = "#ef4444";
 });
 
+// Ejecuta el código fuente completo ingresado en el editor principal.
 runBtn.addEventListener("click", () => {
     const code = codeInput.value;
     if (!code.trim()) {
@@ -36,19 +39,23 @@ runBtn.addEventListener("click", () => {
     }
 });
 
+// Limpia el contenido del editor de código y la consola de salida.
 clearBtn.addEventListener("click", () => {
     codeInput.value = "";
     outputContainer.textContent = "Consola limpia.";
 });
 
+// Carga el ejemplo básico de expresiones y operaciones aritméticas en el editor.
 btnExample1.addEventListener("click", () => {
     codeInput.value = 'print "Hola desde la Web!";\nprint 5 + 3 * 2;';
 });
 
+// Carga el ejemplo avanzado de función recursiva (Fibonacci) en el editor.
 btnExample2.addEventListener("click", () => {
     codeInput.value = 'fun fibonacci(n) {\n    if (n <= 1) return n;\n    return fibonacci(n - 1) + fibonacci(n - 2);\n}\n\nprint fibonacci(10);';
 });
 
+// Gestiona la entrada interactiva de comandos línea por línea en la terminal REPL.
 replInput.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
         const code = replInput.value.trim();
@@ -74,6 +81,7 @@ replInput.addEventListener("keydown", (event) => {
     }
 });
 
+// Agrega una línea formateada al historial visual de la terminal REPL.
 function appendReplLine(text, type) {
     const line = document.createElement("div");
     line.className = `repl-line ${type}`;
@@ -81,6 +89,7 @@ function appendReplLine(text, type) {
     replHistory.appendChild(line);
 }
 
+// Restablece el historial de la terminal interactiva a su estado inicial.
 replClearBtn.addEventListener("click", () => {
     replHistory.innerHTML = '<div class="repl-line text-muted">Terminal limpia. Escribí una nueva sentencia...</div>';
 });

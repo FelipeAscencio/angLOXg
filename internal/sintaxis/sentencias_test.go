@@ -104,6 +104,7 @@ var casosDeSentencia = []struct {
 	},
 }
 
+// Verifica la correcta representación textual en formato S-expresión para las diferentes sentencias.
 func TestRepresentarSentencias(t *testing.T) {
 	for _, caso := range casosDeSentencia {
 		t.Run(caso.nombre, func(t *testing.T) {

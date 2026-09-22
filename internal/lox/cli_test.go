@@ -7,6 +7,7 @@ import (
 	"github.com/FelipeAscencio/angLOXg/internal/lox"
 )
 
+// Verifica el funcionamiento correcto de los diferentes modos de ejecución del CLI.
 func TestModosCLI(t *testing.T) {
 	var salida bytes.Buffer
 	fuente := "var a = 1;"
@@ -18,6 +19,7 @@ func TestModosCLI(t *testing.T) {
 	}
 }
 
+// Verifica que el intérprete detecte y reporte fallos ante errores léxicos y sintácticos.
 func TestErroresEjecucion(t *testing.T) {
 	var salida bytes.Buffer
 	

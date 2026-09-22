@@ -6,6 +6,7 @@ import (
 	"github.com/FelipeAscencio/angLOXg/internal/token"
 )
 
+// Verifica que el resolvedor identifique correctamente palabras clave frente a identificadores generales.
 func TestResolverIdentificador(t *testing.T) {
 	casos := []struct {
 		lexema   string
@@ -28,6 +29,7 @@ func TestResolverIdentificador(t *testing.T) {
 	}
 }
 
+// Comprueba el manejo seguro de límites y valores inválidos en la representación String de los tokens.
 func TestTipoDeTokenStringLimites(t *testing.T) {
 	if token.PLUS.String() != "PLUS" {
 		t.Errorf("El string del token PLUS falló")
@@ -44,6 +46,7 @@ func TestTipoDeTokenStringLimites(t *testing.T) {
 	}
 }
 
+// Verifica la correcta creación de tokens y la representación textual de sus literales.
 func TestTokenStringYConstructor(t *testing.T) {
 	tkPlus := token.Nuevo(token.PLUS, "+", nil, 1)
 	if tkPlus.String() != "PLUS" {

@@ -6,14 +6,7 @@ import (
 	"strings"
 )
 
-// Representar arma una representación textual del árbol de una expresión, con
-// la forma de una S-expresión: cada nodo compuesto queda entre paréntesis, con
-// el operador adelante y los operandos atrás.
-//
-//	1 + 2 * 3   ->   (+ 1 (* 2 3))
-//
-// Sirve para ver de un vistazo cómo quedó agrupado el árbol, que es
-// exactamente lo que no se puede deducir mirando la lista de tokens.
+// Arma una representación textual del árbol de una expresión en formato de S-expresión.
 func Representar(expresion Expr) string {
 	switch n := expresion.(type) {
 	case *Literal:
@@ -46,14 +39,11 @@ func Representar(expresion Expr) string {
 		return encerrar("call", partes...)
 
 	default:
-		// Si aparece un nodo nuevo y nadie lo contempló acá, conviene que se
-		// note enseguida y no que se represente como vacío.
 		panic(fmt.Sprintf("expresión no contemplada por el representador: %T", expresion))
 	}
 }
 
-// RepresentarSentencia arma la representación textual del árbol de una
-// sentencia, con el mismo formato de S-expresiones que usa Representar.
+// Arma una representación textual del árbol de una sentencia en formato de S-expresión.
 func RepresentarSentencia(sentencia Stmt) string {
 	switch n := sentencia.(type) {
 	case *ExpressionStmt:
@@ -106,24 +96,21 @@ func RepresentarSentencia(sentencia Stmt) string {
 	}
 }
 
-// representarValor escribe el valor de un literal.
+// Escribe la representación textual del valor de un literal.
 func representarValor(valor any) string {
 	switch v := valor.(type) {
 	case nil:
 		return "nil"
 	case string:
-		// Las comillas distinguen una cadena de un identificador.
 		return `"` + v + `"`
 	case float64:
-		// El formato 'g' con precisión -1 escribe la menor cantidad de dígitos
-		// que permita recuperar el mismo número: 1 queda "1" y no "1.000000".
 		return strconv.FormatFloat(v, 'g', -1, 64)
 	default:
 		return fmt.Sprintf("%v", v)
 	}
 }
 
-// representarSentencias representa una lista de sentencias.
+// Representa una lista de sentencias.
 func representarSentencias(sentencias []Stmt) []string {
 	partes := make([]string, 0, len(sentencias))
 	for _, sentencia := range sentencias {
@@ -133,7 +120,7 @@ func representarSentencias(sentencias []Stmt) []string {
 	return partes
 }
 
-// encerrar arma "(nombre parte parte ...)".
+// Envuelve las partes en una estructura de S-expresión: "(nombre parte1 parte2 ...)".
 func encerrar(nombre string, partes ...string) string {
 	if len(partes) == 0 {
 		return "(" + nombre + ")"

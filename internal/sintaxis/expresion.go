@@ -2,78 +2,56 @@ package sintaxis
 
 import "github.com/FelipeAscencio/angLOXg/internal/token"
 
-// Expr es un nodo del árbol que produce un valor.
-//
-// La interfaz es marcadora: su único método es privado, así que ningún tipo de
-// afuera de este paquete puede hacerse pasar por un nodo del árbol. Quien
-// recorre el árbol distingue los nodos con un "switch" de tipo.
+// Interfaz marcadora para los nodos de expresión del árbol de sintaxis.
 type Expr interface {
 	isExpr()
 }
 
-// Literal es un valor escrito directamente en el código: un número, una cadena,
-// "true", "false" o "nil".
-//
-// "Value" guarda el dato ya resuelto, con los mismos tipos dinámicos que usa el
-// escáner: float64, string, bool o nil.
+// Representa un valor literal directo (número, cadena, booleano o nil).
 type Literal struct {
 	Value any
 }
 
-// Grouping es una expresión encerrada entre paréntesis.
-//
-// Se guarda como nodo propio, en vez de devolver directamente lo de adentro,
-// para no perder la forma original del código.
+// Representa una expresión encerrada entre paréntesis.
 type Grouping struct {
 	Expression Expr
 }
 
-// Unary es un operador de un solo operando: "-" o "!".
+// Representa un operador unario ("-" o "!").
 type Unary struct {
 	Operator token.Token
 	Right    Expr
 }
 
-// Binary es un operador de dos operandos: aritméticos, de comparación o de
-// igualdad.
+// Representa un operador binario de dos operandos.
 type Binary struct {
 	Left     Expr
 	Operator token.Token
 	Right    Expr
 }
 
-// Logical es un "and" o un "or".
-//
-// Va separado de Binary porque no evalúa siempre los dos lados: corta apenas el
-// izquierdo alcanza para saber el resultado.
+// Representa una expresión lógica ("and" o "or") con evaluación en cortocircuito.
 type Logical struct {
 	Left     Expr
 	Operator token.Token
 	Right    Expr
 }
 
-// Variable es la lectura de una variable por su nombre.
+// Representa la lectura de una variable por su nombre.
 type Variable struct {
 	Name token.Token
 }
 
-// Assign le da un valor nuevo a una variable ya declarada.
+// Representa una asignación de valor a una variable existente.
 type Assign struct {
 	Name  token.Token
 	Value Expr
 }
 
-// Call invoca al resultado de "Callee" con una lista de argumentos.
-//
-// "Callee" es una expresión y no un nombre porque lo que se llama puede ser el
-// resultado de otra llamada, como en "f()()".
+// Representa una llamada o invocación de una función con argumentos.
 type Call struct {
-	Callee Expr
-
-	// Paréntesis de cierre, que se guarda para poder ubicar los errores de
-	// ejecución de la llamada en la línea correcta.
-	Paren token.Token
-
+	Callee    Expr
+	Paren     token.Token
 	Arguments []Expr
 }
 

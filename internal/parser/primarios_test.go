@@ -2,7 +2,7 @@ package parser
 
 import "testing"
 
-// Expresiones primarias: lo que no se descompone en nada más chico.
+// Casos de prueba para expresiones primarias (literales, variables y agrupaciones).
 var casosPrimarios = []casoDeParseo{
 	{
 		nombre:   "número entero",
@@ -50,14 +50,14 @@ var casosPrimarios = []casoDeParseo{
 		esperado: "(group (group 1))",
 	},
 	{
-		nombre:  "paréntesis sin cerrar",
-		fuente:  "(1",
-		errores: []string{"se esperaba ')'"},
+		nombre:   "paréntesis sin cerrar",
+		fuente:   "(1",
+		errores:  []string{"se esperaba ')'"},
 	},
 	{
-		nombre:  "no hay expresión",
-		fuente:  ";",
-		errores: []string{"se esperaba una expresión"},
+		nombre:   "no hay expresión",
+		fuente:   ";",
+		errores:  []string{"se esperaba una expresión"},
 	},
 }
 

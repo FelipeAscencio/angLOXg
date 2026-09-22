@@ -8,8 +8,7 @@ import (
 	"github.com/FelipeAscencio/angLOXg/internal/lox"
 )
 
-// TestBugDelClosure verifica que el scope estático funcione correctamente y que
-// la redefinición de una variable en un scope externo no rompa el closure interno.
+// Verifica el funcionamiento del scope estático frente a redefiniciones en closures.
 func TestBugDelClosure(t *testing.T) {
 	fuente := `
 	var a = "global";
@@ -30,7 +29,6 @@ func TestBugDelClosure(t *testing.T) {
 		t.Fatalf("La ejecución falló inesperadamente.")
 	}
 
-	// Como el scope es estático, ambas llamadas deben imprimir "global"
 	esperado := "global\nglobal\n"
 	obtenido := salida.String()
 
@@ -39,8 +37,7 @@ func TestBugDelClosure(t *testing.T) {
 	}
 }
 
-// TestErrorVariableEnPropioInicializador verifica que el Resolver atrape
-// el uso de una variable local en su propia declaración.
+// Verifica que el resolver detecte el uso de una variable en su propio inicializador.
 func TestErrorVariableEnPropioInicializador(t *testing.T) {
 	fuente := `
 	{
@@ -53,7 +50,6 @@ func TestErrorVariableEnPropioInicializador(t *testing.T) {
 	var salida bytes.Buffer
 	ok := lox.Ejecutar(fuente, &salida)
 
-	// El análisis semántico debe fallar y devolver false
 	if ok {
 		t.Fatalf("Se esperaba que la ejecución fallara por error semántico, pero dio OK.")
 	}
@@ -64,7 +60,7 @@ func TestErrorVariableEnPropioInicializador(t *testing.T) {
 	}
 }
 
-// TestShadowingAnidado verifica la correcta resolución de saltos en múltiples niveles.
+// Verifica la correcta resolución de shadowing en múltiples niveles de anidamiento.
 func TestShadowingAnidado(t *testing.T) {
 	fuente := `
 	var a = "global";
@@ -93,7 +89,7 @@ func TestShadowingAnidado(t *testing.T) {
 	}
 }
 
-// TestAsignacionDesdeClosure verifica que un closure pueda mutar una variable de un scope superior.
+// Verifica que un closure pueda modificar una variable perteneciente a un ámbito superior.
 func TestAsignacionDesdeClosure(t *testing.T) {
 	fuente := `
 	var a = "antes";

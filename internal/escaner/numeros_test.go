@@ -6,13 +6,12 @@ import (
 	"github.com/FelipeAscencio/angLOXg/internal/token"
 )
 
-// Literales numéricos: todos, con o sin parte decimal, resuelven a un float64.
+// Casos de prueba para literales numéricos del escáner.
 var casosNumeros = []casoDeEscaneo{
 	{
 		nombre: "entero",
 		fuente: "123",
 		esperado: []tokenEsperado{
-			// El literal es float64, no int.
 			{token.NUMBER, "123", float64(123), 1},
 		},
 	},
@@ -39,7 +38,6 @@ var casosNumeros = []casoDeEscaneo{
 	},
 	{
 		nombre: "el signo menos no es parte del literal",
-		// El menos unario lo resuelve el parser, no el escáner.
 		fuente: "-7",
 		esperado: []tokenEsperado{
 			{token.MINUS, "-", nil, 1},
@@ -73,28 +71,25 @@ var casosNumeros = []casoDeEscaneo{
 		},
 	},
 	{
-		nombre: "un número no puede terminar en punto",
-		// El punto no se traga: se cierra el número y el punto suelto, que no
-		// es un token del lenguaje, queda como error.
-		fuente:  "123.",
-		errores: []string{"carácter inesperado"},
+		nombre:   "un número no puede terminar en punto",
+		fuente:   "123.",
+		errores:  []string{"carácter inesperado"},
 		esperado: []tokenEsperado{
 			{token.NUMBER, "123", float64(123), 1},
 		},
 	},
 	{
-		nombre:  "un número no puede empezar con punto",
-		fuente:  ".5",
-		errores: []string{"carácter inesperado"},
+		nombre:   "un número no puede empezar con punto",
+		fuente:   ".5",
+		errores:  []string{"carácter inesperado"},
 		esperado: []tokenEsperado{
 			{token.NUMBER, "5", float64(5), 1},
 		},
 	},
 	{
-		nombre: "un número no puede tener dos puntos",
-		// Se consume la primera parte decimal y nada más.
-		fuente:  "1.2.3",
-		errores: []string{"carácter inesperado"},
+		nombre:   "un número no puede tener dos puntos",
+		fuente:   "1.2.3",
+		errores:  []string{"carácter inesperado"},
 		esperado: []tokenEsperado{
 			{token.NUMBER, "1.2", 1.2, 1},
 			{token.NUMBER, "3", float64(3), 1},

@@ -6,7 +6,7 @@ import (
 	"github.com/FelipeAscencio/angLOXg/internal/token"
 )
 
-// Tokens de un solo carácter.
+// Casos de prueba para tokens de un solo carácter.
 var casosUnCaracter = []casoDeEscaneo{
 	{
 		nombre: "agrupadores",
@@ -59,7 +59,7 @@ var casosUnCaracter = []casoDeEscaneo{
 	},
 }
 
-// Tokens de uno o dos caracteres.
+// Casos de prueba para tokens de uno o dos caracteres.
 var casosDosCaracteres = []casoDeEscaneo{
 	{
 		nombre: "versión de un carácter",
@@ -99,8 +99,7 @@ var casosDosCaracteres = []casoDeEscaneo{
 	},
 }
 
-// Espacios en blanco y comentarios: no generan tokens, pero mueven el contador
-// de líneas.
+// Casos de prueba para espacios en blanco y comentarios.
 var casosComentarios = []casoDeEscaneo{
 	{
 		nombre:   "comentario hasta el fin de línea",

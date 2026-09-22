@@ -6,11 +6,13 @@ import (
 	"github.com/FelipeAscencio/angLOXg/internal/token"
 )
 
+// Verifica la obtención, asignación y herencia de variables entre entornos.
 func TestEntornoObtenerYAsignar(t *testing.T) {
 	global := NuevoEntorno(nil)
 	local := NuevoEntorno(global)
 	tkA := token.Token{Lexema: "a"}
 	tkFantasma := token.Token{Lexema: "fantasma"}
+
 	if _, err := global.Obtener(tkFantasma); err == nil {
 		t.Errorf("Se esperaba error al obtener variable no definida")
 	}
@@ -30,11 +32,13 @@ func TestEntornoObtenerYAsignar(t *testing.T) {
 	}
 }
 
+// Verifica la resolución estática de variables mediante saltos de entorno.
 func TestEntornoEstatico(t *testing.T) {
 	global := NuevoEntorno(nil)
 	global.Definir("x", 100)
 	intermedio := NuevoEntorno(global)
 	local := NuevoEntorno(intermedio)
+
 	if val := local.ObtenerEn(2, "x"); val != 100 {
 		t.Errorf("ObtenerEn falló con saltos estáticos")
 	}

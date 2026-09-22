@@ -103,10 +103,7 @@ var nombresDeTipos = [...]string{
 const _ = uint(len(nombresDeTipos) - (int(EOF) + 1))
 const _ = uint((int(EOF) + 1) - len(nombresDeTipos))
 
-// String devuelve el nombre legible de la categoría léxica.
-//
-// Se llama así, y no "Nombre", porque es el método que Go espera para poder
-// imprimir el valor con el paquete "fmt".
+// Devuelve el nombre legible de la categoría léxica para la impresión por formato.
 func (t TipoDeToken) String() string {
 	if t < 0 || int(t) >= len(nombresDeTipos) {
 		return "UNKNOWN"

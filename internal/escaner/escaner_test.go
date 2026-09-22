@@ -7,7 +7,7 @@ import (
 	"github.com/FelipeAscencio/angLOXg/internal/token"
 )
 
-// tokenEsperado describe un token que el escáner tiene que producir.
+// Describe un token esperado en el resultado del escaneo.
 type tokenEsperado struct {
 	tipo    token.TipoDeToken
 	lexema  string
@@ -15,21 +15,15 @@ type tokenEsperado struct {
 	linea   int
 }
 
-// casoDeEscaneo es una entrada de una tabla de pruebas: un fuente y lo que se
-// espera obtener al escanearlo.
+// Representa un caso de prueba individual para las tablas del escáner.
 type casoDeEscaneo struct {
-	nombre string
-	fuente string
-
-	// Tokens esperados, sin contar el EOF final: ese se verifica siempre.
+	nombre   string
+	fuente   string
 	esperado []tokenEsperado
-
-	// Subcadenas que tienen que aparecer en los errores, una por error y en
-	// orden. Si es nil, el escaneo tiene que terminar sin fallas.
-	errores []string
+	errores  []string
 }
 
-// correrCasos ejecuta una tabla de pruebas completa.
+// Ejecuta una tabla de pruebas completa.
 func correrCasos(t *testing.T, casos []casoDeEscaneo) {
 	t.Helper()
 
@@ -42,8 +36,7 @@ func correrCasos(t *testing.T, casos []casoDeEscaneo) {
 	}
 }
 
-// verificarTokens compara la lista producida contra la esperada, agregándole el
-// EOF con el que el escáner siempre tiene que cerrar.
+// Compara los tokens obtenidos contra los esperados.
 func verificarTokens(t *testing.T, obtenidos []token.Token, esperados []tokenEsperado) {
 	t.Helper()
 
@@ -51,7 +44,6 @@ func verificarTokens(t *testing.T, obtenidos []token.Token, esperados []tokenEsp
 		t.Fatalf("el escáner no produjo ni siquiera el token EOF")
 	}
 
-	// El último token siempre tiene que ser un EOF con lexema vacío.
 	ultimo := obtenidos[len(obtenidos)-1]
 	if ultimo.Tipo != token.EOF {
 		t.Errorf("el último token es %s, se esperaba EOF", ultimo.Tipo)
@@ -61,7 +53,6 @@ func verificarTokens(t *testing.T, obtenidos []token.Token, esperados []tokenEsp
 		t.Errorf("el token EOF tiene lexema %q, se esperaba vacío", ultimo.Lexema)
 	}
 
-	// El resto se compara campo por campo contra la tabla.
 	reales := obtenidos[:len(obtenidos)-1]
 	if len(reales) != len(esperados) {
 		t.Fatalf("se obtuvieron %d tokens y se esperaban %d\nobtenidos: %v",
@@ -92,7 +83,7 @@ func verificarTokens(t *testing.T, obtenidos []token.Token, esperados []tokenEsp
 	}
 }
 
-// verificarErrores chequea que las fallas léxicas sean las esperadas.
+// Verifica que los errores léxicos coincidan con los esperados.
 func verificarErrores(t *testing.T, obtenidos []error, esperados []string) {
 	t.Helper()
 

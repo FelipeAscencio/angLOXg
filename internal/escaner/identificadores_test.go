@@ -6,8 +6,7 @@ import (
 	"github.com/FelipeAscencio/angLOXg/internal/token"
 )
 
-// Identificadores: arrancan con letra ASCII o guion bajo, y siguen con letras,
-// dígitos o guiones bajos.
+// Casos de prueba para identificadores del escáner.
 var casosIdentificadores = []casoDeEscaneo{
 	{
 		nombre: "identificador simple",
@@ -32,7 +31,6 @@ var casosIdentificadores = []casoDeEscaneo{
 	},
 	{
 		nombre: "no puede arrancar con un dígito",
-		// "1abc" no es un identificador inválido: son dos tokens distintos.
 		fuente: "1abc",
 		esperado: []tokenEsperado{
 			{token.NUMBER, "1", float64(1), 1},
@@ -59,8 +57,7 @@ var casosIdentificadores = []casoDeEscaneo{
 	},
 }
 
-// Palabras reservadas: se reconocen recién después de consumir el lexema
-// completo, así que nunca se parte un identificador al medio.
+// Casos de prueba para palabras reservadas del escáner.
 var casosPalabrasClave = []casoDeEscaneo{
 	{
 		nombre: "todas las palabras reservadas",
@@ -68,8 +65,6 @@ var casosPalabrasClave = []casoDeEscaneo{
 		esperado: []tokenEsperado{
 			{token.AND, "and", nil, 1},
 			{token.ELSE, "else", nil, 1},
-			// true, false y nil son palabras clave, no literales: no llevan
-			// valor resuelto.
 			{token.FALSE, "false", nil, 1},
 			{token.FUN, "fun", nil, 1},
 			{token.FOR, "for", nil, 1},
@@ -110,7 +105,7 @@ var casosPalabrasClave = []casoDeEscaneo{
 	},
 }
 
-// Programas completos, con todas las piezas del escáner trabajando juntas.
+// Casos de prueba para programas completos del escáner.
 var casosPrograma = []casoDeEscaneo{
 	{
 		nombre: "declaración con condicional",

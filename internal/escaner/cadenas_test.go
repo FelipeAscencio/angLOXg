@@ -6,15 +6,12 @@ import (
 	"github.com/FelipeAscencio/angLOXg/internal/token"
 )
 
-// Literales de cadena: se delimitan con comillas dobles y no admiten
-// secuencias de escape, así que pueden ocupar varias líneas pero nunca
-// contener una comilla doble.
+// Casos de prueba para literales de cadena del escáner.
 var casosCadenas = []casoDeEscaneo{
 	{
 		nombre: "cadena simple",
 		fuente: `"hola"`,
 		esperado: []tokenEsperado{
-			// El lexema conserva las comillas; el literal no.
 			{token.STRING, `"hola"`, "hola", 1},
 		},
 	},
@@ -48,7 +45,6 @@ var casosCadenas = []casoDeEscaneo{
 		nombre: "cadena multilínea",
 		fuente: "\"primera\nsegunda\"",
 		esperado: []tokenEsperado{
-			// El token se reporta en la línea donde abre la cadena.
 			{token.STRING, "\"primera\nsegunda\"", "primera\nsegunda", 1},
 		},
 	},
@@ -75,8 +71,7 @@ var casosCadenas = []casoDeEscaneo{
 		esperado: []tokenEsperado{},
 	},
 	{
-		nombre: "la cadena sin cerrar se reporta en la línea donde abre",
-		// La cadena abre en la línea 2 y se come el resto del archivo.
+		nombre:  "la cadena sin cerrar se reporta en la línea donde abre",
 		fuente:  "+\n\"hola\nmundo",
 		errores: []string{"[línea 2] Error de escaneo: cadena sin cerrar"},
 		esperado: []tokenEsperado{

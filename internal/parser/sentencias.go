@@ -5,11 +5,7 @@ import (
 	"github.com/FelipeAscencio/angLOXg/internal/token"
 )
 
-// declaration reconoce todo lo que puede aparecer en el cuerpo de un programa o
-// de un bloque.
-//
-// Se separa de "statement" porque no todos los lugares admiten una declaración:
-// "if (a) var x = 1;" no tiene sentido, ya que la variable moriría al instante.
+// Reconoce declaraciones permitidas en cuerpos de programas o bloques.
 func (p *Parser) declaration() sintaxis.Stmt {
 	switch {
 	case p.match(token.VAR):
@@ -23,11 +19,10 @@ func (p *Parser) declaration() sintaxis.Stmt {
 	}
 }
 
-// varDeclaration reconoce "var x;" y "var x = expresion;".
+// Reconoce declaraciones de variables ("var x;" o "var x = expresion;").
 func (p *Parser) varDeclaration() sintaxis.Stmt {
 	nombre := p.consume(token.IDENTIFIER, "se esperaba el nombre de la variable")
 
-	// El valor inicial es opcional: sin él, la variable arranca en nil.
 	var inicializador sintaxis.Expr
 	if p.match(token.EQUAL) {
 		inicializador = p.expression()
@@ -38,7 +33,7 @@ func (p *Parser) varDeclaration() sintaxis.Stmt {
 	return &sintaxis.Var{Name: nombre, Initializer: inicializador}
 }
 
-// statement reconoce cuál de las formas de sentencia viene y la arma.
+// Reconoce y arma sentencias de acuerdo con su tipo.
 func (p *Parser) statement() sintaxis.Stmt {
 	switch {
 	case p.match(token.PRINT):
@@ -64,7 +59,7 @@ func (p *Parser) statement() sintaxis.Stmt {
 	}
 }
 
-// printStatement reconoce "print expresion;".
+// Reconoce sentencias de impresión ("print expresion;").
 func (p *Parser) printStatement() sintaxis.Stmt {
 	valor := p.expression()
 	p.consume(token.SEMICOLON, "se esperaba ';' después del valor a imprimir")
@@ -72,7 +67,7 @@ func (p *Parser) printStatement() sintaxis.Stmt {
 	return &sintaxis.Print{Value: valor}
 }
 
-// expressionStatement reconoce una expresión suelta terminada en punto y coma.
+// Reconoce expresiones sueltas terminadas en punto y coma.
 func (p *Parser) expressionStatement() sintaxis.Stmt {
 	expression := p.expression()
 	p.consume(token.SEMICOLON, "se esperaba ';' después de la expresión")
@@ -80,13 +75,10 @@ func (p *Parser) expressionStatement() sintaxis.Stmt {
 	return &sintaxis.ExpressionStmt{Expression: expression}
 }
 
-// block reconoce las declaraciones de adentro de un par de llaves. Se llama
-// con la llave de apertura ya consumida.
+// Reconoce declaraciones dentro de un bloque delimitado por llaves.
 func (p *Parser) block() []sintaxis.Stmt {
 	sentencias := []sintaxis.Stmt{}
 
-	// El chequeo de fin de archivo evita quedarse dando vueltas para siempre
-	// cuando la llave de cierre nunca llega.
 	for !p.check(token.RIGHT_BRACE) && !p.isAtEnd() {
 		sentencias = append(sentencias, p.declaration())
 	}
@@ -96,7 +88,7 @@ func (p *Parser) block() []sintaxis.Stmt {
 	return sentencias
 }
 
-// ifStatement reconoce "if (condicion) sentencia" con un "else" opcional.
+// Reconoce estructuras condicionales ("if").
 func (p *Parser) ifStatement() sintaxis.Stmt {
 	p.consume(token.LEFT_PAREN, "se esperaba '(' después de 'if'")
 	condicion := p.expression()
@@ -104,9 +96,6 @@ func (p *Parser) ifStatement() sintaxis.Stmt {
 
 	entonces := p.statement()
 
-	// El "else" se engancha acá mismo, en la llamada más profunda que esté
-	// abierta. Por eso en "if (a) if (b) x; else y;" el else queda con el if
-	// interno, que es la lectura habitual en los lenguajes con llaves.
 	var sino sintaxis.Stmt
 	if p.match(token.ELSE) {
 		sino = p.statement()
@@ -115,7 +104,7 @@ func (p *Parser) ifStatement() sintaxis.Stmt {
 	return &sintaxis.If{Condition: condicion, Then: entonces, Else: sino}
 }
 
-// whileStatement reconoce "while (condicion) sentencia".
+// Reconoce bucles iterativos ("while").
 func (p *Parser) whileStatement() sintaxis.Stmt {
 	p.consume(token.LEFT_PAREN, "se esperaba '(' después de 'while'")
 	condicion := p.expression()
@@ -124,16 +113,10 @@ func (p *Parser) whileStatement() sintaxis.Stmt {
 	return &sintaxis.While{Condition: condicion, Body: p.statement()}
 }
 
-// forStatement reconoce "for (inicializador; condicion; incremento) sentencia"
-// y lo traduce a un bucle mientras.
-//
-// No hay un nodo propio para el for: un for hace exactamente lo mismo que un
-// mientras con el inicializador delante y el incremento al final del cuerpo, y
-// armarlo así deja un nodo menos que atender en cada recorrido del árbol.
+// Reconoce bucles for y los traduce internamente a construcciones while.
 func (p *Parser) forStatement() sintaxis.Stmt {
 	p.consume(token.LEFT_PAREN, "se esperaba '(' después de 'for'")
 
-	// Las tres partes son opcionales.
 	inicializador := p.forInitializer()
 
 	var condicion sintaxis.Expr
@@ -152,7 +135,6 @@ func (p *Parser) forStatement() sintaxis.Stmt {
 
 	cuerpo := p.statement()
 
-	// El incremento corre al final de cada vuelta.
 	if incremento != nil {
 		cuerpo = &sintaxis.Block{Statements: []sintaxis.Stmt{
 			cuerpo,
@@ -160,16 +142,12 @@ func (p *Parser) forStatement() sintaxis.Stmt {
 		}}
 	}
 
-	// Sin condición, el bucle es infinito.
 	if condicion == nil {
 		condicion = &sintaxis.Literal{Value: true}
 	}
 
 	var bucle sintaxis.Stmt = &sintaxis.While{Condition: condicion, Body: cuerpo}
 
-	// El inicializador corre una sola vez, antes del bucle. El bloque que lo
-	// envuelve le da su propio ámbito, para que la variable del for no se
-	// escape al código de alrededor.
 	if inicializador != nil {
 		bucle = &sintaxis.Block{Statements: []sintaxis.Stmt{inicializador, bucle}}
 	}
@@ -177,8 +155,7 @@ func (p *Parser) forStatement() sintaxis.Stmt {
 	return bucle
 }
 
-// forInitializer reconoce la primera de las tres partes de un for, que
-// puede ser una declaración, una expresión o nada.
+// Reconoce el inicializador de un bucle for (declaración, expresión o vacío).
 func (p *Parser) forInitializer() sintaxis.Stmt {
 	switch {
 	case p.match(token.SEMICOLON):
@@ -192,7 +169,7 @@ func (p *Parser) forInitializer() sintaxis.Stmt {
 	}
 }
 
-// funDeclaration reconoce "fun nombre(parametros) { cuerpo }".
+// Reconoce declaraciones de funciones ("fun nombre(...) { ... }").
 func (p *Parser) funDeclaration() sintaxis.Stmt {
 	nombre := p.consume(token.IDENTIFIER, "se esperaba el nombre de la función")
 	p.consume(token.LEFT_PAREN, "se esperaba '(' después del nombre de la función")
@@ -208,8 +185,7 @@ func (p *Parser) funDeclaration() sintaxis.Stmt {
 	}
 }
 
-// parameters reconoce la lista de nombres entre paréntesis. Se llama con el
-// paréntesis de apertura ya consumido y consume el de cierre.
+// Reconoce la lista de parámetros formales de una función.
 func (p *Parser) parameters() []token.Token {
 	nombres := []token.Token{}
 
@@ -228,11 +204,10 @@ func (p *Parser) parameters() []token.Token {
 	return nombres
 }
 
-// returnStatement reconoce "return;" y "return expresion;".
+// Reconoce sentencias de retorno ("return").
 func (p *Parser) returnStatement() sintaxis.Stmt {
 	palabraClave := p.previous()
 
-	// El valor es opcional: un "return" pelado devuelve nil.
 	var valor sintaxis.Expr
 	if !p.check(token.SEMICOLON) {
 		valor = p.expression()

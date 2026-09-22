@@ -6,18 +6,17 @@ import (
 	"github.com/FelipeAscencio/angLOXg/internal/token"
 )
 
-// tok arma un token mínimo, con la información que hace falta para representar
-// el árbol y nada más.
+// Crea un token mínimo con la información necesaria para representar el árbol.
 func tok(tipo token.TipoDeToken, lexema string) token.Token {
 	return token.Nuevo(tipo, lexema, nil, 1)
 }
 
-// num arma un literal numérico, que es el nodo más repetido en las tablas.
+// Crea un literal numérico, nodo frecuente en las tablas de pruebas.
 func num(valor float64) Expr {
 	return &Literal{Value: valor}
 }
 
-// variable arma una referencia a una variable por su nombre.
+// Crea una referencia a una variable por su nombre.
 func variable(nombre string) Expr {
 	return &Variable{Name: tok(token.IDENTIFIER, nombre)}
 }
@@ -40,8 +39,7 @@ var casosDeExpresion = []struct {
 	{
 		nombre: "literal de cadena",
 		arbol:  &Literal{Value: "hola"},
-		// La cadena se representa entre comillas, para distinguirla de un
-		// identificador.
+		// La cadena se representa entre comillas para distinguirla de un identificador.
 		esperado: `"hola"`,
 	},
 	{

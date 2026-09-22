@@ -9,8 +9,7 @@ import (
 	"github.com/FelipeAscencio/angLOXg/internal/lox"
 )
 
-// ejecutar corre código Lox capturando toda la salida en un buffer, para poder
-// devolvérsela a JavaScript como un string.
+// Ejecuta código Lox y captura la salida para retornarla a JavaScript.
 func ejecutar(args []js.Value) string {
 	if len(args) == 0 {
 		return ""
@@ -22,23 +21,21 @@ func ejecutar(args []js.Value) string {
 	return buf.String()
 }
 
-// ejecutarDesdeEditor alimenta el panel del editor del playground.
+// Expone la ejecución para el panel del editor.
 func ejecutarDesdeEditor(this js.Value, args []js.Value) any {
 	return ejecutar(args)
 }
 
-// ejecutarDesdeRepl alimenta el panel del REPL del playground.
+// Expone la ejecución para el panel del REPL.
 func ejecutarDesdeRepl(this js.Value, args []js.Value) any {
 	return ejecutar(args)
 }
 
 func main() {
-	// Los nombres globales quedan en inglés porque son los que busca la página
-	// web en "web/app.js".
+	// Se exponen las funciones globales requeridas por la interfaz web.
 	js.Global().Set("runLox", js.FuncOf(ejecutarDesdeEditor))
 	js.Global().Set("evalLox", js.FuncOf(ejecutarDesdeRepl))
 
-	// Bloqueamos para siempre: si main termina, el runtime de Go se apaga y las
-	// funciones que acabamos de exponer dejan de existir.
+	// Bloquea el hilo principal para mantener activo el runtime de WebAssembly.
 	select {}
 }

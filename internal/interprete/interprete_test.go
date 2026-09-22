@@ -8,6 +8,7 @@ import (
 	"github.com/FelipeAscencio/angLOXg/internal/token"
 )
 
+// Verifica las reglas semánticas básicas del intérprete (valores de verdad e igualdad).
 func TestReglasSemanticasBasicas(t *testing.T) {
 	i := NuevoInterprete(&bytes.Buffer{})
 	if i.esVerdadero(nil) != false { t.Errorf("nil debe ser falso") }
@@ -25,6 +26,7 @@ func TestReglasSemanticasBasicas(t *testing.T) {
 	if i.checkNumerosOperandos(tk, 5.0, "5") == nil { t.Errorf("num, str es invalido") }
 }
 
+// Verifica la correcta evaluación de expresiones aritméticas, unarias y lógicas.
 func TestEvaluarExpresionesAritmeticasYLogicas(t *testing.T) {
 	i := NuevoInterprete(&bytes.Buffer{})
 	num := &sintaxis.Literal{Value: 10.0}
@@ -33,6 +35,7 @@ func TestEvaluarExpresionesAritmeticasYLogicas(t *testing.T) {
 	tkMinus := token.Token{Tipo: token.MINUS}
 	tkSlash := token.Token{Tipo: token.SLASH}
 	tkPercent := token.Token{Tipo: token.PERCENT}
+
 	if val, _ := i.Evaluar(&sintaxis.Unary{Operator: tkMinus, Right: num}); val != -10.0 {
 		t.Errorf("Unario falló")
 	}
@@ -61,6 +64,7 @@ func TestEvaluarExpresionesAritmeticasYLogicas(t *testing.T) {
 	if valOr != true { t.Errorf("OR cortocircuito falló") }
 }
 
+// Comprueba la ejecución de sentencias de impresión, declaraciones y control de flujo.
 func TestEjecutarSentenciasYControlDeFlujo(t *testing.T) {
 	var buf bytes.Buffer
 	i := NuevoInterprete(&buf)
@@ -74,10 +78,11 @@ func TestEjecutarSentenciasYControlDeFlujo(t *testing.T) {
 
 	i.Ejecutar(&sintaxis.While{
 		Condition: &sintaxis.Literal{Value: false},
-		Body: &sintaxis.Print{Value: &sintaxis.Literal{Value: "no"}},
+		Body:      &sintaxis.Print{Value: &sintaxis.Literal{Value: "no"}},
 	})
 }
 
+// Verifica la invocación de funciones, la aridad y el manejo de retornos.
 func TestLlamadasYRetornos(t *testing.T) {
 	i := NuevoInterprete(&bytes.Buffer{})
 	if _, err := i.Evaluar(&sintaxis.Call{Callee: &sintaxis.Literal{Value: 5.0}}); err == nil {
@@ -87,7 +92,7 @@ func TestLlamadasYRetornos(t *testing.T) {
 	varNode := &sintaxis.Variable{Name: token.Token{Lexema: "param"}}
 	i.ResolverLocal(varNode, 0)
 	fnNode := &sintaxis.Function{
-		Name: token.Token{Lexema: "testFn"},
+		Name:   token.Token{Lexema: "testFn"},
 		Params: []token.Token{{Lexema: "param"}},
 		Body: []sintaxis.Stmt{
 			&sintaxis.Return{Value: varNode},
@@ -106,6 +111,7 @@ func TestLlamadasYRetornos(t *testing.T) {
 	}
 }
 
+// Comprueba el almacenamiento de distancias locales resueltas estáticamente.
 func TestResolverLocalEIntreprete(t *testing.T) {
 	i := NuevoInterprete(&bytes.Buffer{})
 	expr := &sintaxis.Variable{Name: token.Token{Lexema: "z"}}
@@ -115,6 +121,7 @@ func TestResolverLocalEIntreprete(t *testing.T) {
 	}
 }
 
+// Evalúa la ejecución secuencial e interpretación de bloques condicionales If/Else.
 func TestInterpretarYFlujoDeControl(t *testing.T) {
 	var buf bytes.Buffer
 	i := NuevoInterprete(&buf)
@@ -142,6 +149,7 @@ func TestInterpretarYFlujoDeControl(t *testing.T) {
 	}
 }
 
+// Verifica que el valor nulo imprima su representación literal correcta.
 func TestImpresionDeNil(t *testing.T) {
 	var buf bytes.Buffer
 	i := NuevoInterprete(&buf)
@@ -151,6 +159,7 @@ func TestImpresionDeNil(t *testing.T) {
 	}
 }
 
+// Evalúa operaciones de comparación relacionales y expresiones agrupadas.
 func TestEvaluarComparacionesYAgrupaciones(t *testing.T) {
 	i := NuevoInterprete(&bytes.Buffer{})
 	num5 := &sintaxis.Literal{Value: 5.0}
@@ -187,6 +196,7 @@ func TestEvaluarComparacionesYAgrupaciones(t *testing.T) {
 	}
 }
 
+// Comprueba el comportamiento de operadores lógicos con evaluación en cortocircuito.
 func TestOperadoresLogicosCompletos(t *testing.T) {
 	i := NuevoInterprete(&bytes.Buffer{})
 	tTrue := &sintaxis.Literal{Value: true}
@@ -208,6 +218,7 @@ func TestOperadoresLogicosCompletos(t *testing.T) {
 	}
 }
 
+// Verifica que el intérprete rechace operaciones sobre variables no declaradas.
 func TestAsignacionYVariablesNoDeclaradas(t *testing.T) {
 	i := NuevoInterprete(&bytes.Buffer{})
 	asignarInvalido := &sintaxis.Assign{
@@ -225,6 +236,7 @@ func TestAsignacionYVariablesNoDeclaradas(t *testing.T) {
 	}
 }
 
+// Comprueba la propagación de errores durante la ejecución de sentencias.
 func TestPropagacionDeErroresEnEjecutar(t *testing.T) {
 	var buf bytes.Buffer
 	i := NuevoInterprete(&buf)
@@ -236,9 +248,8 @@ func TestPropagacionDeErroresEnEjecutar(t *testing.T) {
 		&sintaxis.If{Condition: exprMala, Then: &sintaxis.Block{}},
 		&sintaxis.While{Condition: exprMala, Body: &sintaxis.Block{}},
 		&sintaxis.While{
-			// Entra al bucle, pero falla evaluando el cuerpo
 			Condition: &sintaxis.Literal{Value: true}, 
-			Body: &sintaxis.ExpressionStmt{Expression: exprMala}, 
+			Body:      &sintaxis.ExpressionStmt{Expression: exprMala}, 
 		},
 		&sintaxis.Block{Statements: []sintaxis.Stmt{&sintaxis.ExpressionStmt{Expression: exprMala}}},
 		&sintaxis.Return{Value: exprMala},
@@ -251,6 +262,7 @@ func TestPropagacionDeErroresEnEjecutar(t *testing.T) {
 	}
 }
 
+// Comprueba la propagación de errores durante la evaluación de expresiones.
 func TestPropagacionDeErroresEnEvaluar(t *testing.T) {
 	i := NuevoInterprete(&bytes.Buffer{})
 	exprMala := &sintaxis.Variable{Name: token.Token{Lexema: "invalida"}}
@@ -272,10 +284,11 @@ func TestPropagacionDeErroresEnEvaluar(t *testing.T) {
 	}
 }
 
+// Verifica que los errores internos en el cuerpo de una función se propaguen adecuadamente.
 func TestErrorEnCuerpoDeFuncion(t *testing.T) {
 	i := NuevoInterprete(&bytes.Buffer{})
 	fnNode := &sintaxis.Function{
-		Name: token.Token{Lexema: "f"},
+		Name:   token.Token{Lexema: "f"},
 		Params: []token.Token{},
 		Body: []sintaxis.Stmt{
 			&sintaxis.ExpressionStmt{Expression: &sintaxis.Variable{Name: token.Token{Lexema: "noexiste"}}},

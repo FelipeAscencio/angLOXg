@@ -1,4 +1,4 @@
-/* Estilos del editor de scripts y la consola */
+/* Definición de variables globales de diseño (colores, fuentes y acentos) */
 :root {
     --bg-color: #18181b;
     --panel-bg: #27272a;
@@ -11,12 +11,14 @@
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
+/* Reset global para estandarizar márgenes, rellenos y modelo de caja */
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
 }
 
+/* Estilos base del cuerpo de la página */
 body {
     background-color: var(--bg-color);
     color: var(--text-color);
@@ -24,25 +26,29 @@ body {
     padding: 2rem;
 }
 
+/* Contenedor central principal del playground */
 .playground-container {
     max-width: 1200px;
     margin: 0 auto;
 }
 
+/* Cabecera general de la interfaz con centrado y separación */
 .playground-header {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     margin-bottom: 2rem;
     border-bottom: 1px solid var(--border-color);
-    padding-bottom: 1rem;
+    padding-bottom: 1.5rem;
 }
 
+/* Título principal de la interfaz */
 .playground-header h1 {
     font-size: 1.5rem;
     font-weight: 600;
 }
 
+/* Enlaces de navegación secundarios o de retorno */
 .back-link {
     color: var(--text-muted);
     text-decoration: none;
@@ -54,18 +60,21 @@ body {
     color: var(--accent-color);
 }
 
+/* Cuadrícula flexible de doble columna para los paneles del editor */
 .playground-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1.5rem;
 }
 
+/* Diseño adaptativo (responsive) para pantallas pequeñas o móviles */
 @media (max-width: 768px) {
     .playground-grid {
         grid-template-columns: 1fr;
     }
 }
 
+/* Panel contenedor genérico para bloques de código y consolas */
 .panel {
     background-color: var(--panel-bg);
     border: 1px solid var(--border-color);
@@ -75,6 +84,7 @@ body {
     overflow: hidden;
 }
 
+/* Cabecera superior interna de cada panel */
 .panel-header {
     background-color: rgba(0, 0, 0, 0.2);
     padding: 0.75rem 1rem;
@@ -86,6 +96,7 @@ body {
     align-items: center;
 }
 
+/* Área de texto interactiva para escribir el código Lox fuente */
 textarea#code-input {
     width: 100%;
     height: 350px;
@@ -99,6 +110,7 @@ textarea#code-input {
     outline: none;
 }
 
+/* Barra inferior de acciones (botones de ejecución y limpieza) */
 .panel-actions {
     padding: 0.75rem 1rem;
     background-color: rgba(0, 0, 0, 0.1);
@@ -107,6 +119,7 @@ textarea#code-input {
     gap: 0.5rem;
 }
 
+/* Botón de acción principal destacado */
 .btn-primary {
     background-color: var(--accent-color);
     color: white;
@@ -122,6 +135,7 @@ textarea#code-input {
     background-color: var(--accent-hover);
 }
 
+/* Botón de acción secundario o complementario */
 .btn-secondary {
     background-color: transparent;
     color: var(--text-muted);
@@ -138,11 +152,13 @@ textarea#code-input {
     color: var(--text-color);
 }
 
+/* Grupo compacto para alinear botones pequeños */
 .button-group-sm {
     display: flex;
     gap: 0.4rem;
 }
 
+/* Consola de salida de texto para los scripts ejecutados */
 .console-output {
     background-color: #121214;
     color: #4ade80;
@@ -155,6 +171,7 @@ textarea#code-input {
     word-break: break-all;
 }
 
+/* Contenedor de títulos de sección */
 .section-title {
     margin-bottom: 0.75rem;
 }
@@ -167,11 +184,12 @@ textarea#code-input {
     padding-left: 0.5rem;
 }
 
+/* Utilidad para expandir elementos a todo el ancho de la cuadrícula */
 .full-width {
     grid-column: 1 / -1;
 }
 
-/* Estilos de la Terminal REPL */
+/* Historial de la terminal interactiva REPL */
 .repl-history {
     background-color: #121214;
     color: var(--text-color);
@@ -185,6 +203,7 @@ textarea#code-input {
     gap: 0.4rem;
 }
 
+/* Línea individual dentro de la terminal REPL */
 .repl-line {
     white-space: pre-wrap;
     word-break: break-all;
@@ -202,10 +221,12 @@ textarea#code-input {
     color: var(--danger-color);
 }
 
+/* Clase de utilidad para textos atenuados */
 .text-muted {
     color: var(--text-muted);
 }
 
+/* Contenedor de la línea de entrada de comandos de la terminal */
 .repl-input-container {
     background-color: #18181b;
     border-top: 1px solid var(--border-color);
@@ -214,6 +235,7 @@ textarea#code-input {
     padding: 0.5rem 1rem;
 }
 
+/* Símbolo de indicador de prompt (>) en la terminal */
 .repl-prompt {
     font-family: var(--font-mono);
     color: var(--accent-color);
@@ -222,6 +244,7 @@ textarea#code-input {
     font-size: 1rem;
 }
 
+/* Campo de entrada de texto para la terminal interactiva */
 input#repl-input {
     width: 100%;
     background-color: transparent;
@@ -232,16 +255,7 @@ input#repl-input {
     outline: none;
 }
 
-/* Estilos del Banner */
-.playground-header {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 2rem;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 1.5rem;
-}
-
+/* Enlace contenedor del banner gráfico superior */
 .banner-link {
     display: block;
     width: 100%;
@@ -253,6 +267,7 @@ input#repl-input {
     opacity: 0.9;
 }
 
+/* Imagen responsiva del banner del proyecto */
 .responsive-banner {
     width: 100%;
     height: auto;

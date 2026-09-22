@@ -12,21 +12,16 @@ import (
 
 // Códigos de salida del programa.
 const (
-	salidaOK           = 0
-	salidaUso          = 64 // Error en la invocación del programa.
-	salidaErrorDeDatos = 65 // El código Lox tenía errores.
-	salidaSinArchivo   = 66 // No se pudo leer el script.
+	salidaOK            = 0
+	salidaUso           = 64
+	salidaErrorDeDatos  = 65
+	salidaSinArchivo    = 66
 )
 
 func main() {
-	modoEscaneo := flag.Bool("escaneo", false,
-		"mostrar los tokens producidos por el escáner en lugar de ejecutar el código")
-
-	modoArbol := flag.Bool("arbol", false,
-		"mostrar el árbol de sintaxis (AST) en lugar de ejecutar el código")
-		
-	modoResolucion := flag.Bool("resolucion", false,
-		"ejecutar hasta la fase de análisis semántico (Resolver) sin interpretar el código")
+	modoEscaneo := flag.Bool("escaneo", false, "mostrar tokens")
+	modoArbol := flag.Bool("arbol", false, "mostrar árbol de sintaxis (AST)")
+	modoResolucion := flag.Bool("resolucion", false, "ejecutar hasta análisis semántico (Resolver)")
 
 	flag.Usage = func() {
 		fmt.Fprintln(os.Stderr, "uso: angloxg [--escaneo | --arbol | --resolucion] [script.lox]")
@@ -49,6 +44,7 @@ func main() {
 	os.Exit(ejecutarConsola(*modoEscaneo, *modoArbol, *modoResolucion))
 }
 
+// Ejecuta un archivo de código fuente Lox.
 func ejecutarArchivo(ruta string, modoEscaneo, modoArbol, modoResolucion bool) int {
 	fuente, err := os.ReadFile(ruta)
 	if err != nil {
@@ -63,6 +59,7 @@ func ejecutarArchivo(ruta string, modoEscaneo, modoArbol, modoResolucion bool) i
 	return salidaOK
 }
 
+// Inicia la consola interactiva (REPL).
 func ejecutarConsola(modoEscaneo, modoArbol, modoResolucion bool) int {
 	fmt.Println("=== angLOXg ===")
 	fmt.Println("Intérprete de Lox escrito en Go")
@@ -85,6 +82,7 @@ func ejecutarConsola(modoEscaneo, modoArbol, modoResolucion bool) int {
 	return salidaOK
 }
 
+// Dirige la ejecución según el modo o flag seleccionada.
 func despachar(fuente string, salida io.Writer, modoEscaneo, modoArbol, modoResolucion bool) bool {
 	switch {
 	case modoEscaneo:

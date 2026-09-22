@@ -2,6 +2,7 @@ package parser
 
 import "testing"
 
+// Casos de prueba para operaciones de asignación.
 var casosAsignacion = []casoDePrograma{
 	{
 		nombre:   "asignación simple",
@@ -14,24 +15,23 @@ var casosAsignacion = []casoDePrograma{
 		esperado: []string{"(expr (= a (+ 1 2)))"},
 	},
 	{
-		nombre: "la asignación asocia a la derecha",
-		fuente: "a = b = 1;",
-		// Tiene que ser a = (b = 1): el valor de la asignación interna es lo
-		// que termina guardándose en "a".
+		nombre:   "la asignación asocia a la derecha",
+		fuente:   "a = b = 1;",
 		esperado: []string{"(expr (= a (= b 1)))"},
 	},
 	{
-		nombre:  "destino inválido",
-		fuente:  "1 = 2;",
-		errores: []string{"destino de asignación inválido"},
+		nombre:   "destino inválido",
+		fuente:   "1 = 2;",
+		errores:  []string{"destino de asignación inválido"},
 	},
 	{
-		nombre:  "destino inválido con una expresión",
-		fuente:  "a + b = 1;",
-		errores: []string{"destino de asignación inválido"},
+		nombre:   "destino inválido con una expresión",
+		fuente:   "a + b = 1;",
+		errores:  []string{"destino de asignación inválido"},
 	},
 }
 
+// Casos de prueba para operadores lógicos.
 var casosLogicos = []casoDePrograma{
 	{
 		nombre:   "disyunción",
@@ -44,9 +44,8 @@ var casosLogicos = []casoDePrograma{
 		esperado: []string{"(expr (and a b))"},
 	},
 	{
-		nombre: "la conjunción agrupa antes que la disyunción",
-		fuente: "a or b and c;",
-		// El "and" queda adentro: liga más fuerte que el "or".
+		nombre:   "la conjunción agrupa antes que la disyunción",
+		fuente:   "a or b and c;",
 		esperado: []string{"(expr (or a (and b c)))"},
 	},
 	{
@@ -66,6 +65,7 @@ var casosLogicos = []casoDePrograma{
 	},
 }
 
+// Casos de prueba para estructuras condicionales (if/else).
 var casosCondicionales = []casoDePrograma{
 	{
 		nombre:   "condicional sin rama falsa",
@@ -83,27 +83,24 @@ var casosCondicionales = []casoDePrograma{
 		esperado: []string{"(if a (block (print 1)) (block (print 2)))"},
 	},
 	{
-		nombre: "el else se pega al if más cercano",
-		fuente: "if (a) if (b) print 1; else print 2;",
-		// El else es del if interno: si fuera del externo, la representación
-		// tendría tres partes en el "si" de afuera.
+		nombre:   "el else se pega al if más cercano",
+		fuente:   "if (a) if (b) print 1; else print 2;",
 		esperado: []string{"(if a (if b (print 1) (print 2)))"},
 	},
 	{
-		nombre: "condicional sin paréntesis de apertura",
-		fuente: "if a) print 1;",
-		// Tras el error, el parseo retoma en la sentencia siguiente y la
-		// recupera entera: ése es el trabajo del sincronizador.
+		nombre:   "condicional sin paréntesis de apertura",
+		fuente:   "if a) print 1;",
 		errores:  []string{"se esperaba '(' después de 'if'"},
 		esperado: []string{"(print 1)"},
 	},
 	{
-		nombre:  "condicional sin paréntesis de cierre",
-		fuente:  "if (a print 1;",
-		errores: []string{"se esperaba ')'"},
+		nombre:   "condicional sin paréntesis de cierre",
+		fuente:   "if (a print 1;",
+		errores:  []string{"se esperaba ')'"},
 	},
 }
 
+// Casos de prueba para bucles (while y for).
 var casosBucles = []casoDePrograma{
 	{
 		nombre:   "bucle mientras",
@@ -122,17 +119,13 @@ var casosBucles = []casoDePrograma{
 		esperado: []string{"(print 1)"},
 	},
 	{
-		nombre: "bucle for sin ninguna de sus tres partes",
-		fuente: "for (;;) print 1;",
-		// Sin inicializador ni incremento no hace falta envolver nada: queda
-		// un mientras pelado con la condición en true.
+		nombre:   "bucle for sin ninguna de sus tres partes",
+		fuente:   "for (;;) print 1;",
 		esperado: []string{"(while true (print 1))"},
 	},
 	{
-		nombre: "bucle for completo",
-		fuente: "for (var i = 0; i < 10; i = i + 1) print i;",
-		// El inicializador queda antes del bucle, y el incremento al final del
-		// cuerpo. Es la traducción a mientras, hecha visible.
+		nombre:   "bucle for completo",
+		fuente:   "for (var i = 0; i < 10; i = i + 1) print i;",
 		esperado: []string{"(block (var i 0) (while (< i 10) (block (print i) (expr (= i (+ i 1))))))"},
 	},
 	{
@@ -148,8 +141,6 @@ var casosBucles = []casoDePrograma{
 	{
 		nombre: "bucle for sin paréntesis",
 		fuente: "for ;; print 1;",
-		// El punto y coma suelto que queda tras sincronizar tampoco es una
-		// sentencia válida, así que son dos errores distintos y reales.
 		errores: []string{
 			"se esperaba '(' después de 'for'",
 			"se esperaba una expresión",

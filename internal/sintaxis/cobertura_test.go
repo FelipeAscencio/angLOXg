@@ -5,9 +5,7 @@ import (
 	"testing"
 )
 
-// Una instancia de cada nodo de expresión que existe en el paquete.
-//
-// Si se agrega un nodo y no se lo suma acá, el test de abajo lo detecta.
+// Instancia de cada nodo de expresión existente en el paquete.
 var todasLasExpresiones = []Expr{
 	&Literal{},
 	&Grouping{Expression: &Literal{}},
@@ -19,7 +17,7 @@ var todasLasExpresiones = []Expr{
 	&Call{Callee: &Literal{}},
 }
 
-// Una instancia de cada nodo de sentencia que existe en el paquete.
+// Instancia de cada nodo de sentencia existente en el paquete.
 var todasLasSentencias = []Stmt{
 	&ExpressionStmt{Expression: &Literal{}},
 	&Print{Value: &Literal{}},
@@ -31,12 +29,7 @@ var todasLasSentencias = []Stmt{
 	&Return{},
 }
 
-// TestRepresentadorContemplaTodosLosNodos verifica que el representador sepa
-// qué hacer con cada tipo de nodo.
-//
-// Como el recorrido se hace con un "switch" de tipo, el compilador no avisa si
-// falta una rama: un nodo sin contemplar recién se notaría al ejecutarlo. Este
-// test adelanta ese momento.
+// Verifica que el representador soporte y contemple todos los tipos de nodos definidos.
 func TestRepresentadorContemplaTodosLosNodos(t *testing.T) {
 	for _, expresion := range todasLasExpresiones {
 		t.Run(fmt.Sprintf("%T", expresion), func(t *testing.T) {
@@ -63,11 +56,7 @@ func TestRepresentadorContemplaTodosLosNodos(t *testing.T) {
 	}
 }
 
-// TestListasDeNodosEstanCompletas verifica que las listas de arriba tengan
-// tantos nodos como tipos definidos en el paquete.
-//
-// Es la mitad que falta: sin esto, un nodo nuevo que nadie sume a las listas
-// pasaría el test anterior sin haberse probado nunca.
+// Verifica que las listas de nodos incluyan exactamente la cantidad de tipos definidos en el paquete.
 func TestListasDeNodosEstanCompletas(t *testing.T) {
 	const expresionesDefinidas = 8
 	const sentenciasDefinidas = 8

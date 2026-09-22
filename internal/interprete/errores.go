@@ -5,7 +5,7 @@ import (
 	"github.com/FelipeAscencio/angLOXg/internal/token"
 )
 
-// "ErrorRuntime" representa un error de ejecución en Lox.
+// Representa un error de ejecución en el intérprete de Lox.
 type ErrorRuntime struct {
 	Token   token.Token
 	Mensaje string

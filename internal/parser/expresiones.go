@@ -9,18 +9,13 @@ import (
 // la siguiente, de la precedencia más floja a la más fuerte:
 //
 //	assignment -> or -> and -> equality -> comparison
-//	           -> term -> factor -> unary -> call -> primary
+//	            -> term -> factor -> unary -> call -> primary
 //
 // El anidamiento es lo que hace que "1 + 2 * 3" agrupe la multiplicación
 // primero: cuando "term" va a buscar sus operandos, "factor" ya se llevó el
 // producto entero.
 
-// assignment reconoce "x = valor".
-//
-// El problema es que el lado izquierdo no se sabe que era un destino hasta
-// haber leído el "=", y para entonces ya se consumió. La salida es parsear
-// primero una expresión común y, si aparece el "=", revisar que lo que salió
-// haya sido una variable.
+// Reconoce expresiones de asignación ("x = valor").
 func (p *Parser) assignment() sintaxis.Expr {
 	destino := p.or()
 
@@ -43,18 +38,17 @@ func (p *Parser) assignment() sintaxis.Expr {
 	return nil
 }
 
-// or reconoce el operador "or".
+// Reconoce el operador lógico "or".
 func (p *Parser) or() sintaxis.Expr {
 	return p.logicalLeft(p.and, token.OR)
 }
 
-// and reconoce el operador "and".
+// Reconoce el operador lógico "and".
 func (p *Parser) and() sintaxis.Expr {
 	return p.logicalLeft(p.equality, token.AND)
 }
 
-// logicalLeft arma una cadena de operadores lógicos, agrupando de izquierda a
-// derecha. Es igual que binaryLeft, pero produce nodos Logical.
+// Arma una cadena de operadores lógicos, agrupando de izquierda a derecha.
 func (p *Parser) logicalLeft(siguiente func() sintaxis.Expr, operadores ...token.TipoDeToken) sintaxis.Expr {
 	expression := siguiente()
 
@@ -71,31 +65,28 @@ func (p *Parser) logicalLeft(siguiente func() sintaxis.Expr, operadores ...token
 	return expression
 }
 
-// equality reconoce "==" y "!=".
+// Reconoce operadores de igualdad ("==" y "!=").
 func (p *Parser) equality() sintaxis.Expr {
 	return p.binaryLeft(p.comparison, token.BANG_EQUAL, token.EQUAL_EQUAL)
 }
 
-// comparison reconoce ">", ">=", "<" y "<=".
+// Reconoce operadores de comparación (">", ">=", "<" y "<=").
 func (p *Parser) comparison() sintaxis.Expr {
 	return p.binaryLeft(p.term,
 		token.GREATER, token.GREATER_EQUAL, token.LESS, token.LESS_EQUAL)
 }
 
-// term reconoce la suma y la resta.
+// Reconoce operaciones de suma y resta.
 func (p *Parser) term() sintaxis.Expr {
 	return p.binaryLeft(p.factor, token.MINUS, token.PLUS)
 }
 
-// factor reconoce el producto, la división y el módulo.
+// Reconoce operaciones de multiplicación, división y módulo.
 func (p *Parser) factor() sintaxis.Expr {
 	return p.binaryLeft(p.unary, token.SLASH, token.STAR, token.PERCENT)
 }
 
-// unary reconoce "!" y "-" delante de una expresión.
-//
-// Se llama a sí misma, y no al siguiente nivel, para que "--1" se lea como la
-// negación de una negación.
+// Reconoce operadores unarios ("!" y "-") delante de una expresión.
 func (p *Parser) unary() sintaxis.Expr {
 	if p.match(token.BANG, token.MINUS) {
 		operador := p.previous()
@@ -106,11 +97,7 @@ func (p *Parser) unary() sintaxis.Expr {
 	return p.call()
 }
 
-// call reconoce una expresión seguida de cero o más listas de argumentos
-// entre paréntesis.
-//
-// El bucle es lo que permite encadenar: en "f()()", el destino de la segunda
-// llamada es el nodo que armó la primera.
+// Reconoce llamadas a funciones y encadenamiento de invocaciones.
 func (p *Parser) call() sintaxis.Expr {
 	expression := p.primary()
 
@@ -121,8 +108,7 @@ func (p *Parser) call() sintaxis.Expr {
 	return expression
 }
 
-// finishCall consume los argumentos y el paréntesis de cierre. Se llama
-// con el paréntesis de apertura ya consumido.
+// Consume los argumentos y el paréntesis de cierre de una llamada a función.
 func (p *Parser) finishCall(destino sintaxis.Expr) sintaxis.Expr {
 	argumentos := []sintaxis.Expr{}
 
@@ -145,12 +131,7 @@ func (p *Parser) finishCall(destino sintaxis.Expr) sintaxis.Expr {
 	}
 }
 
-// binaryLeft arma una cadena de operadores binarios del mismo nivel de
-// precedencia, agrupando de izquierda a derecha.
-//
-// El bucle es lo que da la asociatividad: cada vuelta mete el árbol acumulado
-// como operando izquierdo del operador nuevo, así "1 - 2 - 3" queda como
-// "(1 - 2) - 3" y no como "1 - (2 - 3)".
+// Arma una cadena de operadores binarios con asociatividad a la izquierda.
 func (p *Parser) binaryLeft(siguiente func() sintaxis.Expr, operadores ...token.TipoDeToken) sintaxis.Expr {
 	expression := siguiente()
 

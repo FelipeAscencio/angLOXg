@@ -2,8 +2,7 @@ package parser
 
 import "testing"
 
-// Operadores unarios: se aplican a un solo operando y se anidan hacia la
-// derecha.
+// Casos de prueba para operadores unarios.
 var casosUnarios = []casoDeParseo{
 	{
 		nombre:   "negación aritmética",
@@ -26,13 +25,13 @@ var casosUnarios = []casoDeParseo{
 		esperado: "(! (! false))",
 	},
 	{
-		nombre:  "unario sin operando",
-		fuente:  "-",
-		errores: []string{"se esperaba una expresión"},
+		nombre:   "unario sin operando",
+		fuente:   "-",
+		errores:  []string{"se esperaba una expresión"},
 	},
 }
 
-// Operadores binarios: la precedencia decide quién se agrupa primero.
+// Casos de prueba para precedencia de operadores binarios y unarios.
 var casosPrecedencia = []casoDeParseo{
 	{
 		nombre:   "producto",
@@ -50,10 +49,8 @@ var casosPrecedencia = []casoDeParseo{
 		esperado: "(% 10 3)",
 	},
 	{
-		nombre: "el producto agrupa antes que la suma",
-		fuente: "1 + 2 * 3",
-		// La multiplicación queda adentro: es la prueba de que hay precedencia
-		// y no una lectura de izquierda a derecha.
+		nombre:   "el producto agrupa antes que la suma",
+		fuente:   "1 + 2 * 3",
 		esperado: "(+ 1 (* 2 3))",
 	},
 	{
@@ -103,13 +100,11 @@ var casosPrecedencia = []casoDeParseo{
 	},
 }
 
-// Asociatividad: los binarios de la misma precedencia se agrupan de izquierda a
-// derecha.
+// Casos de prueba para asociatividad de operadores.
 var casosAsociatividad = []casoDeParseo{
 	{
-		nombre: "la resta asocia a la izquierda",
-		fuente: "1 - 2 - 3",
-		// Tiene que ser (1-2)-3 y no 1-(2-3), que daría otro resultado.
+		nombre:   "la resta asocia a la izquierda",
+		fuente:   "1 - 2 - 3",
 		esperado: "(- (- 1 2) 3)",
 	},
 	{
@@ -128,14 +123,14 @@ var casosAsociatividad = []casoDeParseo{
 		esperado: "(== (== 1 2) 3)",
 	},
 	{
-		nombre:  "binario sin operando derecho",
-		fuente:  "1 +",
-		errores: []string{"se esperaba una expresión"},
+		nombre:   "binario sin operando derecho",
+		fuente:   "1 +",
+		errores:  []string{"se esperaba una expresión"},
 	},
 	{
-		nombre:  "binario sin operando izquierdo",
-		fuente:  "* 1",
-		errores: []string{"se esperaba una expresión"},
+		nombre:   "binario sin operando izquierdo",
+		fuente:   "* 1",
+		errores:  []string{"se esperaba una expresión"},
 	},
 }
 

@@ -8,9 +8,9 @@ import (
 	"github.com/FelipeAscencio/angLOXg/internal/token"
 )
 
-// ====================
-// Funciones y closures
-// ====================
+// =====================
+// Funciones y closures.
+// =====================
 
 type LoxCallable interface {
 	Aridad() int
@@ -48,15 +48,15 @@ func (v *ValorRetorno) Error() string {
 	return "retorno"
 }
 
-// ==========
-// Intérprete
-// ==========
+// ===========
+// Intérprete.
+// ===========
 
 type Interprete struct {
-	Salida  io.Writer
-	entorno *Entorno
+	Salida   io.Writer
+	entorno  *Entorno
 	globales *Entorno
-	locales map[sintaxis.Expr]int
+	locales  map[sintaxis.Expr]int
 }
 
 func NuevoInterprete(salida io.Writer) *Interprete {
@@ -69,12 +69,12 @@ func NuevoInterprete(salida io.Writer) *Interprete {
 	}
 }
 
-// ResolverLocal es llamado por el Analizador Semántico para guardar la distancia de una variable.
+// Guarda la distancia estática de una variable resuelta localmente.
 func (i *Interprete) ResolverLocal(expr sintaxis.Expr, profundidad int) {
 	i.locales[expr] = profundidad
 }
 
-// buscarVariable usa la distancia estática si existe.
+// Busca una variable utilizando la distancia estática o recurriendo al ámbito global.
 func (i *Interprete) buscarVariable(nombre token.Token, expr sintaxis.Expr) (any, error) {
 	if distancia, ok := i.locales[expr]; ok {
 		return i.entorno.ObtenerEn(distancia, nombre.Lexema), nil
@@ -83,7 +83,7 @@ func (i *Interprete) buscarVariable(nombre token.Token, expr sintaxis.Expr) (any
 	return i.globales.Obtener(nombre)
 }
 
-// Interpretar recorre las sentencias y devuelve el primer error de runtime que encuentre.
+// Recorre secuencialmente una lista de sentencias.
 func (i *Interprete) Interpretar(sentencias []sintaxis.Stmt) error {
 	for _, sentencia := range sentencias {
 		if err := i.Ejecutar(sentencia); err != nil {
@@ -93,13 +93,15 @@ func (i *Interprete) Interpretar(sentencias []sintaxis.Stmt) error {
 	return nil
 }
 
-// Ejecutar procesa una sentencia usando un switch de tipo.
+// Procesa una sentencia evaluando su tipo mediante un switch.
 func (i *Interprete) Ejecutar(stmt sintaxis.Stmt) error {
 	switch s := stmt.(type) {
+	// Sentencia de expresión simple.
 	case *sintaxis.ExpressionStmt:
 		_, err := i.Evaluar(s.Expression)
 		return err
 
+	// Sentencia print para mostrar valores por pantalla.
 	case *sintaxis.Print:
 		valor, err := i.Evaluar(s.Value)
 		if err != nil {
@@ -114,6 +116,7 @@ func (i *Interprete) Ejecutar(stmt sintaxis.Stmt) error {
 
 		return nil
 
+	// Declaración de variable con inicializador opcional.
 	case *sintaxis.Var:
 		var valor any
 		var err error
@@ -127,9 +130,11 @@ func (i *Interprete) Ejecutar(stmt sintaxis.Stmt) error {
 		i.entorno.Definir(s.Name.Lexema, valor)
 		return nil
 
+	// Bloque de código con su propio ámbito local.
 	case *sintaxis.Block:
 		return i.ejecutarBloque(s.Statements, NuevoEntorno(i.entorno))
 
+	// Estructura condicional If-Else.
 	case *sintaxis.If:
 		condicion, err := i.Evaluar(s.Condition)
 		if err != nil {
@@ -144,6 +149,7 @@ func (i *Interprete) Ejecutar(stmt sintaxis.Stmt) error {
 
 		return nil
 
+	// Bucle iterativo While.
 	case *sintaxis.While:
 		for {
 			condicion, err := i.Evaluar(s.Condition)
@@ -162,6 +168,7 @@ func (i *Interprete) Ejecutar(stmt sintaxis.Stmt) error {
 
 		return nil
 
+	// Declaración de funciones con cierre léxico.
 	case *sintaxis.Function:
 		funcion := &LoxFunction{
 			Declaracion: s,
@@ -171,6 +178,7 @@ func (i *Interprete) Ejecutar(stmt sintaxis.Stmt) error {
 		i.entorno.Definir(s.Name.Lexema, funcion)
 		return nil
 
+	// Retorno de valor desde una función.
 	case *sintaxis.Return:
 		var valor any
 		var err error
@@ -187,7 +195,7 @@ func (i *Interprete) Ejecutar(stmt sintaxis.Stmt) error {
 	return nil
 }
 
-// ejecutarBloque ejecuta una lista de sentencias bajo un entorno específico (scope local).
+// Ejecuta un bloque de código bajo un entorno local aislado.
 func (i *Interprete) ejecutarBloque(sentencias []sintaxis.Stmt, entornoLocal *Entorno) error {
 	entornoAnterior := i.entorno
 	defer func() {
@@ -204,15 +212,18 @@ func (i *Interprete) ejecutarBloque(sentencias []sintaxis.Stmt, entornoLocal *En
 	return nil
 }
 
-// Evaluar procesa una expresión usando un switch de tipo y devuelve su valor resultante.
+// Evalúa una expresión determinando su valor de retorno o posibles errores.
 func (i *Interprete) Evaluar(expr sintaxis.Expr) (any, error) {
 	switch e := expr.(type) {
+	// Literales primitivos.
 	case *sintaxis.Literal:
 		return e.Value, nil
 
+	// Expresiones agrupadas entre paréntesis.
 	case *sintaxis.Grouping:
 		return i.Evaluar(e.Expression)
 
+	// Operadores unarios.
 	case *sintaxis.Unary:
 		derecha, err := i.Evaluar(e.Right)
 		if err != nil {
@@ -229,6 +240,7 @@ func (i *Interprete) Evaluar(expr sintaxis.Expr) (any, error) {
 			return -derecha.(float64), nil
 		}
 
+	// Operadores binarios aritméticos, relacionales y de igualdad.
 	case *sintaxis.Binary:
 		izquierda, err := i.Evaluar(e.Left)
 		if err != nil {
@@ -309,9 +321,11 @@ func (i *Interprete) Evaluar(expr sintaxis.Expr) (any, error) {
 			return float64(int64(izq) % int64(der)), nil
 		}
 
+	// Referencia a variables locales o globales.
 	case *sintaxis.Variable:
 		return i.buscarVariable(e.Name, e)
 
+	// Asignación de valores a variables existentes.
 	case *sintaxis.Assign:
 		valor, err := i.Evaluar(e.Value)
 		if err != nil {
@@ -327,6 +341,7 @@ func (i *Interprete) Evaluar(expr sintaxis.Expr) (any, error) {
 		}
 		return valor, nil
 
+	// Operadores lógicos.
 	case *sintaxis.Logical:
 		izquierda, err := i.Evaluar(e.Left)
 		if err != nil {
@@ -346,6 +361,7 @@ func (i *Interprete) Evaluar(expr sintaxis.Expr) (any, error) {
 
 		return i.Evaluar(e.Right)
 
+	// Invocación de funciones ejecutables.
 	case *sintaxis.Call:
 		callee, err := i.Evaluar(e.Callee)
 		if err != nil {
@@ -377,9 +393,9 @@ func (i *Interprete) Evaluar(expr sintaxis.Expr) (any, error) {
 	return nil, nil
 }
 
-// ========================
-// Reglas semánticas de Lox
-// ========================
+// =========================
+// Reglas semánticas de Lox.
+// =========================
 
 func (i *Interprete) esVerdadero(objeto any) bool {
 	if objeto == nil {

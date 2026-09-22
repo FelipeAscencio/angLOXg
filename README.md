@@ -8,7 +8,7 @@ Esta implementación sigue los conceptos y la arquitectura del libro *Crafting I
 
 **Enlaces rápidos**
 
-* 📖 [ Documentación oficial](https://FelipeAscencio.github.io/angLOXg/)
+* 📖 [Documentación oficial](https://FelipeAscencio.github.io/angLOXg/)
 * ▶️ [Playground web interactivo](https://FelipeAscencio.github.io/angLOXg/web/)
 
 ## Prerrequisitos e instalación
@@ -156,7 +156,7 @@ Contiene todos los submódulos lógicos que implementan el intérprete de Lox en
 
 ### `tests/` (Pruebras de la cátedra y de rendimiento)
 
-Agrupa tanto los scripts oficiales provistos por la materia (`.lox`) para validar el comportamiento integral del intérprete. Como los tests desarrollados para realizar mediciones de rendimiento contra implementaciones de terceros.
+Agrupa tanto los scripts oficiales provistos por la materia (`.lox`) para validar el comportamiento integral del intérprete. Como los tests desarrollados para realizar mediciones de rendimiento contra implementaciones de terceros e implementaciones de casos de uso reales del lenguaje (Tanto la implementación como la justificación de estos mismos se encuentran dentro del directorio `tests/casos_de_uso`).
 
 ### `web/` (Playground web e interfaz)
 

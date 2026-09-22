@@ -2,6 +2,7 @@ package parser
 
 import "testing"
 
+// Casos de prueba para sentencias generales del lenguaje (print, variables, bloques).
 var casosSentencias = []casoDePrograma{
 	{
 		nombre:   "impresión",
@@ -59,24 +60,24 @@ var casosSentencias = []casoDePrograma{
 		esperado: []string{"(block (block (var x 1)))"},
 	},
 	{
-		nombre:  "falta el punto y coma",
-		fuente:  "print 1",
-		errores: []string{"se esperaba ';'"},
+		nombre:   "falta el punto y coma",
+		fuente:   "print 1",
+		errores:  []string{"se esperaba ';'"},
 	},
 	{
-		nombre:  "falta el punto y coma de una declaración",
-		fuente:  "var x = 1",
-		errores: []string{"se esperaba ';'"},
+		nombre:   "falta el punto y coma de una declaración",
+		fuente:   "var x = 1",
+		errores:  []string{"se esperaba ';'"},
 	},
 	{
-		nombre:  "declaración sin nombre",
-		fuente:  "var = 1;",
-		errores: []string{"se esperaba el nombre de la variable"},
+		nombre:   "declaración sin nombre",
+		fuente:   "var = 1;",
+		errores:  []string{"se esperaba el nombre de la variable"},
 	},
 	{
-		nombre:  "bloque sin cerrar",
-		fuente:  "{ print 1;",
-		errores: []string{"se esperaba '}'"},
+		nombre:   "bloque sin cerrar",
+		fuente:   "{ print 1;",
+		errores:  []string{"se esperaba '}'"},
 	},
 }
 

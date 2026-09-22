@@ -2,8 +2,7 @@ package parser
 
 import "testing"
 
-// El parser no corta en el primer error: lo anota, descarta lo que quedó a
-// medio leer y retoma en la sentencia siguiente.
+// Casos de prueba para verificar la sincronización y recuperación de errores sintácticos.
 var casosSincronizacion = []casoDePrograma{
 	{
 		nombre: "una sentencia rota no se lleva a las sanas",
@@ -16,8 +15,6 @@ var casosSincronizacion = []casoDePrograma{
 	{
 		nombre: "varios errores en una sola pasada",
 		fuente: "var = 1;\nprint 2;\nvar = 3;\nprint 4;",
-		// Los dos errores se reportan juntos: no hace falta corregir uno,
-		// volver a compilar y descubrir el otro.
 		errores: []string{
 			"se esperaba el nombre de la variable",
 			"se esperaba el nombre de la variable",
@@ -35,9 +32,6 @@ var casosSincronizacion = []casoDePrograma{
 	{
 		nombre: "un error dentro de un bloque pierde el bloque, no su contenido",
 		fuente: "{ var = 1; print 2; }\nprint 3;",
-		// La recuperación pasa por la declaración de nivel superior, así que
-		// se pierde el bloque como tal: lo que tenía adentro queda suelto
-		// arriba y la llave de cierre, ya huérfana, da un segundo error.
 		errores: []string{
 			"se esperaba el nombre de la variable",
 			"se esperaba una expresión",

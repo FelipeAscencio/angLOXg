@@ -11,6 +11,7 @@ import (
 	"github.com/FelipeAscencio/angLOXg/internal/token"
 )
 
+// Verifica que el analizador semántico detecte el uso de una variable en su propio inicializador.
 func TestErrorInicializadorPropio(t *testing.T) {
 	intp := interprete.NuevoInterprete(&bytes.Buffer{})
 	res := semantica.Nuevo(intp)
@@ -29,6 +30,7 @@ func TestErrorInicializadorPropio(t *testing.T) {
 	}
 }
 
+// Comprueba la correcta resolución de variables globales y ámbitos vacíos sin errores.
 func TestResolucionGlobalYAmbitoVacio(t *testing.T) {
 	intp := interprete.NuevoInterprete(&bytes.Buffer{})
 	res := semantica.Nuevo(intp)
@@ -48,6 +50,7 @@ func TestResolucionGlobalYAmbitoVacio(t *testing.T) {
 	}
 }
 
+// Verifica la correcta propagación de errores semánticos a través de diferentes sentencias contenedorizadas.
 func TestPropagacionDeErroresEnResolver(t *testing.T) {
 	intp := interprete.NuevoInterprete(&bytes.Buffer{})
 	tkX := token.Token{Lexema: "x", Linea: 1}
@@ -77,6 +80,7 @@ func TestPropagacionDeErroresEnResolver(t *testing.T) {
 	}
 }
 
+// Comprueba que la resolución de expresiones variadas válidas no genere errores.
 func TestResolucionExpresionesVariadas(t *testing.T) {
 	intp := interprete.NuevoInterprete(&bytes.Buffer{})
 	res := semantica.Nuevo(intp)
@@ -98,6 +102,7 @@ func TestResolucionExpresionesVariadas(t *testing.T) {
 	}
 }
 
+// Verifica la detección de errores semánticos dentro de condiciones de estructuras de control (if, while).
 func TestErrorEnCondicionesDeControl(t *testing.T) {
 	intp := interprete.NuevoInterprete(&bytes.Buffer{})
 	tkX := token.Token{Lexema: "x", Linea: 1}
@@ -127,6 +132,7 @@ func TestErrorEnCondicionesDeControl(t *testing.T) {
 	}
 }
 
+// Comprueba errores semánticos en cuerpos de funciones e invocaciones de llamadas.
 func TestErroresEnFuncionesYLlamadas(t *testing.T) {
 	intp := interprete.NuevoInterprete(&bytes.Buffer{})
 	tkX := token.Token{Lexema: "x", Linea: 1}
@@ -158,6 +164,7 @@ func TestErroresEnFuncionesYLlamadas(t *testing.T) {
 	}
 }
 
+// Verifica la propagación de errores semánticos en expresiones complejas anidadas.
 func TestPropagacionDeErroresEnExpresionesComplejas(t *testing.T) {
 	intp := interprete.NuevoInterprete(&bytes.Buffer{})
 	tkX := token.Token{Lexema: "x", Linea: 1}
@@ -170,7 +177,7 @@ func TestPropagacionDeErroresEnExpresionesComplejas(t *testing.T) {
 	lit := &sintaxis.Literal{Value: 1.0}
 	casosExpr := []sintaxis.Expr{
 		&sintaxis.Binary{Left: lit, Operator: token.Token{Tipo: token.PLUS}, Right: exprMala},
-		&sintaxis.Logical{Left: lit, Operator: token.Token{Tipo: token.AND}, Right: exprMala},
+		&sintaxis.Logical{Left: lit, Operator: token.Token{Tipo: token.AND}, Right: exprMalo},
 		&sintaxis.Unary{Operator: token.Token{Tipo: token.MINUS}, Right: exprMala},
 		&sintaxis.Grouping{Expression: exprMala},
 	}

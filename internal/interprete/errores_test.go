@@ -7,6 +7,7 @@ import (
 	"github.com/FelipeAscencio/angLOXg/internal/token"
 )
 
+// Verifica la correcta generación de mensajes y formato para errores de ejecución.
 func TestErrorRuntime(t *testing.T) {
 	tk := token.Token{Lexema: "+", Linea: 10}
 	err := NewErrorRuntime(tk, "Prueba de error de ejecución")
@@ -20,6 +21,7 @@ func TestErrorRuntime(t *testing.T) {
 	}
 }
 
+// Verifica el comportamiento y valor estático del control de retorno de funciones.
 func TestValorRetorno(t *testing.T) {
 	ret := &ValorRetorno{Valor: "test"}
 	if ret.Error() != "retorno" {

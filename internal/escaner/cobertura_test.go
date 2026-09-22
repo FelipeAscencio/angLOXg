@@ -6,8 +6,7 @@ import (
 	"github.com/FelipeAscencio/angLOXg/internal/token"
 )
 
-// Todas las tablas de pruebas del paquete. Si se agrega una nueva, hay que
-// sumarla acá para que entre en el chequeo de cobertura.
+// Tablas de prueba del escáner para verificación de cobertura.
 var todasLasTablas = [][]casoDeEscaneo{
 	casosUnCaracter,
 	casosDosCaracteres,
@@ -19,13 +18,9 @@ var todasLasTablas = [][]casoDeEscaneo{
 	casosPrograma,
 }
 
-// TestCoberturaDeTiposDeToken verifica que no quede ninguna categoría léxica sin
-// al menos un caso de prueba que la produzca.
+// Verifica que todas las categorías léxicas tengan al menos un caso de prueba asociado.
 func TestCoberturaDeTiposDeToken(t *testing.T) {
 	cubiertos := make(map[token.TipoDeToken]bool)
-
-	// El EOF no aparece en ninguna tabla porque "verificarTokens" lo chequea en
-	// todos los casos, sin necesidad de declararlo.
 	cubiertos[token.EOF] = true
 
 	for _, suite := range todasLasTablas {
