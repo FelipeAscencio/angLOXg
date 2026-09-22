@@ -122,6 +122,44 @@ gotestsum -- -cover ./internal/... ./tests/...
 
 ```
 
-## Distribución de Archivos y Estructura del Repositorio
+## Distribución de componentes y estructura del repositorio
 
-X.
+El proyecto se organiza en grandes bloques funcionales que separan la interfaz, la lógica del compilador/intérprete, la documentación y las pruebas:
+
+### `.github/workflows` (Configuración y automatización)
+
+* **GitHub Actions:** Automatiza las tareas de integración continua y el despliegue de los sitios web.
+
+### `cmd/` (Puntos de entrada)
+
+Contiene los ejecutables de la aplicación:
+
+* **angLOXg:** El punto de entrada principal de la implementación que gestiona la consola interactiva (REPL) y la ejecución de scripts `.lox` mediante la terminal (CLI).
+* **wasm (WebAssembly):** El adaptador necesario para compilar el motor de Go y permitir que corra directamente en navegadores web.
+
+### `data/images` (Recursos)
+
+* **Data:** Almacena recursos gráficos del repositorio.
+
+### `docs/` (Documentación Oficial)
+
+Contiene todo el sitio web de documentación detallada (Implementado con JustTheDocs).
+
+### `internal/` (Núcleo de implementación)
+
+Contiene todos los submódulos lógicos que implementan el intérprete de Lox en Go.
+* **Token y escáner:** Se encargan del análisis léxico, dividiendo el texto plano en unidades mínimas (*tokens*) y reconociendo palabras reservadas.
+* **Sintaxis y parser:** Definen las estructuras de datos del Árbol de Sintaxis Abstracta (AST) y procesan los tokens para armar las reglas gramaticales y de precedencia.
+* **Semántica (Resolver):** Realiza el análisis estático de variables y ámbitos (*scopes*) antes de ejecutar.
+* **Intérprete y entorno:** Ejecutan el árbol de sintaxis (*tree-walk interpreter*), manejando los entornos de memoria  y llamadas a funciones.
+* **Lox (Coordinador):** Une y administra todas las fases anteriores junto con la gestión centralizada de errores.
+
+### `tests/` (Pruebras de la cátedra y de rendimiento)
+
+Agrupa tanto los scripts oficiales provistos por la materia (`.lox`) para validar el comportamiento integral del intérprete. Como los tests desarrollados para realizar mediciones de rendimiento contra implementaciones de terceros.
+
+### `web/` (Playground web e interfaz)
+
+Aloja los recursos estáticos y lógicos de la interfaz visual interactiva.
+
+Permite a los usuarios escribir y probar código Lox directamente desde la web utilizando la potencia del motor compilado a WebAssembly.
