@@ -1,0 +1,21 @@
+print "Iniciando benchmark de resolución de entornos anidados...";
+
+var a = 1;
+var suma = 0;
+
+for (var i = 0; i < 100000; i = i + 1) {
+    var b = 2;
+    {
+        var c = 3;
+        {
+            var d = 4;
+            {
+                var e = 5;
+                suma = suma + a + b + c + d + e;
+            }
+        }
+    }
+}
+
+print "Resolución de scopes finalizada. Suma:";
+print suma;

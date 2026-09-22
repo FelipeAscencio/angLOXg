@@ -1,0 +1,18 @@
+print "Iniciando benchmark de instanciación de closures...";
+
+var suma = 0;
+
+fun crearClosure(x) {
+    fun closure() {
+        return x * 2;
+    }
+    return closure;
+}
+
+for (var i = 0; i < 50000; i = i + 1) {
+    var c = crearClosure(i);
+    suma = suma + c();
+}
+
+print "Closures evaluados. Resultado:";
+print suma;

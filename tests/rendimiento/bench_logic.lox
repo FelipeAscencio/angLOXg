@@ -1,0 +1,13 @@
+print "Iniciando benchmark de saltos lógicos (Short-circuit)...";
+
+var contador = 0;
+for (var i = 0; i < 500000; i = i + 1) {
+    if ((i < 100000 or i > 400000) and (i != 250000)) {
+        contador = contador + 1;
+    } else {
+        contador = contador - 1;
+    }
+}
+
+print "Lógica finalizada. Contador resultante:";
+print contador;

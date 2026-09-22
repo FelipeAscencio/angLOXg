@@ -1,0 +1,10 @@
+print "Iniciando benchmark de recorrido del AST (Matemática compleja)...";
+
+var resultado = 0;
+for (var i = 1; i < 100000; i = i + 1) {
+    // Expresión densa para estresar el patrón Visitor
+    resultado = resultado + ((i * 2.0) - (i / 2.0)) + (i * 0.5) - (-1.0);
+}
+
+print "Matemática finalizada. Resultado:";
+print resultado;

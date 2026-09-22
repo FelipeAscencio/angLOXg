@@ -1,0 +1,12 @@
+print "Iniciando benchmark de bucle pesado...";
+
+var inicio = 0;
+var limite = 1000000;
+var suma = 0;
+
+for (var i = inicio; i < limite; i = i + 1) {
+    suma = suma + i;
+}
+
+print "Bucle finalizado. Resultado:";
+print suma;

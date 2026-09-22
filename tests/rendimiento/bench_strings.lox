@@ -1,0 +1,11 @@
+print "Iniciando benchmark de strings (Asignación y GC)...";
+
+var texto = "";
+var iteraciones = 20000;
+
+for (var i = 0; i < iteraciones; i = i + 1) {
+    // Al ser inmutables, cada iteración crea un string nuevo en memoria
+    texto = texto + "a";
+}
+
+print "Concatenación finalizada exitosamente.";
