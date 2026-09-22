@@ -177,7 +177,7 @@ func TestPropagacionDeErroresEnExpresionesComplejas(t *testing.T) {
 	lit := &sintaxis.Literal{Value: 1.0}
 	casosExpr := []sintaxis.Expr{
 		&sintaxis.Binary{Left: lit, Operator: token.Token{Tipo: token.PLUS}, Right: exprMala},
-		&sintaxis.Logical{Left: lit, Operator: token.Token{Tipo: token.AND}, Right: exprMalo},
+		&sintaxis.Logical{Left: lit, Operator: token.Token{Tipo: token.AND}, Right: exprMala},
 		&sintaxis.Unary{Operator: token.Token{Tipo: token.MINUS}, Right: exprMala},
 		&sintaxis.Grouping{Expression: exprMala},
 	}
