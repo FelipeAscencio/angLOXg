@@ -1,130 +1,156 @@
 package interprete
 
 import (
+	"fmt"
+	"io"
+
 	"github.com/FelipeAscencio/angLOXg/internal/sintaxis"
 	"github.com/FelipeAscencio/angLOXg/internal/token"
 )
 
-type Interprete struct{}
+// ========================
+// Intérprete Principal
+// ========================
 
-func NuevoInterprete() *Interprete {
-	return &Interprete{}
+type Interprete struct {
+	Salida io.Writer
 }
 
-// Punto de entrada para procesar una expresión.
-func (i *Interprete) Evaluar(expr sintaxis.Expresion) (any, error) {
-	return expr.Aceptar(i)
+func NuevoInterprete(salida io.Writer) *Interprete {
+	return &Interprete{
+		Salida: salida,
+	}
 }
 
-// ===================================
-// Implementación del VisitorExpresion
-// ===================================
-
-func (i *Interprete) VisitarLiteral(expr *sintaxis.Literal) (any, error) {
-	return expr.Valor, nil
+// Interpretar recorre las sentencias y devuelve el primer error de runtime que encuentre.
+func (i *Interprete) Interpretar(sentencias []sintaxis.Stmt) error {
+	for _, sentencia := range sentencias {
+		if err := i.Ejecutar(sentencia); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
-func (i *Interprete) VisitarAgrupacion(expr *sintaxis.Agrupacion) (any, error) {
-	return i.Evaluar(expr.Expresion)
-}
+// Ejecutar procesa una sentencia usando un switch de tipo.
+func (i *Interprete) Ejecutar(stmt sintaxis.Stmt) error {
+	switch s := stmt.(type) {
+	case *sintaxis.ExpressionStmt:
+		_, err := i.Evaluar(s.Expression)
+		return err
 
-func (i *Interprete) VisitarUnaria(expr *sintaxis.Unaria) (any, error) {
-	derecha, err := i.Evaluar(expr.Derecha)
-	if err != nil {
-		return nil, err
+	case *sintaxis.Print:
+		valor, err := i.Evaluar(s.Value)
+		if err != nil {
+			return err
+		}
+
+		if valor == nil {
+			fmt.Fprintln(i.Salida, "nil")
+		} else {
+			fmt.Fprintln(i.Salida, valor)
+		}
+
+		return nil
 	}
 
-	switch expr.Operador.Tipo {
-	case token.BANG:
-		return !i.esVerdadero(derecha), nil
-	case token.MENOS:
-		if err := i.checkNumeroOperando(expr.Operador, derecha); err != nil {
-			return nil, err
-		}
-
-		return -derecha.(float64), nil
-	}
-
-	return nil, nil
+	return nil
 }
 
-// Evaluación post-order: Evaluamos hijos de izquierda a derecha.
-func (i *Interprete) VisitarBinaria(expr *sintaxis.Binaria) (any, error) {
-	izquierda, err := i.Evaluar(expr.Izquierda)
-	if err != nil {
-		return nil, err
-	}
+// Evaluar procesa una expresión usando un switch de tipo y devuelve su valor resultante.
+func (i *Interprete) Evaluar(expr sintaxis.Expr) (any, error) {
+	switch e := expr.(type) {
+	case *sintaxis.Literal:
+		return e.Value, nil
 
-	derecha, err := i.Evaluar(expr.Derecha)
-	if err != nil {
-		return nil, err
-	}
+	case *sintaxis.Grouping:
+		return i.Evaluar(e.Expression)
 
-	switch expr.Operador.Tipo {
-	case token.MAYOR:
-		if err := i.checkNumerosOperandos(expr.Operador, izquierda, derecha); err != nil {
+	case *sintaxis.Unary:
+		derecha, err := i.Evaluar(e.Right)
+		if err != nil {
 			return nil, err
 		}
 
-		return izquierda.(float64) > derecha.(float64), nil
-	case token.MAYOR_IGUAL:
-		if err := i.checkNumerosOperandos(expr.Operador, izquierda, derecha); err != nil {
-			return nil, err
-		}
-
-		return izquierda.(float64) >= derecha.(float64), nil
-	case token.MENOR:
-		if err := i.checkNumerosOperandos(expr.Operador, izquierda, derecha); err != nil {
-			return nil, err
-		}
-
-		return izquierda.(float64) < derecha.(float64), nil
-	case token.MENOR_IGUAL:
-		if err := i.checkNumerosOperandos(expr.Operador, izquierda, derecha); err != nil {
-			return nil, err
-		}
-
-		return izquierda.(float64) <= derecha.(float64), nil
-	case token.MENOS:
-		if err := i.checkNumerosOperandos(expr.Operador, izquierda, derecha); err != nil {
-			return nil, err
-		}
-
-		return izquierda.(float64) - derecha.(float64), nil
-	case token.SLASH:
-		if err := i.checkNumerosOperandos(expr.Operador, izquierda, derecha); err != nil {
-			return nil, err
-		}
-
-		if derecha.(float64) == 0 {
-			return nil, NewErrorRuntime(expr.Operador, "División por cero.")
-		}
-
-		return izquierda.(float64) / derecha.(float64), nil
-	case token.ESTRELLA:
-		if err := i.checkNumerosOperandos(expr.Operador, izquierda, derecha); err != nil {
-			return nil, err
-		}
-
-		return izquierda.(float64) * derecha.(float64), nil
-	case token.SUMA:
-		if izq, ok := izquierda.(float64); ok {
-			if der, ok := derecha.(float64); ok {
-				return izq + der, nil
+		switch e.Operator.Tipo {
+		case token.BANG:
+			return !i.esVerdadero(derecha), nil
+		case token.MINUS:
+			if err := i.checkNumeroOperando(e.Operator, derecha); err != nil {
+				return nil, err
 			}
+			return -derecha.(float64), nil
 		}
 
-		if izq, ok := izquierda.(string); ok {
-			if der, ok := derecha.(string); ok {
-				return izq + der, nil
+	case *sintaxis.Binary:
+		izquierda, err := i.Evaluar(e.Left)
+		if err != nil {
+			return nil, err
+		}
+
+		derecha, err := i.Evaluar(e.Right)
+		if err != nil {
+			return nil, err
+		}
+
+		switch e.Operator.Tipo {
+		case token.GREATER:
+			if err := i.checkNumerosOperandos(e.Operator, izquierda, derecha); err != nil {
+				return nil, err
 			}
-		}
+			return izquierda.(float64) > derecha.(float64), nil
+		case token.GREATER_EQUAL:
+			if err := i.checkNumerosOperandos(e.Operator, izquierda, derecha); err != nil {
+				return nil, err
+			}
+			return izquierda.(float64) >= derecha.(float64), nil
+		case token.LESS:
+			if err := i.checkNumerosOperandos(e.Operator, izquierda, derecha); err != nil {
+				return nil, err
+			}
+			return izquierda.(float64) < derecha.(float64), nil
+		case token.LESS_EQUAL:
+			if err := i.checkNumerosOperandos(e.Operator, izquierda, derecha); err != nil {
+				return nil, err
+			}
+			return izquierda.(float64) <= derecha.(float64), nil
+		case token.MINUS:
+			if err := i.checkNumerosOperandos(e.Operator, izquierda, derecha); err != nil {
+				return nil, err
+			}
+			return izquierda.(float64) - derecha.(float64), nil
+		case token.SLASH:
+			if err := i.checkNumerosOperandos(e.Operator, izquierda, derecha); err != nil {
+				return nil, err
+			}
+			if derecha.(float64) == 0 {
+				return nil, NewErrorRuntime(e.Operator, "División por cero.")
+			}
+			return izquierda.(float64) / derecha.(float64), nil
+		case token.STAR:
+			if err := i.checkNumerosOperandos(e.Operator, izquierda, derecha); err != nil {
+				return nil, err
+			}
+			return izquierda.(float64) * derecha.(float64), nil
+		case token.PLUS:
+			if izq, ok := izquierda.(float64); ok {
+				if der, ok := derecha.(float64); ok {
+					return izq + der, nil
+				}
+			}
 
-		return nil, NewErrorRuntime(expr.Operador, "Los operandos deben ser dos números o dos cadenas.")
-	case token.BANG_IGUAL:
-		return !i.esIgual(izquierda, derecha), nil
-	case token.IGUAL_IGUAL:
-		return i.esIgual(izquierda, derecha), nil
+			if izq, ok := izquierda.(string); ok {
+				if der, ok := derecha.(string); ok {
+					return izq + der, nil
+				}
+			}
+
+			return nil, NewErrorRuntime(e.Operator, "Los operandos deben ser dos números o dos cadenas.")
+		case token.BANG_EQUAL:
+			return !i.esIgual(izquierda, derecha), nil
+		case token.EQUAL_EQUAL:
+			return i.esIgual(izquierda, derecha), nil
+		}
 	}
 
 	return nil, nil
@@ -134,16 +160,13 @@ func (i *Interprete) VisitarBinaria(expr *sintaxis.Binaria) (any, error) {
 // Reglas Semánticas de Lox
 // ========================
 
-// Característica de Lox: "false" y "nil" son falsos, todo lo demás es verdadero.
 func (i *Interprete) esVerdadero(objeto any) bool {
 	if objeto == nil {
 		return false
 	}
-
 	if b, ok := objeto.(bool); ok {
 		return b
 	}
-
 	return true
 }
 
@@ -151,11 +174,9 @@ func (i *Interprete) esIgual(a, b any) bool {
 	if a == nil && b == nil {
 		return true
 	}
-
 	if a == nil {
 		return false
 	}
-
 	return a == b
 }
 
@@ -163,7 +184,6 @@ func (i *Interprete) checkNumeroOperando(operador token.Token, operando any) err
 	if _, ok := operando.(float64); ok {
 		return nil
 	}
-
 	return NewErrorRuntime(operador, "El operando debe ser un número.")
 }
 
@@ -173,6 +193,5 @@ func (i *Interprete) checkNumerosOperandos(operador token.Token, izq, der any) e
 	if ok1 && ok2 {
 		return nil
 	}
-	
 	return NewErrorRuntime(operador, "Los operandos deben ser números.")
 }

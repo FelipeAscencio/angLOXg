@@ -23,10 +23,13 @@ func main() {
 		"mostrar los tokens producidos por el escáner en lugar de ejecutar el código")
 
 	modoArbol := flag.Bool("arbol", false,
-		"mostrar el árbol de sintaxis en lugar de ejecutar el código")
+		"mostrar el árbol de sintaxis (AST) en lugar de ejecutar el código")
+		
+	modoResolucion := flag.Bool("resolucion", false,
+		"ejecutar hasta la fase de análisis semántico (Resolver) sin interpretar el código")
 
 	flag.Usage = func() {
-		fmt.Fprintln(os.Stderr, "uso: angloxg [--escaneo | --arbol] [script.lox]")
+		fmt.Fprintln(os.Stderr, "uso: angloxg [--escaneo | --arbol | --resolucion] [script.lox]")
 		fmt.Fprintln(os.Stderr, "\nSin argumentos, abre la consola interactiva (REPL).")
 		fmt.Fprintln(os.Stderr, "\nOpciones:")
 		flag.PrintDefaults()
@@ -40,46 +43,37 @@ func main() {
 	}
 
 	if flag.NArg() == 1 {
-		os.Exit(ejecutarArchivo(flag.Arg(0), *modoEscaneo, *modoArbol))
+		os.Exit(ejecutarArchivo(flag.Arg(0), *modoEscaneo, *modoArbol, *modoResolucion))
 	}
 
-	os.Exit(ejecutarConsola(*modoEscaneo, *modoArbol))
+	os.Exit(ejecutarConsola(*modoEscaneo, *modoArbol, *modoResolucion))
 }
 
-// ejecutarArchivo corre un script completo y devuelve el código de salida.
-func ejecutarArchivo(ruta string, modoEscaneo, modoArbol bool) int {
+func ejecutarArchivo(ruta string, modoEscaneo, modoArbol, modoResolucion bool) int {
 	fuente, err := os.ReadFile(ruta)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "no se pudo leer %q: %v\n", ruta, err)
 		return salidaSinArchivo
 	}
 
-	if !despachar(string(fuente), os.Stdout, modoEscaneo, modoArbol) {
+	if !despachar(string(fuente), os.Stdout, modoEscaneo, modoArbol, modoResolucion) {
 		return salidaErrorDeDatos
 	}
 
 	return salidaOK
 }
 
-// ejecutarConsola abre la consola interactiva, que lee y corre una línea por
-// vez.
-//
-// Un error no corta la sesión: se reporta y se sigue esperando la próxima
-// sentencia.
-func ejecutarConsola(modoEscaneo, modoArbol bool) int {
+func ejecutarConsola(modoEscaneo, modoArbol, modoResolucion bool) int {
 	fmt.Println("=== angLOXg ===")
 	fmt.Println("Intérprete de Lox escrito en Go")
-
 	entrada := bufio.NewScanner(os.Stdin)
 	for {
 		fmt.Print("> ")
-
-		// Scan devuelve false al llegar al fin de la entrada.
 		if !entrada.Scan() {
 			break
 		}
 
-		despachar(entrada.Text(), os.Stdout, modoEscaneo, modoArbol)
+		despachar(entrada.Text(), os.Stdout, modoEscaneo, modoArbol, modoResolucion)
 	}
 
 	if err := entrada.Err(); err != nil {
@@ -87,21 +81,21 @@ func ejecutarConsola(modoEscaneo, modoArbol bool) int {
 		return salidaErrorDeDatos
 	}
 
-	// El salto de línea deja prolija la consola del sistema después del Ctrl+D.
 	fmt.Println()
-
 	return salidaOK
 }
 
-// despachar manda el fuente al modo correspondiente e informa si salió todo
-// bien.
-func despachar(fuente string, salida io.Writer, modoEscaneo, modoArbol bool) bool {
+func despachar(fuente string, salida io.Writer, modoEscaneo, modoArbol, modoResolucion bool) bool {
 	switch {
 	case modoEscaneo:
 		return lox.Escanear(fuente, salida)
 
 	case modoArbol:
 		return lox.Parsear(fuente, salida)
+		
+	case modoResolucion:
+		fmt.Fprintln(salida, "El modo --resolucion está en construcción.")
+		return true
 
 	default:
 		return lox.Ejecutar(fuente, salida)

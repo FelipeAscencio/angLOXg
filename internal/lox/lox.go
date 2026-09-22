@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"github.com/FelipeAscencio/angLOXg/internal/escaner"
+	"github.com/FelipeAscencio/angLOXg/internal/interprete"
 	"github.com/FelipeAscencio/angLOXg/internal/parser"
 	"github.com/FelipeAscencio/angLOXg/internal/sintaxis"
 	"github.com/FelipeAscencio/angLOXg/internal/token"
@@ -21,10 +22,25 @@ func Ejecutar(fuente string, salida io.Writer) bool {
 		return false
 	}
 
-	// TODO: acá va el intérprete. Hasta que exista, el modo de ejecución vuelca
-	// el árbol igual que el modo de parseo.
-	imprimirArbol(sentencias, salida)
+	intp := interprete.NuevoInterprete(salida)
+	if err := intp.Interpretar(sentencias); err != nil {
+		fmt.Fprintln(salida, err.Error())
+		return false
+	}
 
+	return true
+}
+
+// Resolver escanea, parsea, y realiza el análisis semántico sin ejecutar.
+// Es lo que corre el CLI con "--resolucion".
+func Resolver(fuente string, salida io.Writer) bool {
+	_, ok := parsearFuente(fuente, salida)
+	if !ok {
+		return false
+	}
+
+	// TODO: acá va el análisis semántico (resolución de variables locales).
+	fmt.Fprintln(salida, "El análisis semántico está en construcción.")
 	return true
 }
 
