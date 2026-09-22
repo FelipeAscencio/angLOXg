@@ -14,12 +14,13 @@ Bienvenidos al repositorio oficial de **angLOXg**, nuestro intérprete del lengu
 
 Este proyecto fue desarrollado como "Trabajo Práctico" para la materia "Lenguajes y compiladores I ((TB027))" de la Universidad de Buenos Aires (FIUBA). Siguiendo las bases del gran libro **Crafting Interpreters** de *Robert Nystrom*.
 
+* ▶️ [Playground web interactivo](https://FelipeAscencio.github.io/angLOXg/web/)
+
 ## 🧭 Mapa del sitio (Navegación rápida)
 
 Explorá los distintos apartados de nuestra documentación:
 
 * 🛠️ **[Justificación de stack](stack.html)** — ¿Por qué elegimos Go y qué herramientas usamos?
-* 🌐 **[Playground web](playground.html)** — ¡Probá Lox en vivo directo en tu navegador con WebAssembly sin clonar nada!
 * 🧪 **[Pruebas](pruebas.html)** — Test unitarios, de integración y de la cátedra que pasamos con honores.
 * 🎯 **[Ejemplos de uso real](ejemplos.html)** — Programas con objetivos concretos para ver el lenguaje en acción.
 * 📈 **[Comparativas de rendimiento](benchmarks.html)** — Métricas y evolución de performance.
