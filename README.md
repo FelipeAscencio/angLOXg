@@ -21,15 +21,13 @@ Cloná el repositorio, navegá a la raíz del proyecto e instalá las dependenci
 
 ```bash
 
-git clone https://github.com/FelipeAscencio/angLOXg.git
-cd angLOXg
 go install gotest.tools/gotestsum@latest
 
 ```
 
 ## Modos de Ejecución
 
-*Nota: Las flags de depuración (`--escaneo`, `--arbol`, `--resolucion`) se pueden utilizar tanto pasando un archivo de script como en el formato de ejecución directo de consola (REPL).*
+*Nota: Las flags de depuración (`--escaneo`, `--arbol`, `--resolucion`) se pueden utilizar tanto pasando un archivo de script como en el formato de ejecución directo de consola (REPL). Al no pasar una flag, se inicia automáticamente en modo interprete completo.*
 
 ### 1. Consola interactiva (REPL)
 
@@ -37,7 +35,7 @@ Si ejecutás el programa sin argumentos, se abrirá la consola interactiva donde
 
 ```bash
 
-go run ./cmd/angLOXg
+go run ./cmd/angLOXg [FLAG_DESEADA]
 
 ```
 
@@ -112,7 +110,7 @@ Para correr la suite completa de pruebas utilizando la interfaz limpia de `gotes
 
 ```bash
 
-gotestsum -- -v ./...
+gotestsum -- -v ./internal/... ./tests/...
 
 ```
 
@@ -120,7 +118,7 @@ Para calcular la **cobertura real unificada** de todo el motor (excluyendo el pu
 
 ```bash
 
-gotestsum -- -cover ./...
+gotestsum -- -cover ./internal/... ./tests/...
 
 ```
 
