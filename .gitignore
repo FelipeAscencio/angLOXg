@@ -26,3 +26,4 @@ vendor/
 
 # Archivos de prueba dummy para el desarrollo
 prueba.lox
+resultados_benchmarks.txt
