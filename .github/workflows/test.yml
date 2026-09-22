@@ -1,0 +1,24 @@
+name: Test angLOXg
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  test:
+    name: Ejecutar pruebas Go
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Correr tests
+        run: go test -v ./internal/... ./tests/...
