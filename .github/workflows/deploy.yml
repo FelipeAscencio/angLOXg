@@ -25,9 +25,7 @@ jobs:
       - name: Compilar WebAssembly
         run: |
           mkdir -p web
-          # Compilamos el binario para la web
           GOOS=js GOARCH=wasm go build -o web/main.wasm ./cmd/wasm
-          # Copiamos el archivo puente que requiere Go para funcionar en el navegador
           cp $(go env GOROOT)/misc/wasm/wasm_exec.js web/
 
       - name: Setup Ruby (Para Jekyll/JustTheDocs)
@@ -41,16 +39,14 @@ jobs:
         working-directory: './docs'
         run: |
           bundle install
-          # Construimos el sitio y lo dejamos en la carpeta _site en la raíz
           bundle exec jekyll build -d ../_site
 
       - name: Unir Documentación con Playground Web
         run: |
-          # Creamos la subcarpeta web dentro del sitio de la documentación
           mkdir -p _site/web
-          # Movemos nuestra app web ahí adentro
           cp -r web/* _site/web/
-          # Fundamental para que GitHub Pages no rompa nuestra app web
+          mkdir -p _site/data/images
+          cp -r data/images/* _site/data/images/
           touch _site/.nojekyll
 
       - name: Subir artefacto a GitHub Pages
