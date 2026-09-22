@@ -4,7 +4,7 @@ title: Comparativas de rendimiento
 nav_order: 6
 ---
 
-# Comparativas de rendimiento
+# 📈 Comparativas de rendimiento
 
 ## Evolución de performance
 
