@@ -1,0 +1,61 @@
+// Valida si la antigüedad laboral cumple con los requisitos mínimos según el sector
+fun validarAntiguedad(mesesLaborales, esSectorPublico) {
+    if (esSectorPublico) {
+        return mesesLaborales >= 6; // Sector público exige menor historial
+    }
+    return mesesLaborales >= 12; // Sector privado exige al menos 1 año
+}
+
+// Algoritmo recursivo para calcular la proyección de riesgo acumulado en cuotas
+fun proyectarRiesgo(cuotaActual, riesgoBase, acumulado) {
+    if (cuotaActual <= 0) {
+        return acumulado;
+    }
+    // Incremento exponencial simulado del riesgo financiero por cada período a futuro
+    var factorRiesgo = riesgoBase * 1.05;
+    return proyectarRiesgo(cuotaActual - 1, riesgoBase, acumulado + factorRiesgo);
+}
+
+print "=== AUDITORÍA AUTOMATIZADA DE CRÉDITO ===";
+
+var clienteNombre = "F संtino"; // Nombre de referencia
+var ingresosMensuales = 3500.0;
+var deudaActual = 800.0;
+var mesesEnEmpleo = 18;
+var esPublico = false;
+
+print "Verificando estabilidad laboral...";
+var cumpleEstabilidad = validarAntiguedad(mesesEnEmpleo, esPublico);
+
+// Cálculo del ratio de endeudamiento (Deuda / Ingresos)
+var ratioEndeudamiento = deudaActual / ingresosMensuales;
+print "Ratio de endeudamiento calculado:";
+print ratioEndeudamiento;
+
+// Reglas de negocio estrictas para aprobación
+var deudaSaludable = ratioEndeudamiento < 0.40;
+var creditoAprobado = false;
+
+if (cumpleEstabilidad) {
+    if (deudaSaludable) {
+        if (ingresosMensuales >= 2000.0) {
+            creditoAprobado = true;
+        } else {
+            print "Rechazado: Ingresos por debajo del umbral mínimo de la categoría.";
+        }
+    } else {
+        print "Rechazado: Excede el límite de endeudamiento permitido.";
+    }
+} else {
+    print "Rechazado: Antigüedad laboral insuficiente.";
+}
+
+if (creditoAprobado) {
+    print "ESTADO DE SOLICITUD: APROBADA EXITOSAMENTE.";
+    // Proyectamos el riesgo financiero para un plan de 5 cuotas
+    var riesgoTotalProyectado = proyectarRiesgo(5, 12.5, 0.0);
+    print "Riesgo financiero total proyectado a 5 plazos:";
+    print riesgoTotalProyectado;
+} else {
+    print "ESTADO DE SOLICITUD: RECHAZADA POR POLÍTICAS DE RIESGO.";
+}

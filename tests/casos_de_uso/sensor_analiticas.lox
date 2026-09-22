@@ -1,0 +1,62 @@
+// Calcula el promedio (media aritmética) de una lista simulada de 5 valores numéricos.
+fun calcularPromedio(v1, v2, v3, v4, v5) {
+    var suma = v1 + v2 + v3 + v4 + v5;
+    return suma / 5;
+}
+
+// Encuentra el valor máximo entre 5 mediciones.
+fun obtenerMaximo(v1, v2, v3, v4, v5) {
+    var max = v1;
+    if (v2 > max) max = v2;
+    if (v3 > max) max = v3;
+    if (v4 > max) max = v4;
+    if (v5 > max) max = v5;
+    return max;
+}
+
+// Encuentra el valor mínimo entre 5 mediciones.
+fun obtenerMinimo(v1, v2, v3, v4, v5) {
+    var min = v1;
+    if (v2 < min) min = v2;
+    if (v3 < min) min = v3;
+    if (v4 < min) min = v4;
+    if (v5 < min) min = v5;
+    return min;
+}
+
+// Filtra y recorta valores fuera de un rango operativo seguro [minSeguro, maxSeguro].
+// Si un sensor falla y emite un valor anómalo, lo reemplaza por el límite tolerable.
+fun sanitizarLectura(valor, minSeguro, maxSeguro) {
+    if (valor < minSeguro) {
+        return minSeguro;
+    }
+    if (valor > maxSeguro) {
+        return maxSeguro;
+    }
+    return valor;
+}
+
+print "=== INFORME DE ANÁLISIS DE SENSORES INDUSTRIALES ===";
+
+// Datos crudos de temperatura capturados por un dispositivo IoT
+var t1 = 22.5;
+var t2 = 999.0; // Inyectamos una Anomalía / Ruido en el sensor
+var t3 = 24.1;
+var t4 = 21.8;
+var t5 = 23.0;
+
+print "Aplicando filtros de integridad de datos...";
+var s1 = sanitizarLectura(t1, 0.0, 100.0);
+var s2 = sanitizarLectura(t2, 0.0, 100.0);
+var s3 = sanitizarLectura(t3, 0.0, 100.0);
+var s4 = sanitizarLectura(t4, 0.0, 100.0);
+var s5 = sanitizarLectura(t5, 0.0, 100.0);
+
+var promedio = calcularPromedio(s1, s2, s3, s4, s5);
+var maximo = obtenerMaximo(s1, s2, s3, s4, s5);
+var minimo = obtenerMinimo(s1, s2, s3, s4, s5);
+
+print "Métricas calculadas exitosamente:";
+print promedio;
+print maximo;
+print minimo;

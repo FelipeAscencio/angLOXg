@@ -1,0 +1,56 @@
+// Generador de políticas de descuento basado en el volumen de unidades
+fun crearMotorDeDescuento(factorLealtad) {
+    // Esta función interna captura la variable externa "factorLealtad"
+    fun calcular(subtotal, cantidadItems) {
+        var descuentoBase = 0;
+        
+        if (cantidadItems >= 10) {
+            descuentoBase = 0.20; // 20% de descuento por volumen alto
+        } else {
+            if (cantidadItems >= 5) {
+                descuentoBase = 0.10; // 10% por volumen moderado
+            } else {
+                descuentoBase = 0.0;
+            }
+        }
+
+        // Se suma el factor de lealtad del cliente al descuento
+        var descuentoTotal = descuentoBase + factorLealtad;
+        if (descuentoTotal > 0.35) {
+            descuentoTotal = 0.35; // Tope máximo de descuento permitido por negocio
+        }
+
+        return subtotal * (1 - descuentoTotal);
+    }
+    return calcular;
+}
+
+print "=== PROCESAMIENTO DE TRANSACCIÓN COMERCIAL ===";
+
+var precioUnitario = 150.0;
+var cantidadComprada = 8;
+var subtotalBruto = precioUnitario * cantidadComprada;
+
+print "Subtotal bruto de la orden:";
+print subtotalBruto;
+
+// Instanciamos el motor de precios para un cliente VIP (otorga un 5% adicional de lealtad)
+var calcularPrecioVIP = crearMotorDeDescuento(0.05);
+
+var totalConDescuento = calcularPrecioVIP(subtotalBruto, cantidadComprada);
+print "Total tras aplicar reglas de volumen y lealtad VIP:";
+print totalConDescuento;
+
+// Impuesto regional según destino (simulación de lógica condicional compleja)
+var esEnvioInternacional = true;
+var tasaImpuesto = 0.0;
+
+if (esEnvioInternacional) {
+    tasaImpuesto = 0.18; // 18% arancel aduanero
+} else {
+    tasaImpuesto = 0.05; // 5% impuesto local
+}
+
+var totalFinal = totalConDescuento * (1 + tasaImpuesto);
+print "Monto final a cobrar (incluyendo impuestos aplicables):";
+print totalFinal;
