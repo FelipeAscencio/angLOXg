@@ -297,6 +297,16 @@ func (i *Interprete) Evaluar(expr sintaxis.Expr) (any, error) {
 			return !i.esIgual(izquierda, derecha), nil
 		case token.EQUAL_EQUAL:
 			return i.esIgual(izquierda, derecha), nil
+		case token.PERCENT:
+			if err := i.checkNumerosOperandos(e.Operator, izquierda, derecha); err != nil {
+				return nil, err
+			}
+			der := derecha.(float64)
+			if der == 0 {
+				return nil, NewErrorRuntime(e.Operator, "Módulo por cero.")
+			}
+			izq := izquierda.(float64)
+			return float64(int64(izq) % int64(der)), nil
 		}
 
 	case *sintaxis.Variable:
