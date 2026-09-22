@@ -54,6 +54,7 @@ func (i *Interprete) Ejecutar(stmt sintaxis.Stmt) error {
 		}
 
 		return nil
+
 	case *sintaxis.Var:
 		var valor any
 		var err error
@@ -66,8 +67,41 @@ func (i *Interprete) Ejecutar(stmt sintaxis.Stmt) error {
 
 		i.entorno.Definir(s.Name.Lexema, valor)
 		return nil
+
 	case *sintaxis.Block:
 		return i.ejecutarBloque(s.Statements, NuevoEntorno(i.entorno))
+
+	case *sintaxis.If:
+		condicion, err := i.Evaluar(s.Condition)
+		if err != nil {
+			return err
+		}
+
+		if i.esVerdadero(condicion) {
+			return i.Ejecutar(s.Then)
+		} else if s.Else != nil {
+			return i.Ejecutar(s.Else)
+		}
+
+		return nil
+
+	case *sintaxis.While:
+		for {
+			condicion, err := i.Evaluar(s.Condition)
+			if err != nil {
+				return err
+			}
+
+			if !i.esVerdadero(condicion) {
+				break
+			}
+
+			if err := i.Ejecutar(s.Body); err != nil {
+				return err
+			}
+		}
+
+		return nil
 	}
 	
 	return nil
@@ -184,7 +218,7 @@ func (i *Interprete) Evaluar(expr sintaxis.Expr) (any, error) {
 		case token.EQUAL_EQUAL:
 			return i.esIgual(izquierda, derecha), nil
 		}
-		
+
 	case *sintaxis.Variable:
 		return i.entorno.Obtener(e.Name)
 
@@ -199,6 +233,25 @@ func (i *Interprete) Evaluar(expr sintaxis.Expr) (any, error) {
 		}
 		
 		return valor, nil
+
+	case *sintaxis.Logical:
+		izquierda, err := i.Evaluar(e.Left)
+		if err != nil {
+			return nil, err
+		}
+
+		if e.Operator.Tipo == token.OR {
+			if i.esVerdadero(izquierda) {
+				return izquierda, nil
+			}
+			
+		} else if e.Operator.Tipo == token.AND {
+			if !i.esVerdadero(izquierda) {
+				return izquierda, nil
+			}
+		}
+
+		return i.Evaluar(e.Right)
 	}
 
 	return nil, nil
