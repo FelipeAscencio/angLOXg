@@ -1,0 +1,81 @@
+========================================
+  RESULTADOS DE RENDIMIENTO - C# (DotLox) 
+  Fecha: Tue Sep 22 21:14:34 UTC 2026
+========================================
+
+----------------------------------------
+Script: bench_closures.lox
+----------------------------------------
+Iniciando benchmark de instanciación de closures...
+Closures evaluados. Resultado:
+2499950000
+
+real	0m1.636s
+user	0m1.495s
+sys	0m0.037s
+
+----------------------------------------
+Script: bench_fib.lox
+----------------------------------------
+Iniciando benchmark de recursividad profunda (Fibonacci 32)...
+Resultado:
+2178309
+
+real	1m24.903s
+user	1m25.152s
+sys	0m0.141s
+
+----------------------------------------
+Script: bench_logic.lox
+----------------------------------------
+Iniciando benchmark de saltos lógicos (Short-circuit)...
+Lógica finalizada. Contador resultante:
+-100002
+
+real	0m0.600s
+user	0m0.504s
+sys	0m0.053s
+
+----------------------------------------
+Script: bench_loop.lox
+----------------------------------------
+Iniciando benchmark de bucle pesado...
+Bucle finalizado. Resultado:
+499999500000
+
+real	0m0.835s
+user	0m0.643s
+sys	0m0.031s
+
+----------------------------------------
+Script: bench_math.lox
+----------------------------------------
+Iniciando benchmark de recorrido del AST (Matemática compleja)...
+Matemática finalizada. Resultado:
+9999999999
+
+real	0m0.330s
+user	0m0.265s
+sys	0m0.026s
+
+----------------------------------------
+Script: bench_scopes.lox
+----------------------------------------
+Iniciando benchmark de resolución de entornos anidados...
+Resolución de scopes finalizada. Suma:
+1500000
+
+real	0m0.355s
+user	0m0.282s
+sys	0m0.039s
+
+----------------------------------------
+Script: bench_strings.lox
+----------------------------------------
+Iniciando benchmark de strings (Asignación y GC)...
+Concatenación finalizada exitosamente.
+
+real	0m0.188s
+user	0m0.125s
+sys	0m0.013s
+

@@ -1,0 +1,81 @@
+========================================
+  RESULTADOS DE RENDIMIENTO - Rust (lox.rs) 
+  Fecha: Tue Sep 22 21:20:15 UTC 2026
+========================================
+
+----------------------------------------
+Script: bench_closures.lox
+----------------------------------------
+Iniciando benchmark de instanciación de closures...
+Closures evaluados. Resultado:
+2499950000
+
+real	0m0.177s
+user	0m0.088s
+sys	0m0.047s
+
+----------------------------------------
+Script: bench_fib.lox
+----------------------------------------
+Iniciando benchmark de recursividad profunda (Fibonacci 32)...
+Resultado:
+2178309
+
+real	0m3.479s
+user	0m3.231s
+sys	0m0.004s
+
+----------------------------------------
+Script: bench_logic.lox
+----------------------------------------
+Iniciando benchmark de saltos lógicos (Short-circuit)...
+Lógica finalizada. Contador resultante:
+-100002
+
+real	0m0.342s
+user	0m0.288s
+sys	0m0.001s
+
+----------------------------------------
+Script: bench_loop.lox
+----------------------------------------
+Iniciando benchmark de bucle pesado...
+Bucle finalizado. Resultado:
+499999500000
+
+real	0m0.620s
+user	0m0.397s
+sys	0m0.000s
+
+----------------------------------------
+Script: bench_math.lox
+----------------------------------------
+Iniciando benchmark de recorrido del AST (Matemática compleja)...
+Matemática finalizada. Resultado:
+9999999999
+
+real	0m0.114s
+user	0m0.071s
+sys	0m0.006s
+
+----------------------------------------
+Script: bench_scopes.lox
+----------------------------------------
+Iniciando benchmark de resolución de entornos anidados...
+Resolución de scopes finalizada. Suma:
+1500000
+
+real	0m0.157s
+user	0m0.114s
+sys	0m0.002s
+
+----------------------------------------
+Script: bench_strings.lox
+----------------------------------------
+Iniciando benchmark de strings (Asignación y GC)...
+Concatenación finalizada exitosamente.
+
+real	0m0.071s
+user	0m0.025s
+sys	0m0.007s
+

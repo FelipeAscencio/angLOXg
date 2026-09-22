@@ -1,0 +1,81 @@
+========================================
+  RESULTADOS DE RENDIMIENTO - Java (jlox) 
+  Fecha: Tue Sep 22 20:57:38 UTC 2026
+========================================
+
+----------------------------------------
+Script: bench_closures.lox
+----------------------------------------
+Iniciando benchmark de instanciación de closures...
+Closures evaluados. Resultado:
+2.49995E9
+
+real	0m0.843s
+user	0m0.721s
+sys	0m0.136s
+
+----------------------------------------
+Script: bench_fib.lox
+----------------------------------------
+Iniciando benchmark de recursividad profunda (Fibonacci 32)...
+Resultado:
+2178309
+
+real	0m1.688s
+user	0m1.114s
+sys	0m0.374s
+
+----------------------------------------
+Script: bench_logic.lox
+----------------------------------------
+Iniciando benchmark de saltos lógicos (Short-circuit)...
+Lógica finalizada. Contador resultante:
+-100002
+
+real	0m0.741s
+user	0m0.520s
+sys	0m0.156s
+
+----------------------------------------
+Script: bench_loop.lox
+----------------------------------------
+Iniciando benchmark de bucle pesado...
+Bucle finalizado. Resultado:
+4.999995E11
+
+real	0m0.893s
+user	0m0.539s
+sys	0m0.164s
+
+----------------------------------------
+Script: bench_math.lox
+----------------------------------------
+Iniciando benchmark de recorrido del AST (Matemática compleja)...
+Matemática finalizada. Resultado:
+9.999999999E9
+
+real	0m0.835s
+user	0m0.561s
+sys	0m0.140s
+
+----------------------------------------
+Script: bench_scopes.lox
+----------------------------------------
+Iniciando benchmark de resolución de entornos anidados...
+Resolución de scopes finalizada. Suma:
+1500000
+
+real	0m0.696s
+user	0m0.388s
+sys	0m0.118s
+
+----------------------------------------
+Script: bench_strings.lox
+----------------------------------------
+Iniciando benchmark de strings (Asignación y GC)...
+Concatenación finalizada exitosamente.
+
+real	0m0.583s
+user	0m0.319s
+sys	0m0.075s
+

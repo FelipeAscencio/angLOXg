@@ -1,0 +1,81 @@
+========================================
+  RESULTADOS DE RENDIMIENTO - TypeScript (tslox) 
+  Fecha: Tue Sep 22 21:07:58 UTC 2026
+========================================
+
+----------------------------------------
+Script: bench_closures.lox
+----------------------------------------
+Iniciando benchmark de instanciación de closures...
+Closures evaluados. Resultado:
+2499950000
+
+real	0m0.423s
+user	0m0.316s
+sys	0m0.033s
+
+----------------------------------------
+Script: bench_fib.lox
+----------------------------------------
+Iniciando benchmark de recursividad profunda (Fibonacci 32)...
+Resultado:
+2178309
+
+real	0m11.938s
+user	0m12.990s
+sys	0m0.156s
+
+----------------------------------------
+Script: bench_logic.lox
+----------------------------------------
+Iniciando benchmark de saltos lógicos (Short-circuit)...
+Lógica finalizada. Contador resultante:
+-100002
+
+real	0m0.526s
+user	0m0.413s
+sys	0m0.051s
+
+----------------------------------------
+Script: bench_loop.lox
+----------------------------------------
+Iniciando benchmark de bucle pesado...
+Bucle finalizado. Resultado:
+499999500000
+
+real	0m0.500s
+user	0m0.414s
+sys	0m0.040s
+
+----------------------------------------
+Script: bench_math.lox
+----------------------------------------
+Iniciando benchmark de recorrido del AST (Matemática compleja)...
+Matemática finalizada. Resultado:
+9999999999
+
+real	0m0.551s
+user	0m0.201s
+sys	0m0.038s
+
+----------------------------------------
+Script: bench_scopes.lox
+----------------------------------------
+Iniciando benchmark de resolución de entornos anidados...
+Resolución de scopes finalizada. Suma:
+1500000
+
+real	0m0.254s
+user	0m0.187s
+sys	0m0.025s
+
+----------------------------------------
+Script: bench_strings.lox
+----------------------------------------
+Iniciando benchmark de strings (Asignación y GC)...
+Concatenación finalizada exitosamente.
+
+real	0m0.231s
+user	0m0.124s
+sys	0m0.027s
+

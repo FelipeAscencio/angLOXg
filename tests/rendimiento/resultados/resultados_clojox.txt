@@ -1,0 +1,122 @@
+========================================
+  RESULTADOS DE RENDIMIENTO - Clojure (clojox) 
+  Fecha: Tue Sep 22 21:03:46 UTC 2026
+========================================
+
+----------------------------------------
+Script: bench_closures.lox
+----------------------------------------
+Retrieving org/clojure/clojure/1.11.1/clojure-1.11.1.pom from central
+Retrieving org/clojure/spec.alpha/0.3.218/spec.alpha-0.3.218.pom from central
+Retrieving org/clojure/pom.contrib/1.1.0/pom.contrib-1.1.0.pom from central
+Retrieving org/clojure/core.specs.alpha/0.2.62/core.specs.alpha-0.2.62.pom from central
+Retrieving com/clojure-goes-fast/clj-async-profiler/1.2.0/clj-async-profiler-1.2.0.pom from clojars
+Retrieving nrepl/nrepl/1.0.0/nrepl-1.0.0.pom from clojars
+Retrieving org/nrepl/incomplete/0.1.0/incomplete-0.1.0.pom from clojars
+Retrieving org/clojure/spec.alpha/0.3.218/spec.alpha-0.3.218.jar from central
+Retrieving org/clojure/clojure/1.11.1/clojure-1.11.1.jar from central
+Retrieving org/clojure/core.specs.alpha/0.2.62/core.specs.alpha-0.2.62.jar from central
+Retrieving nrepl/nrepl/1.0.0/nrepl-1.0.0.jar from clojars
+Retrieving org/nrepl/incomplete/0.1.0/incomplete-0.1.0.jar from clojars
+Retrieving com/clojure-goes-fast/clj-async-profiler/1.2.0/clj-async-profiler-1.2.0.jar from clojars
+Compiling 6 source files to /mnt/c/Users/Feli/Downloads/clojox-main/target/classes
+Note: /mnt/c/Users/Feli/Downloads/clojox-main/src/jlox/Lox.java uses preview features of Java SE 21.
+Note: Recompile with -Xlint:preview for details.
+Reflection warning, /tmp/form-init7772050426176500686.clj:1:939 - call to static method invokeStaticMethod on clojure.lang.Reflector can't be resolved (argument types: unknown, java.lang.String, unknown).
+Iniciando benchmark de instanciación de closures...
+Closures evaluados. Resultado:
+2.49995E9
+
+real	0m23.027s
+user	0m13.277s
+sys	0m2.375s
+
+----------------------------------------
+Script: bench_fib.lox
+----------------------------------------
+Compiling 6 source files to /mnt/c/Users/Feli/Downloads/clojox-main/target/classes
+Note: /mnt/c/Users/Feli/Downloads/clojox-main/src/jlox/Lox.java uses preview features of Java SE 21.
+Note: Recompile with -Xlint:preview for details.
+Reflection warning, /tmp/form-init5977928415576343385.clj:1:929 - call to static method invokeStaticMethod on clojure.lang.Reflector can't be resolved (argument types: unknown, java.lang.String, unknown).
+Iniciando benchmark de recursividad profunda (Fibonacci 32)...
+Resultado:
+2178309
+
+real	0m20.248s
+user	0m14.364s
+sys	0m1.723s
+
+----------------------------------------
+Script: bench_logic.lox
+----------------------------------------
+Compiling 6 source files to /mnt/c/Users/Feli/Downloads/clojox-main/target/classes
+Note: /mnt/c/Users/Feli/Downloads/clojox-main/src/jlox/Lox.java uses preview features of Java SE 21.
+Note: Recompile with -Xlint:preview for details.
+Reflection warning, /tmp/form-init14622267063727801619.clj:1:934 - call to static method invokeStaticMethod on clojure.lang.Reflector can't be resolved (argument types: unknown, java.lang.String, unknown).
+Iniciando benchmark de saltos lógicos (Short-circuit)...
+Lógica finalizada. Contador resultante:
+-100002
+
+real	0m15.026s
+user	0m11.837s
+sys	0m1.936s
+
+----------------------------------------
+Script: bench_loop.lox
+----------------------------------------
+Compiling 6 source files to /mnt/c/Users/Feli/Downloads/clojox-main/target/classes
+Note: /mnt/c/Users/Feli/Downloads/clojox-main/src/jlox/Lox.java uses preview features of Java SE 21.
+Note: Recompile with -Xlint:preview for details.
+Reflection warning, /tmp/form-init15733347151624607581.clj:1:932 - call to static method invokeStaticMethod on clojure.lang.Reflector can't be resolved (argument types: unknown, java.lang.String, unknown).
+Iniciando benchmark de bucle pesado...
+Bucle finalizado. Resultado:
+4.999995E11
+
+real	0m16.965s
+user	0m12.011s
+sys	0m2.139s
+
+----------------------------------------
+Script: bench_math.lox
+----------------------------------------
+Compiling 6 source files to /mnt/c/Users/Feli/Downloads/clojox-main/target/classes
+Note: /mnt/c/Users/Feli/Downloads/clojox-main/src/jlox/Lox.java uses preview features of Java SE 21.
+Note: Recompile with -Xlint:preview for details.
+Reflection warning, /tmp/form-init12601107285561355252.clj:1:932 - call to static method invokeStaticMethod on clojure.lang.Reflector can't be resolved (argument types: unknown, java.lang.String, unknown).
+Iniciando benchmark de recorrido del AST (Matemática compleja)...
+Matemática finalizada. Resultado:
+9.999999999E9
+
+real	0m14.339s
+user	0m12.349s
+sys	0m1.448s
+
+----------------------------------------
+Script: bench_scopes.lox
+----------------------------------------
+Compiling 6 source files to /mnt/c/Users/Feli/Downloads/clojox-main/target/classes
+Note: /mnt/c/Users/Feli/Downloads/clojox-main/src/jlox/Lox.java uses preview features of Java SE 21.
+Note: Recompile with -Xlint:preview for details.
+Reflection warning, /tmp/form-init6237150020852073320.clj:1:935 - call to static method invokeStaticMethod on clojure.lang.Reflector can't be resolved (argument types: unknown, java.lang.String, unknown).
+Iniciando benchmark de resolución de entornos anidados...
+Resolución de scopes finalizada. Suma:
+1500000
+
+real	0m14.163s
+user	0m11.570s
+sys	0m1.707s
+
+----------------------------------------
+Script: bench_strings.lox
+----------------------------------------
+Compiling 6 source files to /mnt/c/Users/Feli/Downloads/clojox-main/target/classes
+Note: /mnt/c/Users/Feli/Downloads/clojox-main/src/jlox/Lox.java uses preview features of Java SE 21.
+Note: Recompile with -Xlint:preview for details.
+Reflection warning, /tmp/form-init6043515545579179910.clj:1:937 - call to static method invokeStaticMethod on clojure.lang.Reflector can't be resolved (argument types: unknown, java.lang.String, unknown).
+Iniciando benchmark de strings (Asignación y GC)...
+Concatenación finalizada exitosamente.
+
+real	0m16.558s
+user	0m11.574s
+sys	0m1.480s
+

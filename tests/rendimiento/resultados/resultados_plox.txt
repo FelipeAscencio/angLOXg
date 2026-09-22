@@ -1,0 +1,79 @@
+========================================
+  RESULTADOS DE RENDIMIENTO - Python (plox) 
+  Fecha: Tue Sep 22 20:40:49 UTC 2026
+========================================
+
+----------------------------------------
+Script: bench_closures.lox
+----------------------------------------
+Iniciando benchmark de instanciación de closures...
+Closures evaluados. Resultado:
+2499950000.0
+
+real	0m24.646s
+user	0m6.158s
+sys	0m4.491s
+
+----------------------------------------
+Script: bench_fib.lox
+----------------------------------------
+
+real	1m51.541s
+user	1m22.879s
+sys	0m25.853s
+>>> ERROR: Se alcanzó el límite de 120 segundos (Timeout).
+
+----------------------------------------
+Script: bench_logic.lox
+----------------------------------------
+Iniciando benchmark de saltos lógicos (Short-circuit)...
+Lógica finalizada. Contador resultante:
+-100002.0
+
+real	0m44.235s
+user	0m39.323s
+sys	0m0.694s
+
+----------------------------------------
+Script: bench_loop.lox
+----------------------------------------
+Iniciando benchmark de bucle pesado...
+Bucle finalizado. Resultado:
+499999500000.0
+
+real	0m49.289s
+user	0m44.353s
+sys	0m0.547s
+
+----------------------------------------
+Script: bench_math.lox
+----------------------------------------
+Iniciando benchmark de recorrido del AST (Matemática compleja)...
+Matemática finalizada. Resultado:
+9999999999.0
+
+real	0m13.130s
+user	0m10.209s
+sys	0m0.473s
+
+----------------------------------------
+Script: bench_scopes.lox
+----------------------------------------
+Iniciando benchmark de resolución de entornos anidados...
+Resolución de scopes finalizada. Suma:
+1500000.0
+
+real	0m14.425s
+user	0m10.210s
+sys	0m0.313s
+
+----------------------------------------
+Script: bench_strings.lox
+----------------------------------------
+Iniciando benchmark de strings (Asignación y GC)...
+Concatenación finalizada exitosamente.
+
+real	0m5.154s
+user	0m1.333s
+sys	0m0.312s
+
