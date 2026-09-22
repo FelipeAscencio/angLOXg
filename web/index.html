@@ -17,6 +17,19 @@
             </a>
         </header>
 
+        <!-- Barra de control global para seleccionar el modo de ejecución (aplica a Editor y REPL) -->
+        <div class="global-control-bar">
+            <div class="mode-selector-wrapper">
+                <label for="execution-mode" class="mode-label">⚙️ Modo de Motor:</label>
+                <select id="execution-mode" class="mode-select">
+                    <option value="run">Modo: Ejecución completa</option>
+                    <option value="tokens">Modo: Escáner (Tokens)</option>
+                    <option value="ast">Modo: Parser (Árbol AST)</option>
+                    <option value="semantica">Modo: Resolución semántica</option>
+                </select>
+            </div>
+        </div>
+
         <!-- Sección superior: Editor de scripts de código completo -->
         <div class="section-title"><h2>Editor de scripts</h2></div>
         <div class="playground-grid">
@@ -24,15 +37,7 @@
             <!-- Panel izquierdo: Entrada de código fuente, ejemplos rápidos y acciones -->
             <div class="panel">
                 <div class="panel-header">
-                    <div style="display: flex; align-items: center; gap: 1rem;">
-                        <span>Código fuente (Lox)</span>
-                        <select id="execution-mode" class="mode-select" style="background: var(--bg-color); color: var(--text-color); border: 1px solid var(--border-color); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.85rem;">
-                            <option value="run">Modo: Ejecución Completa</option>
-                            <option value="tokens">Modo: Escáner (Tokens)</option>
-                            <option value="ast">Modo: Parser (Árbol AST)</option>
-                            <option value="semantica">Modo: Resolución Semántica</option>
-                        </select>
-                    </div>
+                    <span>Código fuente (Lox)</span>
                     <div class="button-group-sm">
                         <button id="btn-example-1" class="btn-secondary">Ejemplo print</button>
                         <button id="btn-example-2" class="btn-secondary">Ejemplo fibonacci</button>
