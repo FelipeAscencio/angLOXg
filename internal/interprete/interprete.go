@@ -8,9 +8,49 @@ import (
 	"github.com/FelipeAscencio/angLOXg/internal/token"
 )
 
-// ========================
-// Intérprete Principal
-// ========================
+// ====================
+// Funciones y closures
+// ====================
+
+type LoxCallable interface {
+	Aridad() int
+	Llamar(intp *Interprete, argumentos []any) (any, error)
+}
+
+type LoxFunction struct {
+	Declaracion *sintaxis.Function
+	Closure     *Entorno
+}
+
+func (f *LoxFunction) Aridad() int {
+	return len(f.Declaracion.Params)
+}
+
+func (f *LoxFunction) Llamar(intp *Interprete, argumentos []any) (any, error) {
+	entorno := NuevoEntorno(f.Closure)
+	for i, param := range f.Declaracion.Params {
+		entorno.Definir(param.Lexema, argumentos[i])
+	}
+
+	err := intp.ejecutarBloque(f.Declaracion.Body, entorno)
+	if ret, ok := err.(*ValorRetorno); ok {
+		return ret.Valor, nil
+	}
+	
+	return nil, err
+}
+
+type ValorRetorno struct {
+	Valor any
+}
+
+func (v *ValorRetorno) Error() string {
+	return "retorno"
+}
+
+// ==========
+// Intérprete
+// ==========
 
 type Interprete struct {
 	Salida  io.Writer
@@ -102,6 +142,27 @@ func (i *Interprete) Ejecutar(stmt sintaxis.Stmt) error {
 		}
 
 		return nil
+
+	case *sintaxis.Function:
+		funcion := &LoxFunction{
+			Declaracion: s,
+			Closure:     i.entorno,
+		}
+
+		i.entorno.Definir(s.Name.Lexema, funcion)
+		return nil
+
+	case *sintaxis.Return:
+		var valor any
+		var err error
+		if s.Value != nil {
+			valor, err = i.Evaluar(s.Value)
+			if err != nil {
+				return err
+			}
+		}
+
+		return &ValorRetorno{Valor: valor}
 	}
 	
 	return nil
@@ -252,13 +313,40 @@ func (i *Interprete) Evaluar(expr sintaxis.Expr) (any, error) {
 		}
 
 		return i.Evaluar(e.Right)
+
+	case *sintaxis.Call:
+		callee, err := i.Evaluar(e.Callee)
+		if err != nil {
+			return nil, err
+		}
+
+		var argumentos []any
+		for _, argExpr := range e.Arguments {
+			arg, err := i.Evaluar(argExpr)
+			if err != nil {
+				return nil, err
+			}
+			argumentos = append(argumentos, arg)
+		}
+
+		funcion, ok := callee.(LoxCallable)
+		if !ok {
+			return nil, NewErrorRuntime(e.Paren, "Solo se pueden llamar funciones y clases.")
+		}
+
+		if len(argumentos) != funcion.Aridad() {
+			mensaje := fmt.Sprintf("Se esperaban %d argumentos pero se obtuvieron %d.", funcion.Aridad(), len(argumentos))
+			return nil, NewErrorRuntime(e.Paren, mensaje)
+		}
+
+		return funcion.Llamar(i, argumentos)
 	}
 
 	return nil, nil
 }
 
 // ========================
-// Reglas Semánticas de Lox
+// Reglas semánticas de Lox
 // ========================
 
 func (i *Interprete) esVerdadero(objeto any) bool {
