@@ -94,8 +94,7 @@ func despachar(fuente string, salida io.Writer, modoEscaneo, modoArbol, modoReso
 		return lox.Parsear(fuente, salida)
 		
 	case modoResolucion:
-		fmt.Fprintln(salida, "El modo --resolucion está en construcción.")
-		return true
+		return lox.Resolver(fuente, salida)
 
 	default:
 		return lox.Ejecutar(fuente, salida)

@@ -9,6 +9,7 @@ import (
 	"github.com/FelipeAscencio/angLOXg/internal/parser"
 	"github.com/FelipeAscencio/angLOXg/internal/sintaxis"
 	"github.com/FelipeAscencio/angLOXg/internal/token"
+	"github.com/FelipeAscencio/angLOXg/internal/semantica"
 )
 
 // Ejecutar corre código Lox y escribe la salida en "salida". Devuelve false si
@@ -22,7 +23,17 @@ func Ejecutar(fuente string, salida io.Writer) bool {
 		return false
 	}
 
+	// 1. Instanciamos el intérprete y el analizador semántico.
 	intp := interprete.NuevoInterprete(salida)
+	analizador := semantica.Nuevo(intp)
+
+	// 2. Ejecutamos la fase de análisis semántico.
+	if err := analizador.Resolver(sentencias); err != nil {
+		fmt.Fprintln(salida, err.Error())
+		return false
+	}
+
+	// 3. Ejecutamos el intérprete.
 	if err := intp.Interpretar(sentencias); err != nil {
 		fmt.Fprintln(salida, err.Error())
 		return false
@@ -34,13 +45,19 @@ func Ejecutar(fuente string, salida io.Writer) bool {
 // Resolver escanea, parsea, y realiza el análisis semántico sin ejecutar.
 // Es lo que corre el CLI con "--resolucion".
 func Resolver(fuente string, salida io.Writer) bool {
-	_, ok := parsearFuente(fuente, salida)
+	sentencias, ok := parsearFuente(fuente, salida)
 	if !ok {
 		return false
 	}
 
-	// TODO: acá va el análisis semántico (resolución de variables locales).
-	fmt.Fprintln(salida, "El análisis semántico está en construcción.")
+	intp := interprete.NuevoInterprete(salida)
+	analizador := semantica.Nuevo(intp)
+	if err := analizador.Resolver(sentencias); err != nil {
+		fmt.Fprintln(salida, err.Error())
+		return false
+	}
+
+	fmt.Fprintln(salida, "Análisis semántico completado sin errores. El scope es correcto.")
 	return true
 }
 

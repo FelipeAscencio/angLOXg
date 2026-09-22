@@ -55,13 +55,32 @@ func (v *ValorRetorno) Error() string {
 type Interprete struct {
 	Salida  io.Writer
 	entorno *Entorno
+	globales *Entorno
+	locales map[sintaxis.Expr]int
 }
 
 func NuevoInterprete(salida io.Writer) *Interprete {
+	entornoGlobal := NuevoEntorno(nil)
 	return &Interprete{
-		Salida:  salida,
-		entorno: NuevoEntorno(nil),
+		Salida:   salida,
+		entorno:  entornoGlobal,
+		globales: entornoGlobal,
+		locales:  make(map[sintaxis.Expr]int),
 	}
+}
+
+// ResolverLocal es llamado por el Analizador Semántico para guardar la distancia de una variable.
+func (i *Interprete) ResolverLocal(expr sintaxis.Expr, profundidad int) {
+	i.locales[expr] = profundidad
+}
+
+// buscarVariable usa la distancia estática si existe.
+func (i *Interprete) buscarVariable(nombre token.Token, expr sintaxis.Expr) (any, error) {
+	if distancia, ok := i.locales[expr]; ok {
+		return i.entorno.ObtenerEn(distancia, nombre.Lexema), nil
+	}
+	
+	return i.globales.Obtener(nombre)
 }
 
 // Interpretar recorre las sentencias y devuelve el primer error de runtime que encuentre.
@@ -281,7 +300,7 @@ func (i *Interprete) Evaluar(expr sintaxis.Expr) (any, error) {
 		}
 
 	case *sintaxis.Variable:
-		return i.entorno.Obtener(e.Name)
+		return i.buscarVariable(e.Name, e)
 
 	case *sintaxis.Assign:
 		valor, err := i.Evaluar(e.Value)
@@ -289,10 +308,13 @@ func (i *Interprete) Evaluar(expr sintaxis.Expr) (any, error) {
 			return nil, err
 		}
 		
-		if err := i.entorno.Asignar(e.Name, valor); err != nil {
-			return nil, err
+		if distancia, ok := i.locales[e]; ok {
+			i.entorno.AsignarEn(distancia, e.Name.Lexema, valor)
+		} else {
+			if err := i.globales.Asignar(e.Name, valor); err != nil {
+				return nil, err
+			}
 		}
-		
 		return valor, nil
 
 	case *sintaxis.Logical:

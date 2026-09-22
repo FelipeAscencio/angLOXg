@@ -49,3 +49,20 @@ func (e *Entorno) Asignar(nombre token.Token, valor any) error {
 
 	return NewErrorRuntime(nombre, "Variable no definida '"+nombre.Lexema+"'.")
 }
+
+func (e *Entorno) ancestro(distancia int) *Entorno {
+	actual := e
+	for i := 0; i < distancia; i++ {
+		actual = actual.Ancestro
+	}
+	
+	return actual
+}
+
+func (e *Entorno) ObtenerEn(distancia int, nombre string) any {
+	return e.ancestro(distancia).valores[nombre]
+}
+
+func (e *Entorno) AsignarEn(distancia int, nombre string, valor any) {
+	e.ancestro(distancia).valores[nombre] = valor
+}
