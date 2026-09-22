@@ -9,16 +9,38 @@ import (
 	"github.com/FelipeAscencio/angLOXg/internal/lox"
 )
 
-// Ejecuta código Lox y captura la salida para retornarla a JavaScript.
+// Ejecuta código Lox según el modo seleccionado (run, tokens, ast, semantica) y captura la salida.
+// Ejecuta código Lox según el modo seleccionado (run, tokens, ast, semantica) y captura la salida.
 func ejecutar(args []js.Value) string {
 	if len(args) == 0 {
 		return ""
 	}
 
-	var buf bytes.Buffer
-	lox.Ejecutar(args[0].String(), &buf)
+	codigo := args[0].String()
+	modo := "run"
+	if len(args) > 1 {
+		modo = args[1].String()
+	}
 
-	return buf.String()
+	var salida bytes.Buffer
+
+	switch modo {
+	case "tokens":
+		lox.Escanear(codigo, &salida)
+
+	case "ast":
+		lox.Parsear(codigo, &salida)
+
+	case "semantica":
+		lox.Resolver(codigo, &salida)
+
+	case "run":
+		fallthrough
+	default:
+		lox.Ejecutar(codigo, &salida)
+	}
+
+	return salida.String()
 }
 
 // Expone la ejecución para el panel del editor.

@@ -22,9 +22,14 @@ WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((resu
     outputContainer.style.color = "#ef4444";
 });
 
-// Ejecuta el código fuente completo ingresado en el editor principal.
+// Referencia al selector del modo de ejecución/flag.
+const executionModeSelect = document.getElementById("execution-mode");
+
+// Ejecuta el código fuente completo ingresado en el editor principal según el modo elegido.
 runBtn.addEventListener("click", () => {
     const code = codeInput.value;
+    const mode = executionModeSelect ? executionModeSelect.value : "run";
+
     if (!code.trim()) {
         outputContainer.textContent = "Error: El código fuente está vacío.";
         return;
@@ -32,7 +37,7 @@ runBtn.addEventListener("click", () => {
 
     try {
         if (typeof runLox === "function") {
-            const result = runLox(code);
+            const result = runLox(code, mode);
             outputContainer.textContent = result || "[Ejecución finalizada sin salida]";
         } else {
             outputContainer.textContent = "Error: El motor Wasm todavía no está listo.";
@@ -252,18 +257,19 @@ if (creditoAprobado) {
 }`;
 });
 
-// Gestiona la entrada interactiva de comandos línea por línea en la terminal REPL.
+// Gestiona la entrada interactiva de comandos línea por línea en la terminal REPL usando el modo actual.
 replInput.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
         const code = replInput.value.trim();
+        const mode = executionModeSelect ? executionModeSelect.value : "run";
         if (!code) return;
 
-        appendReplLine(`> ${code}`, "input");
+        appendReplLine(`> [${mode}] ${code}`, "input");
         replInput.value = "";
 
         try {
             if (typeof evalLox === "function") {
-                const result = evalLox(code);
+                const result = evalLox(code, mode);
                 if (result) {
                     appendReplLine(result, "output");
                 }
