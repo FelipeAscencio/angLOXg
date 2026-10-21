@@ -174,6 +174,31 @@ func (v *VM) correr() bool {
 			offset := int(v.leerShort())
 			v.frameActual().ip -= offset
 
+		case compilador.OpClosure:
+			funcion := v.leerConstante().(*compilador.Funcion)
+			closure := compilador.NuevoClosure(funcion)
+			v.push(closure)
+
+		case compilador.OpCall:
+			cantidadArgs := int(v.leerByte())
+			callee := v.peek(cantidadArgs)
+			closure, ok := callee.(*compilador.Closure)
+			if !ok {
+				fmt.Fprintln(v.salida, "Error en ejecución: Solo se pueden llamar funciones.")
+				return false
+			}
+
+			if cantidadArgs != closure.Funcion.Aridad {
+				fmt.Fprintf(v.salida, "Error en ejecución: Se esperaban %d argumentos pero se obtuvieron %d.\n", closure.Funcion.Aridad, cantidadArgs)
+				return false
+			}
+
+			v.frames = append(v.frames, &CallFrame{
+				closure: closure,
+				ip:      0,
+				slots:   len(v.pila) - cantidadArgs - 1,
+			})
+
 		case compilador.OpReturn:
 			resultado := v.pop()
 			frameActual := v.frameActual()

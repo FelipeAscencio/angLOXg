@@ -71,7 +71,7 @@ func Compilar(tokens []token.Token) *Funcion {
 // Configura la tabla del Pratt Parser.
 func (c *Compilador) iniciarReglas() {
 	c.reglas = map[token.TipoDeToken]ReglaParseo{
-		token.LEFT_PAREN:    {prefijo: agrupamiento, infijo: nil, precedencia: PrecNone},
+		token.LEFT_PAREN:    {prefijo: agrupamiento, infijo: llamada, precedencia: PrecCall},
 		token.MINUS:         {prefijo: unario, infijo: binario, precedencia: PrecTerm},
 		token.PLUS:          {prefijo: nil, infijo: binario, precedencia: PrecTerm},
 		token.SLASH:         {prefijo: nil, infijo: binario, precedencia: PrecFactor},
@@ -91,6 +91,7 @@ func (c *Compilador) iniciarReglas() {
 		token.IDENTIFIER:    {prefijo: variable, infijo: nil, precedencia: PrecNone},
 		token.AND:           {prefijo: nil, infijo: and, precedencia: PrecAnd},
 		token.OR:            {prefijo: nil, infijo: or, precedencia: PrecOr},
+		token.FUN:           {prefijo: nil, infijo: nil, precedencia: PrecNone},
 	}
 }
 
@@ -316,7 +317,9 @@ func (c *Compilador) obtenerRegla(tipo token.TipoDeToken) ReglaParseo {
 // =================================
 
 func (c *Compilador) declaracion() {
-	if c.coincide(token.VAR) {
+	if c.coincide(token.FUN) {
+		c.declaracionFuncion()
+	} else if c.coincide(token.VAR) {
 		c.declaracionVariable()
 	} else {
 		c.sentencia()
@@ -347,6 +350,56 @@ func (c *Compilador) declaracionVariable() {
 	}
 }
 
+func (c *Compilador) declaracionFuncion() {
+	c.consumir(token.IDENTIFIER, "Se esperaba el nombre de la función.")
+	nombreToken := c.tokenAnterior()
+	indiceGlobal := c.funcion.Chunk.AgregarConstante(nombreToken.Lexema)
+	compiladorFuncion := &Compilador{
+		tokens:           c.tokens,
+		actual:           c.actual, // Hereda la posición actual de los tokens
+		funcion:          NuevaFuncion(),
+		locales:          make([]Local, 0),
+		profundidadScope: 0,
+		reglas:           c.reglas,
+	}
+
+	compiladorFuncion.funcion.Nombre = nombreToken.Lexema
+	compiladorFuncion.locales = append(compiladorFuncion.locales, Local{profundidad: 0, nombre: ""})
+	compiladorFuncion.consumir(token.LEFT_PAREN, "Se esperaba '(' después del nombre de la función.")
+	if compiladorFuncion.tokenActual().Tipo != token.RIGHT_PAREN {
+		for {
+			compiladorFuncion.funcion.Aridad++
+			if compiladorFuncion.funcion.Aridad > 255 {
+				fmt.Fprintf(os.Stderr, "[Línea %d] Error: No se pueden tener más de 255 parámetros.\n", compiladorFuncion.tokenActual().Linea)
+			}
+
+			compiladorFuncion.consumir(token.IDENTIFIER, "Se esperaba el nombre del parámetro.")
+			paramNombre := compiladorFuncion.tokenAnterior().Lexema
+			compiladorFuncion.locales = append(compiladorFuncion.locales, Local{
+				nombre:      paramNombre,
+				profundidad: 1,
+			})
+
+			if !compiladorFuncion.coincide(token.COMMA) {
+				break
+			}
+		}
+	}
+
+	compiladorFuncion.consumir(token.RIGHT_PAREN, "Se esperaba ')' después de los parámetros.")
+	compiladorFuncion.consumir(token.LEFT_BRACE, "Se esperaba '{' antes del cuerpo de la función.")
+	compiladorFuncion.profundidadScope = 1
+	compiladorFuncion.bloque()
+	compiladorFuncion.emitirByte(uint8(OpNil))
+	compiladorFuncion.emitirByte(uint8(OpReturn))
+	c.actual = compiladorFuncion.actual
+	indiceFuncion := c.funcion.Chunk.AgregarConstante(compiladorFuncion.funcion)
+	c.emitirByte(uint8(OpClosure))
+	c.emitirByte(uint8(indiceFuncion))
+	c.emitirByte(uint8(OpDefineGlobal))
+	c.emitirByte(uint8(indiceGlobal))
+}
+
 func (c *Compilador) sentencia() {
 	if c.coincide(token.PRINT) {
 		c.sentenciaImprimir()
@@ -360,6 +413,8 @@ func (c *Compilador) sentencia() {
 		c.empezarScope()
 		c.bloque()
 		c.terminarScope()
+	} else if c.coincide(token.RETURN) {
+		c.sentenciaReturn()
 	} else {
 		c.sentenciaExpresion()
 	}
@@ -447,6 +502,38 @@ func (c *Compilador) sentenciaFor() {
 	}
 	
 	c.terminarScope()
+}
+
+func (c *Compilador) sentenciaReturn() {
+	if c.coincide(token.SEMICOLON) {
+		c.emitirByte(uint8(OpNil))
+	} else {
+		c.expresion()
+		c.consumir(token.SEMICOLON, "Se esperaba ';' después del valor de retorno.")
+	}
+	
+	c.emitirByte(uint8(OpReturn))
+}
+
+func llamada(c *Compilador, puedeAsignar bool) {
+	cantidadArgumentos := 0
+	if c.tokenActual().Tipo != token.RIGHT_PAREN {
+		for {
+			c.expresion()
+			if cantidadArgumentos == 255 {
+				fmt.Fprintf(os.Stderr, "[Línea %d] Error: No se pueden tener más de 255 argumentos.\n", c.tokenActual().Linea)
+			}
+
+			cantidadArgumentos++
+			if !c.coincide(token.COMMA) {
+				break
+			}
+		}
+	}
+	
+	c.consumir(token.RIGHT_PAREN, "Se esperaba ')' después de los argumentos.")
+	c.emitirByte(uint8(OpCall))
+	c.emitirByte(uint8(cantidadArgumentos))
 }
 
 func (c *Compilador) expresion() {
