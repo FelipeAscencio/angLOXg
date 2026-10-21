@@ -66,13 +66,45 @@ func (v *VM) correr() bool {
 			valor := v.pop().(float64)
 			v.push(-valor)
 
+		case compilador.OpNil:
+			v.push(nil)
+
+		case compilador.OpTrue:
+			v.push(true)
+
+		case compilador.OpFalse:
+			v.push(false)
+
+		case compilador.OpEqual:
+			b := v.pop()
+			a := v.pop()
+			v.push(sonIguales(a, b))
+
+		case compilador.OpGreater:
+			b := v.pop().(float64)
+			a := v.pop().(float64)
+			v.push(a > b)
+
+		case compilador.OpLess:
+			b := v.pop().(float64)
+			a := v.pop().(float64)
+			v.push(a < b)
+
+		case compilador.OpNot:
+			valor := v.pop()
+			v.push(esFalso(valor))
+
+		case compilador.OpPop:
+			v.pop()
+
+		case compilador.OpPrint:
+			fmt.Fprintln(v.salida, v.pop())
+
 		case compilador.OpReturn:
-			if len(v.pila) > 0 {
-				fmt.Fprintln(v.salida, v.pop())
-			}
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -100,4 +132,26 @@ func (v *VM) pop() any {
 	valor := v.pila[tope]
 	v.pila = v.pila[:tope]
 	return valor
+}
+
+// Lox sigue la convención de Ruby: false y nil son falsos, todo lo demás es verdadero.
+func esFalso(valor any) bool {
+	if valor == nil {
+		return true
+	}
+	if b, ok := valor.(bool); ok {
+		return !b
+	}
+	return false
+}
+
+// Comprueba igualdad tolerando distintos tipos.
+func sonIguales(a, b any) bool {
+	if a == nil && b == nil {
+		return true
+	}
+	if a == nil {
+		return false
+	}
+	return a == b
 }
