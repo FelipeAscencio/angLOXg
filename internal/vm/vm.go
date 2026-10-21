@@ -190,6 +190,28 @@ func (v *VM) correr() bool {
 			slot := v.leerByte()
 			v.pila[v.frameActual().slots+int(slot)] = v.peek(0)
 
+		case compilador.OpGetUpvalue:
+			slot := v.leerByte()
+			upvalue := v.frameActual().closure.Upvalues[slot]
+			if upvalue.Locacion != -1 {
+				v.push(v.pila[upvalue.Locacion])
+			} else {
+				v.push(upvalue.Cerrado)
+			}
+
+		case compilador.OpSetUpvalue:
+			slot := v.leerByte()
+			upvalue := v.frameActual().closure.Upvalues[slot]
+			if upvalue.Locacion != -1 {
+				v.pila[upvalue.Locacion] = v.peek(0)
+			} else {
+				upvalue.Cerrado = v.peek(0)
+			}
+
+		case compilador.OpCloseUpvalue:
+			v.cerrarUpvalues(len(v.pila) - 1)
+			v.pop()
+
 		case compilador.OpJump:
 			offset := int(v.leerShort())
 			v.frameActual().ip += offset
