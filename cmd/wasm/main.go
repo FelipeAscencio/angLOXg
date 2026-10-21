@@ -9,8 +9,7 @@ import (
 	"github.com/FelipeAscencio/angLOXg/internal/lox"
 )
 
-// Ejecuta código Lox según el modo seleccionado (run, tokens, ast, semantica) y captura la salida.
-// Ejecuta código Lox según el modo seleccionado (run, tokens, ast, semantica) y captura la salida.
+// Ejecuta código Lox según el modo seleccionado (run, tokens, ast, semantica, vm) y captura la salida.
 func ejecutar(args []js.Value) string {
 	if len(args) == 0 {
 		return ""
@@ -33,6 +32,9 @@ func ejecutar(args []js.Value) string {
 
 	case "semantica":
 		lox.Resolver(codigo, &salida)
+
+	case "vm":
+		lox.EjecutarVM(codigo, &salida)
 
 	case "run":
 		fallthrough

@@ -12,19 +12,20 @@ import (
 
 // Códigos de salida del programa.
 const (
-	salidaOK            = 0
-	salidaUso           = 64
-	salidaErrorDeDatos  = 65
-	salidaSinArchivo    = 66
+	salidaOK           = 0
+	salidaUso          = 64
+	salidaErrorDeDatos = 65
+	salidaSinArchivo   = 66
 )
 
 func main() {
 	modoEscaneo := flag.Bool("escaneo", false, "mostrar tokens")
 	modoArbol := flag.Bool("arbol", false, "mostrar árbol de sintaxis (AST)")
 	modoResolucion := flag.Bool("resolucion", false, "ejecutar hasta análisis semántico (Resolver)")
+	modoVM := flag.Bool("vm", false, "ejecutar usando la Máquina Virtual (Bytecode Compiler)") // NUEVO FLAG
 
 	flag.Usage = func() {
-		fmt.Fprintln(os.Stderr, "uso: angloxg [--escaneo | --arbol | --resolucion] [script.lox]")
+		fmt.Fprintln(os.Stderr, "uso: angloxg [--escaneo | --arbol | --resolucion | --vm] [script.lox]")
 		fmt.Fprintln(os.Stderr, "\nSin argumentos, abre la consola interactiva (REPL).")
 		fmt.Fprintln(os.Stderr, "\nOpciones:")
 		flag.PrintDefaults()
@@ -38,21 +39,21 @@ func main() {
 	}
 
 	if flag.NArg() == 1 {
-		os.Exit(ejecutarArchivo(flag.Arg(0), *modoEscaneo, *modoArbol, *modoResolucion))
+		os.Exit(ejecutarArchivo(flag.Arg(0), *modoEscaneo, *modoArbol, *modoResolucion, *modoVM))
 	}
 
-	os.Exit(ejecutarConsola(*modoEscaneo, *modoArbol, *modoResolucion))
+	os.Exit(ejecutarConsola(*modoEscaneo, *modoArbol, *modoResolucion, *modoVM))
 }
 
 // Ejecuta un archivo de código fuente Lox.
-func ejecutarArchivo(ruta string, modoEscaneo, modoArbol, modoResolucion bool) int {
+func ejecutarArchivo(ruta string, modoEscaneo, modoArbol, modoResolucion, modoVM bool) int {
 	fuente, err := os.ReadFile(ruta)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "no se pudo leer %q: %v\n", ruta, err)
 		return salidaSinArchivo
 	}
 
-	if !despachar(string(fuente), os.Stdout, modoEscaneo, modoArbol, modoResolucion) {
+	if !despachar(string(fuente), os.Stdout, modoEscaneo, modoArbol, modoResolucion, modoVM) {
 		return salidaErrorDeDatos
 	}
 
@@ -60,7 +61,7 @@ func ejecutarArchivo(ruta string, modoEscaneo, modoArbol, modoResolucion bool) i
 }
 
 // Inicia la consola interactiva (REPL).
-func ejecutarConsola(modoEscaneo, modoArbol, modoResolucion bool) int {
+func ejecutarConsola(modoEscaneo, modoArbol, modoResolucion, modoVM bool) int {
 	fmt.Println("=== angLOXg ===")
 	fmt.Println("Intérprete de Lox escrito en Go")
 	entrada := bufio.NewScanner(os.Stdin)
@@ -70,7 +71,7 @@ func ejecutarConsola(modoEscaneo, modoArbol, modoResolucion bool) int {
 			break
 		}
 
-		despachar(entrada.Text(), os.Stdout, modoEscaneo, modoArbol, modoResolucion)
+		despachar(entrada.Text(), os.Stdout, modoEscaneo, modoArbol, modoResolucion, modoVM)
 	}
 
 	if err := entrada.Err(); err != nil {
@@ -83,7 +84,7 @@ func ejecutarConsola(modoEscaneo, modoArbol, modoResolucion bool) int {
 }
 
 // Dirige la ejecución según el modo o flag seleccionada.
-func despachar(fuente string, salida io.Writer, modoEscaneo, modoArbol, modoResolucion bool) bool {
+func despachar(fuente string, salida io.Writer, modoEscaneo, modoArbol, modoResolucion, modoVM bool) bool {
 	switch {
 	case modoEscaneo:
 		return lox.Escanear(fuente, salida)
@@ -93,6 +94,9 @@ func despachar(fuente string, salida io.Writer, modoEscaneo, modoArbol, modoReso
 		
 	case modoResolucion:
 		return lox.Resolver(fuente, salida)
+
+	case modoVM:
+		return lox.EjecutarVM(fuente, salida)
 
 	default:
 		return lox.Ejecutar(fuente, salida)

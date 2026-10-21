@@ -35,6 +35,19 @@ func Ejecutar(fuente string, salida io.Writer) bool {
 	return true
 }
 
+// Ejecuta código Lox utilizando el compilador de bytecode y la Máquina Virtual (Single-Pass).
+func EjecutarVM(fuente string, salida io.Writer) bool {
+	// Reutilizamos el escáner del Tree-Walk.
+	tokens, ok := escanearFuente(fuente, salida)
+	if !ok {
+		return false
+	}
+
+	fmt.Fprintln(salida, "--- MODO VM ACTIVADO ---")
+	fmt.Fprintln(salida, "Tokens listos para el Single-Pass Compiler:", len(tokens))
+	return true
+}
+
 // Ejecuta las fases de escaneo, parseo y análisis semántico sin llegar a interpretar.
 func Resolver(fuente string, salida io.Writer) bool {
 	sentencias, ok := parsearFuente(fuente, salida)
