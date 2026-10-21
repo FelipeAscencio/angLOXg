@@ -34,6 +34,10 @@ const (
 	OpGetGlobal
 	OpSetGlobal
 
+	// Manejo de variables locales
+	OpGetLocal
+	OpSetLocal
+
 	// Finaliza la ejecución del chunk actual y retorna el control.
 	OpReturn
 )

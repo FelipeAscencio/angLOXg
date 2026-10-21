@@ -126,6 +126,14 @@ func (v *VM) correr() bool {
 			// La asignación deja el valor en la pila, por eso usamos peek(0) en vez de pop().
 			v.globales[nombre] = v.peek(0)
 
+		case compilador.OpGetLocal:
+			slot := v.leerByte()
+			v.push(v.pila[slot])
+
+		case compilador.OpSetLocal:
+			slot := v.leerByte()
+			v.pila[slot] = v.peek(0)
+
 		case compilador.OpReturn:
 			return true
 		}

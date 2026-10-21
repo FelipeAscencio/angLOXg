@@ -32,20 +32,30 @@ type ReglaParseo struct {
 	precedencia Precedencia
 }
 
+// Estructura para simular el rastro de las variables locales en la pila[cite: 39].
+type Local struct {
+	nombre      string
+	profundidad int
+}
+
 // El Compilador orquesta la traducción de tokens a bytecode (Single-Pass).
 type Compilador struct {
 	tokens []token.Token
 	actual int
 	chunk  *Chunk
 	reglas map[token.TipoDeToken]ReglaParseo
+	locales          []Local
+	profundidadScope int
 }
 
 // Toma una lista de tokens y devuelve un Chunk listo para la VM.
 func Compilar(tokens []token.Token) *Chunk {
 	comp := &Compilador{
-		tokens: tokens,
-		actual: 0,
-		chunk:  NuevoChunk(),
+		tokens:           tokens,
+		actual:           0,
+		chunk:            NuevoChunk(),
+		locales:          make([]Local, 0),
+		profundidadScope: 0,
 	}
 
 	comp.iniciarReglas()
@@ -109,16 +119,38 @@ func (c *Compilador) parsearPrecedencia(prec Precedencia) {
 
 func variable(c *Compilador, puedeAsignar bool) {
 	nombre := c.tokenAnterior().Lexema
-	indiceGlobal := c.chunk.AgregarConstante(nombre)
+	arg := c.resolverLocal(nombre)
+	var opGet, opSet uint8
+	if arg != -1 {
+		// La variable existe en el scope local.
+		opGet = uint8(OpGetLocal)
+		opSet = uint8(OpSetLocal)
+	} else {
+		// Asumimos que es global.
+		arg = c.chunk.AgregarConstante(nombre)
+		opGet = uint8(OpGetGlobal)
+		opSet = uint8(OpSetGlobal)
+	}
 
 	if puedeAsignar && c.coincide(token.EQUAL) {
 		c.expresion()
-		c.emitirByte(uint8(OpSetGlobal))
-		c.emitirByte(uint8(indiceGlobal))
+		c.emitirByte(opSet)
+		c.emitirByte(uint8(arg))
 	} else {
-		c.emitirByte(uint8(OpGetGlobal))
-		c.emitirByte(uint8(indiceGlobal))
+		c.emitirByte(opGet)
+		c.emitirByte(uint8(arg))
 	}
+}
+
+// Simula la búsqueda en la pila recorriendo el arreglo de locales hacia atrás.
+func (c *Compilador) resolverLocal(nombre string) int {
+	for i := len(c.locales) - 1; i >= 0; i-- {
+		if c.locales[i].nombre == nombre {
+			return i
+		}
+	}
+
+	return -1
 }
 
 func numero(c *Compilador, puedeAsignar bool) {
@@ -211,7 +243,7 @@ func (c *Compilador) consumir(tipo token.TipoDeToken, mensaje string) {
 		c.avanzar()
 		return
 	}
-	
+
 	fmt.Fprintf(os.Stderr, "[Línea %d] Error: %s\n", c.tokenActual().Linea, mensaje)
 }
 
@@ -247,23 +279,35 @@ func (c *Compilador) declaracion() {
 
 func (c *Compilador) declaracionVariable() {
 	c.consumir(token.IDENTIFIER, "Se esperaba el nombre de la variable.")
-	
-	indiceGlobal := c.chunk.AgregarConstante(c.tokenAnterior().Lexema)
-
+	nombreToken := c.tokenAnterior()
 	if c.coincide(token.EQUAL) {
 		c.expresion()
 	} else {
-		c.emitirByte(uint8(OpNil)) // Variables sin inicializar son nil por defecto
+		c.emitirByte(uint8(OpNil))
 	}
 
 	c.consumir(token.SEMICOLON, "Se esperaba ';' después de la declaración de la variable.")
-	c.emitirByte(uint8(OpDefineGlobal))
-	c.emitirByte(uint8(indiceGlobal))
+	if c.profundidadScope > 0 {
+		// Es una variable local.
+		c.locales = append(c.locales, Local{
+			nombre:      nombreToken.Lexema,
+			profundidad: c.profundidadScope,
+		})
+	} else {
+		// Es una variable global.
+		indiceGlobal := c.chunk.AgregarConstante(nombreToken.Lexema)
+		c.emitirByte(uint8(OpDefineGlobal))
+		c.emitirByte(uint8(indiceGlobal))
+	}
 }
 
 func (c *Compilador) sentencia() {
 	if c.coincide(token.PRINT) {
 		c.sentenciaImprimir()
+	} else if c.coincide(token.LEFT_BRACE) {
+		c.empezarScope()
+		c.bloque()
+		c.terminarScope()
 	} else {
 		c.sentenciaExpresion()
 	}
@@ -283,6 +327,26 @@ func (c *Compilador) sentenciaExpresion() {
 
 func (c *Compilador) expresion() {
 	c.parsearPrecedencia(PrecAssignment)
+}
+
+func (c *Compilador) bloque() {
+	for !c.esFin() && c.tokenActual().Tipo != token.RIGHT_BRACE {
+		c.declaracion()
+	}
+
+	c.consumir(token.RIGHT_BRACE, "Se esperaba '}' al final del bloque.")
+}
+
+func (c *Compilador) empezarScope() {
+	c.profundidadScope++
+}
+
+func (c *Compilador) terminarScope() {
+	c.profundidadScope--
+	for len(c.locales) > 0 && c.locales[len(c.locales)-1].profundidad > c.profundidadScope {
+		c.emitirByte(uint8(OpPop))
+		c.locales = c.locales[:len(c.locales)-1]
+	}
 }
 
 func (c *Compilador) coincide(tipo token.TipoDeToken) bool {
