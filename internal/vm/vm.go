@@ -9,17 +9,19 @@ import (
 
 // Representa la máquina virtual basada en pila que ejecuta el bytecode.
 type VM struct {
-	chunk  *compilador.Chunk
-	ip     int     // Puntero de instrucción (Instruction Pointer).
-	pila   []any   // Pila de ejecución para resultados intermedios.
-	salida io.Writer
+	chunk    *compilador.Chunk
+	ip       int	// Puntero de instrucción (Instruction Pointer).
+	pila     []any
+	globales map[string]any
+	salida   io.Writer
 }
 
 // Inicializa una nueva Máquina Virtual.
 func Nueva(salida io.Writer) *VM {
 	return &VM{
-		pila:   make([]any, 0, 256),
-		salida: salida,
+		pila:     make([]any, 0, 256),
+		globales: make(map[string]any),
+		salida:   salida,
 	}
 }
 
@@ -100,6 +102,30 @@ func (v *VM) correr() bool {
 		case compilador.OpPrint:
 			fmt.Fprintln(v.salida, v.pop())
 
+		case compilador.OpDefineGlobal:
+			nombre := v.leerConstante().(string)
+			v.globales[nombre] = v.pop()
+
+		case compilador.OpGetGlobal:
+			nombre := v.leerConstante().(string)
+			valor, existe := v.globales[nombre]
+			if !existe {
+				fmt.Fprintf(v.salida, "Error en ejecución: Variable no definida '%s'.\n", nombre)
+				return false
+			}
+
+			v.push(valor)
+
+		case compilador.OpSetGlobal:
+			nombre := v.leerConstante().(string)
+			if _, existe := v.globales[nombre]; !existe {
+				fmt.Fprintf(v.salida, "Error en ejecución: Variable no definida '%s'.\n", nombre)
+				return false
+			}
+
+			// La asignación deja el valor en la pila, por eso usamos peek(0) en vez de pop().
+			v.globales[nombre] = v.peek(0)
+
 		case compilador.OpReturn:
 			return true
 		}
@@ -131,7 +157,7 @@ func (v *VM) pop() any {
 	if len(v.pila) == 0 {
 		return nil 
 	}
-	
+
 	tope := len(v.pila) - 1
 	valor := v.pila[tope]
 	v.pila = v.pila[:tope]
@@ -158,4 +184,9 @@ func sonIguales(a, b any) bool {
 		return false
 	}
 	return a == b
+}
+
+// Lee un valor de la pila sin sacarlo. La distancia es desde el tope (0 es el tope actual).
+func (v *VM) peek(distancia int) any {
+	return v.pila[len(v.pila)-1-distancia]
 }

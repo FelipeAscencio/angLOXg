@@ -26,8 +26,13 @@ const (
 	OpNegate
 
 	// Manejo de sentencias
-	OpPop   // Extrae y descarta el tope de la pila
-	OpPrint // Extrae e imprime el tope de la pila
+	OpPop
+	OpPrint
+
+	// Manejo de variables globales
+	OpDefineGlobal
+	OpGetGlobal
+	OpSetGlobal
 
 	// Finaliza la ejecución del chunk actual y retorna el control.
 	OpReturn

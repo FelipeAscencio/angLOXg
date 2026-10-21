@@ -27,8 +27,8 @@ const (
 
 // La ReglaParseo asocia funciones de parseo a un tipo de token.
 type ReglaParseo struct {
-	prefijo     func(*Compilador)
-	infijo      func(*Compilador)
+	prefijo     func(*Compilador, bool)
+	infijo      func(*Compilador, bool)
 	precedencia Precedencia
 }
 
@@ -65,8 +65,8 @@ func (c *Compilador) iniciarReglas() {
 		token.PLUS:          {prefijo: nil, infijo: binario, precedencia: PrecTerm},
 		token.SLASH:         {prefijo: nil, infijo: binario, precedencia: PrecFactor},
 		token.STAR:          {prefijo: nil, infijo: binario, precedencia: PrecFactor},
-		token.STRING:        {prefijo: cadena, infijo: nil, precedencia: PrecNone},
 		token.NUMBER:        {prefijo: numero, infijo: nil, precedencia: PrecNone},
+		token.STRING:        {prefijo: cadena, infijo: nil, precedencia: PrecNone},
 		token.FALSE:         {prefijo: literal, infijo: nil, precedencia: PrecNone},
 		token.TRUE:          {prefijo: literal, infijo: nil, precedencia: PrecNone},
 		token.NIL:           {prefijo: literal, infijo: nil, precedencia: PrecNone},
@@ -77,6 +77,7 @@ func (c *Compilador) iniciarReglas() {
 		token.GREATER_EQUAL: {prefijo: nil, infijo: binario, precedencia: PrecComparison},
 		token.LESS:          {prefijo: nil, infijo: binario, precedencia: PrecComparison},
 		token.LESS_EQUAL:    {prefijo: nil, infijo: binario, precedencia: PrecComparison},
+		token.IDENTIFIER:    {prefijo: variable, infijo: nil, precedencia: PrecNone},
 	}
 }
 
@@ -89,11 +90,16 @@ func (c *Compilador) parsearPrecedencia(prec Precedencia) {
 		return
 	}
 
-	reglaPrefijo(c)
+	puedeAsignar := prec <= PrecAssignment
+	reglaPrefijo(c, puedeAsignar)
 	for prec <= c.obtenerRegla(c.tokenActual().Tipo).precedencia {
 		c.avanzar()
 		reglaInfijo := c.obtenerRegla(c.tokenAnterior().Tipo).infijo
-		reglaInfijo(c)
+		reglaInfijo(c, puedeAsignar)
+	}
+
+	if puedeAsignar && c.coincide(token.EQUAL) {
+		fmt.Fprintf(os.Stderr, "[Línea %d] Error: Objetivo de asignación no válido.\n", c.tokenAnterior().Linea)
 	}
 }
 
@@ -101,12 +107,31 @@ func (c *Compilador) parsearPrecedencia(prec Precedencia) {
 // Funciones de parseo
 // ===================
 
-func numero(c *Compilador) {
+func variable(c *Compilador, puedeAsignar bool) {
+	nombre := c.tokenAnterior().Lexema
+	indiceGlobal := c.chunk.AgregarConstante(nombre)
+
+	if puedeAsignar && c.coincide(token.EQUAL) {
+		c.expresion()
+		c.emitirByte(uint8(OpSetGlobal))
+		c.emitirByte(uint8(indiceGlobal))
+	} else {
+		c.emitirByte(uint8(OpGetGlobal))
+		c.emitirByte(uint8(indiceGlobal))
+	}
+}
+
+func numero(c *Compilador, puedeAsignar bool) {
 	valor := c.tokenAnterior().Literal.(float64)
 	c.emitirConstante(valor)
 }
 
-func literal(c *Compilador) {
+func cadena(c *Compilador, puedeAsignar bool) {
+	valor := c.tokenAnterior().Literal.(string)
+	c.emitirConstante(valor)
+}
+
+func literal(c *Compilador, puedeAsignar bool) {
 	switch c.tokenAnterior().Tipo {
 	case token.FALSE:
 		c.emitirByte(uint8(OpFalse))
@@ -117,18 +142,14 @@ func literal(c *Compilador) {
 	}
 }
 
-func agrupamiento(c *Compilador) {
+func agrupamiento(c *Compilador, puedeAsignar bool) {
 	c.parsearPrecedencia(PrecAssignment)
 	c.consumir(token.RIGHT_PAREN, "Se esperaba ')' después de la expresión.")
 }
 
-func unario(c *Compilador) {
+func unario(c *Compilador, puedeAsignar bool) {
 	tipoOperador := c.tokenAnterior().Tipo
-
-	// Compilamos el operando
 	c.parsearPrecedencia(PrecUnary)
-
-	// Emitimos la instrucción correspondiente
 	switch tipoOperador {
 	case token.MINUS:
 		c.emitirByte(uint8(OpNegate))
@@ -137,13 +158,11 @@ func unario(c *Compilador) {
 	}
 }
 
-func binario(c *Compilador) {
+func binario(c *Compilador, puedeAsignar bool) {
 	tipoOperador := c.tokenAnterior().Tipo
 	regla := c.obtenerRegla(tipoOperador)
-
-	// Compilamos el operando derecho con un nivel más de precedencia
 	c.parsearPrecedencia(regla.precedencia + 1)
-
+	
 	switch tipoOperador {
 	case token.PLUS:
 		c.emitirByte(uint8(OpAdd))
@@ -169,11 +188,6 @@ func binario(c *Compilador) {
 		c.emitirByte(uint8(OpGreater))
 		c.emitirByte(uint8(OpNot))
 	}
-}
-
-func cadena(c *Compilador) {
-	valor := c.tokenAnterior().Literal.(string)
-	c.emitirConstante(valor)
 }
 
 // ====================
@@ -224,7 +238,27 @@ func (c *Compilador) obtenerRegla(tipo token.TipoDeToken) ReglaParseo {
 // =================================
 
 func (c *Compilador) declaracion() {
-	c.sentencia()
+	if c.coincide(token.VAR) {
+		c.declaracionVariable()
+	} else {
+		c.sentencia()
+	}
+}
+
+func (c *Compilador) declaracionVariable() {
+	c.consumir(token.IDENTIFIER, "Se esperaba el nombre de la variable.")
+	
+	indiceGlobal := c.chunk.AgregarConstante(c.tokenAnterior().Lexema)
+
+	if c.coincide(token.EQUAL) {
+		c.expresion()
+	} else {
+		c.emitirByte(uint8(OpNil)) // Variables sin inicializar son nil por defecto
+	}
+
+	c.consumir(token.SEMICOLON, "Se esperaba ';' después de la declaración de la variable.")
+	c.emitirByte(uint8(OpDefineGlobal))
+	c.emitirByte(uint8(indiceGlobal))
 }
 
 func (c *Compilador) sentencia() {
