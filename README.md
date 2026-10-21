@@ -8,14 +8,14 @@ Esta implementación sigue los conceptos y la arquitectura del libro *Crafting I
 
 **Enlaces rápidos**
 
-* 📖 [Documentación oficial](https://FelipeAscencio.github.io/angLOXg/)
-* ▶️ [Playground web interactivo](https://FelipeAscencio.github.io/angLOXg/web/)
+- 📖 [Documentación oficial](https://FelipeAscencio.github.io/angLOXg/)
+- ▶️ [Playground web interactivo](https://FelipeAscencio.github.io/angLOXg/web/)
 
 ## Prerrequisitos e instalación
 
 Para compilar, ejecutar y testear el proyecto localmente, asegurate de contar con:
-* **Go 1.22 o superior** instalado en el sistema.
-* **gotestsum** (herramienta recomendada para la ejecución formateada de tests y métricas de cobertura).
+- **Go 1.22 o superior** instalado en el sistema.
+- **gotestsum** (herramienta recomendada para la ejecución formateada de tests y métricas de cobertura).
 
 Cloná el repositorio, navegá a la raíz del proyecto e instalá las dependencias de testeo global:
 
@@ -25,9 +25,9 @@ go install gotest.tools/gotestsum@latest
 
 ```
 
-## Modos de Ejecución
+## Modos de ejecución
 
-*Nota: Las flags de depuración (`--escaneo`, `--arbol`, `--resolucion`) se pueden utilizar tanto pasando un archivo de script como en el formato de ejecución directo de consola (REPL). Al no pasar una flag, se inicia automáticamente en modo interprete completo.*
+*Nota: Las flags de depuración (`--escaneo`, `--arbol`, `--resolucion`) y ejecución alternativa (`--vm`) se pueden utilizar tanto pasando un archivo de script como en el formato de ejecución directo de consola (REPL). Al no pasar una flag, se inicia automáticamente en modo interprete completo.*
 
 ### 1. Consola interactiva (REPL)
 
@@ -81,6 +81,16 @@ go run ./cmd/angLOXg --resolucion [ruta_al_script.lox]
 
 ```
 
+### 6. Modo de Máquina Virtual (`--vm`)
+
+Desvía la ejecución del clásico *tree-walk interpreter* hacia el compilador de una sola pasada (Single-Pass Compiler) y ejecuta el código generado (Bytecode) utilizando la Máquina Virtual basada en pila.
+
+```bash
+
+go run ./cmd/angLOXg --vm [ruta_al_script.lox]
+
+```
+
 ### Compilación del binario
 
 Si preferís generar el ejecutable para no depender de `go run`:
@@ -88,8 +98,7 @@ Si preferís generar el ejecutable para no depender de `go run`:
 ```bash
 
 go build -o angloxg ./cmd/angLOXg
-
-./angloxg [--escaneo | --arbol | --resolucion] [ruta_al_script.lox]
+./angloxg [--escaneo | --arbol | --resolucion | --vm] [ruta_al_script.lox]
 
 ```
 
@@ -127,39 +136,39 @@ gotestsum -- -cover ./internal/... ./tests/...
 El proyecto se organiza en grandes bloques funcionales que separan la interfaz, la lógica del compilador/intérprete, la documentación y las pruebas:
 
 ### `.github/workflows` (Configuración y automatización)
-
-* **GitHub Actions:** Automatiza las tareas de integración continua y el despliegue de los sitios web.
+- **GitHub Actions:** Automatiza las tareas de integración continua y el despliegue de los sitios web.
 
 ### `cmd/` (Puntos de entrada)
 
 Contiene los ejecutables de la aplicación:
-
-* **angLOXg:** El punto de entrada principal de la implementación que gestiona la consola interactiva (REPL) y la ejecución de scripts `.lox` mediante la terminal (CLI).
-* **wasm (WebAssembly):** El adaptador necesario para compilar el motor de Go y permitir que corra directamente en navegadores web.
+- **angLOXg:** El punto de entrada principal de la implementación que gestiona la consola interactiva (REPL) y la ejecución de scripts `.lox` mediante la terminal (CLI).
+- **wasm (WebAssembly):** El adaptador necesario para compilar el motor de Go y permitir que corra directamente en navegadores web.
 
 ### `data/images` (Recursos)
-
-* **Data:** Almacena recursos gráficos del repositorio.
+- **Data:** Almacena recursos gráficos del repositorio.
 
 ### `docs/` (Documentación Oficial)
 
 Contiene todo el sitio web de documentación detallada (Implementado con JustTheDocs).
 
 ### `internal/` (Núcleo de implementación)
+Contiene todos los submódulos lógicos que implementan Lox en Go.
 
-Contiene todos los submódulos lógicos que implementan el intérprete de Lox en Go.
-* **Token y escáner:** Se encargan del análisis léxico, dividiendo el texto plano en unidades mínimas (*tokens*) y reconociendo palabras reservadas.
-* **Sintaxis y parser:** Definen las estructuras de datos del Árbol de Sintaxis Abstracta (AST) y procesan los tokens para armar las reglas gramaticales y de precedencia.
-* **Semántica (Resolver):** Realiza el análisis estático de variables y ámbitos (*scopes*) antes de ejecutar.
-* **Intérprete y entorno:** Ejecutan el árbol de sintaxis (*tree-walk interpreter*), manejando los entornos de memoria  y llamadas a funciones.
-* **Lox (Coordinador):** Une y administra todas las fases anteriores junto con la gestión centralizada de errores.
+**Motor Clásico (Tree-Walk):**
+- **Token y escáner:** Análisis léxico, dividiendo el texto plano en unidades mínimas (*tokens*) y reconociendo palabras reservadas.
+- **Sintaxis y parser:** Definen el Árbol de Sintaxis Abstracta (AST) y procesan los tokens armando las reglas gramaticales.
+- **Semántica (Resolver):** Análisis estático de variables y ámbitos (*scopes*) antes de ejecutar.
+- **Intérprete y entorno:** Ejecutan el árbol de sintaxis manejando los entornos de memoria y llamadas a funciones.
 
-### `tests/` (Pruebras de la cátedra y de rendimiento)
+**Motor Bytecode (VM):**
+- **Compilador:** Transforma directamente los tokens en instrucciones de bajo nivel (Bytecode) en una única pasada mediante un Pratt Parser, evadiendo la construcción del árbol de sintaxis.
+- **VM (Máquina Virtual):** Ejecuta los chunks de Bytecode utilizando una arquitectura lineal basada en pila para gestionar expresiones, CallFrames y Closures.
 
-Agrupa tanto los scripts oficiales provistos por la materia (`.lox`) para validar el comportamiento integral del intérprete. Como los tests desarrollados para realizar mediciones de rendimiento contra implementaciones de terceros e implementaciones de casos de uso reales del lenguaje (Tanto la implementación como la justificación de estos mismos se encuentran dentro del directorio `tests/casos_de_uso`).
+**Coordinador:**
+- **Lox:** Une y administra las distintas fases (Tree-Walk o Bytecode) junto con la gestión centralizada de errores.
+
+### `tests/` (Pruebas de la cátedra y de rendimiento)
+Agrupa tanto los scripts oficiales provistos por la materia (`.lox`) para validar el comportamiento integral del intérprete, como los tests desarrollados para realizar mediciones de rendimiento contra implementaciones de terceros e implementaciones de casos de uso reales del lenguaje (Tanto la implementación como la justificación de estos mismos se encuentran dentro del directorio `tests/casos_de_uso`).
 
 ### `web/` (Playground web e interfaz)
-
-Aloja los recursos estáticos y lógicos de la interfaz visual interactiva.
-
-Permite a los usuarios escribir y probar código Lox directamente desde la web utilizando la potencia del motor compilado a WebAssembly.
+Aloja los recursos estáticos y lógicos de la interfaz visual interactiva. Permite a los usuarios escribir y probar código Lox directamente desde la web utilizando la potencia del motor compilado a WebAssembly.
