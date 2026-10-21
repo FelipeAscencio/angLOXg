@@ -65,6 +65,7 @@ func (c *Compilador) iniciarReglas() {
 		token.PLUS:          {prefijo: nil, infijo: binario, precedencia: PrecTerm},
 		token.SLASH:         {prefijo: nil, infijo: binario, precedencia: PrecFactor},
 		token.STAR:          {prefijo: nil, infijo: binario, precedencia: PrecFactor},
+		token.STRING:        {prefijo: cadena, infijo: nil, precedencia: PrecNone},
 		token.NUMBER:        {prefijo: numero, infijo: nil, precedencia: PrecNone},
 		token.FALSE:         {prefijo: literal, infijo: nil, precedencia: PrecNone},
 		token.TRUE:          {prefijo: literal, infijo: nil, precedencia: PrecNone},
@@ -170,6 +171,11 @@ func binario(c *Compilador) {
 	}
 }
 
+func cadena(c *Compilador) {
+	valor := c.tokenAnterior().Literal.(string)
+	c.emitirConstante(valor)
+}
+
 // ====================
 // Navegación y emisión
 // ====================
@@ -254,7 +260,7 @@ func (c *Compilador) coincide(tipo token.TipoDeToken) bool {
 		c.avanzar()
 		return true
 	}
-	
+
 	return false
 }
 

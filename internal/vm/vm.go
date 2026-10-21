@@ -128,6 +128,10 @@ func (v *VM) push(valor any) {
 
 // Retira y devuelve el valor en el tope de la pila.
 func (v *VM) pop() any {
+	if len(v.pila) == 0 {
+		return nil 
+	}
+	
 	tope := len(v.pila) - 1
 	valor := v.pila[tope]
 	v.pila = v.pila[:tope]
