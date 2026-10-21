@@ -113,6 +113,18 @@ go build -o angloxg ./cmd/angLOXg
 
 ## Pruebas y cobertura
 
+### Tests de la cátedra
+
+Para ver el resultado de los tests oficiales de la cátedra con ambas implementaciones, ejecutá:
+
+```bash
+
+go test -v ./tests/catedra/...
+
+```
+
+### Tests unitarios propios y de cobertura
+
 El proyecto mantiene un estándar de **cobertura mínima del 80%** para todos los módulos internos.
 
 Para correr la suite completa de pruebas utilizando la interfaz limpia de `gotestsum`:
