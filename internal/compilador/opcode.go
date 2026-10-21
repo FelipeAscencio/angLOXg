@@ -24,6 +24,7 @@ const (
 	OpMultiply
 	OpDivide
 	OpNegate
+	OpModulo
 
 	// Manejo de sentencias
 	OpPop

@@ -87,6 +87,7 @@ func (c *Compilador) iniciarReglas() {
 		token.PLUS:          {prefijo: nil, infijo: binario, precedencia: PrecTerm},
 		token.SLASH:         {prefijo: nil, infijo: binario, precedencia: PrecFactor},
 		token.STAR:          {prefijo: nil, infijo: binario, precedencia: PrecFactor},
+		token.PERCENT:       {prefijo: nil, infijo: binario, precedencia: PrecFactor},
 		token.NUMBER:        {prefijo: numero, infijo: nil, precedencia: PrecNone},
 		token.STRING:        {prefijo: cadena, infijo: nil, precedencia: PrecNone},
 		token.FALSE:         {prefijo: literal, infijo: nil, precedencia: PrecNone},
@@ -253,6 +254,8 @@ func binario(c *Compilador, puedeAsignar bool) {
 		c.emitirByte(uint8(OpMultiply))
 	case token.SLASH:
 		c.emitirByte(uint8(OpDivide))
+	case token.PERCENT:
+		c.emitirByte(uint8(OpModulo))
 	case token.BANG_EQUAL:
 		c.emitirByte(uint8(OpEqual))
 		c.emitirByte(uint8(OpNot))

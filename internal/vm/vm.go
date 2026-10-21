@@ -121,6 +121,16 @@ func (v *VM) correr() bool {
 			a := v.pop().(float64)
 			v.push(a / b)
 
+		case compilador.OpModulo:
+			b := v.pop().(float64)
+			a := v.pop().(float64)
+			if b == 0 {
+				fmt.Fprintln(v.salida, "Error en ejecución: Módulo por cero.")
+				return false
+			}
+
+			v.push(float64(int(a) % int(b)))
+
 		case compilador.OpNegate:
 			valor := v.pop().(float64)
 			v.push(-valor)
