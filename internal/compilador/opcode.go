@@ -47,6 +47,11 @@ const (
 	OpCall
 	OpClosure
 
+	// Closures y Upvalues
+	OpGetUpvalue
+	OpSetUpvalue
+	OpCloseUpvalue
+
 	// Finaliza la ejecución del chunk actual y retorna el control.
 	OpReturn
 )

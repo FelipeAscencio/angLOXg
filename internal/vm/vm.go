@@ -16,19 +16,21 @@ type CallFrame struct {
 
 // Representa la máquina virtual basada en pila que ejecuta el bytecode.
 type VM struct {
-	frames   []*CallFrame
-	pila     []any
-	globales map[string]any
-	salida   io.Writer
+	frames           []*CallFrame
+	pila             []any
+	globales         map[string]any
+	upvaluesAbiertos []*compilador.ObjUpvalue
+	salida           io.Writer
 }
 
 // Inicializa una nueva Máquina Virtual.
 func Nueva(salida io.Writer) *VM {
 	return &VM{
-		frames:   make([]*CallFrame, 0, 64),
-		pila:     make([]any, 0, 256),
-		globales: make(map[string]any),
-		salida:   salida,
+		frames:           make([]*CallFrame, 0, 64),
+		pila:             make([]any, 0, 256),
+		globales:         make(map[string]any),
+		upvaluesAbiertos: make([]*compilador.ObjUpvalue, 0),
+		salida:           salida,
 	}
 }
 
@@ -43,6 +45,34 @@ func (v *VM) Ejecutar(funcion *compilador.Funcion) bool {
 	})
 
 	return v.correr()
+}
+
+// Atrapa una variable local, o devuelve el upvalue si ya estaba atrapada.
+func (v *VM) capturarUpvalue(local int) *compilador.ObjUpvalue {
+	for _, upvalue := range v.upvaluesAbiertos {
+		if upvalue.Locacion == local {
+			return upvalue
+		}
+	}
+
+	nuevoUpvalue := &compilador.ObjUpvalue{Locacion: local}
+	v.upvaluesAbiertos = append(v.upvaluesAbiertos, nuevoUpvalue)
+	return nuevoUpvalue
+}
+
+// Mueve los upvalues de la pila al valor "Cerrado" permanente y limpia la lista de abiertos.
+func (v *VM) cerrarUpvalues(ultimo int) {
+	nuevosAbiertos := make([]*compilador.ObjUpvalue, 0)
+	for _, upvalue := range v.upvaluesAbiertos {
+		if upvalue.Locacion >= ultimo {
+			upvalue.Cerrado = v.pila[upvalue.Locacion]
+			upvalue.Locacion = -1
+		} else {
+			nuevosAbiertos = append(nuevosAbiertos, upvalue)
+		}
+	}
+
+	v.upvaluesAbiertos = nuevosAbiertos
 }
 
 // Ciclo principal (loop) que despacha las instrucciones.
@@ -178,6 +208,15 @@ func (v *VM) correr() bool {
 			funcion := v.leerConstante().(*compilador.Funcion)
 			closure := compilador.NuevoClosure(funcion)
 			v.push(closure)
+			for i := 0; i < funcion.UpvalueCount; i++ {
+				esLocal := v.leerByte()
+				indice := v.leerByte()
+				if esLocal == 1 {
+					closure.Upvalues[i] = v.capturarUpvalue(v.frameActual().slots + int(indice))
+				} else {
+					closure.Upvalues[i] = v.frameActual().closure.Upvalues[indice]
+				}
+			}
 
 		case compilador.OpCall:
 			cantidadArgs := int(v.leerByte())
@@ -202,6 +241,7 @@ func (v *VM) correr() bool {
 		case compilador.OpReturn:
 			resultado := v.pop()
 			frameActual := v.frameActual()
+			v.cerrarUpvalues(frameActual.slots)
 			v.frames = v.frames[:len(v.frames)-1]
 			if len(v.frames) == 0 {
 				v.pop()

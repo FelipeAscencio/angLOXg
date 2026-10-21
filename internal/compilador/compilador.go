@@ -36,14 +36,23 @@ type ReglaParseo struct {
 type Local struct {
 	nombre      string
 	profundidad int
+	capturada   bool
+}
+
+// Representa un upvalue resuelto en tiempo de compilación.
+type UpvalueLocal struct {
+	indice  uint8
+	esLocal bool
 }
 
 // El Compilador orquesta la traducción de tokens a bytecode (Single-Pass).
 type Compilador struct {
+	padre            *Compilador
 	tokens           []token.Token
 	actual           int
 	funcion          *Funcion
 	locales          []Local
+	upvalues         []UpvalueLocal
 	profundidadScope int
 	reglas           map[token.TipoDeToken]ReglaParseo
 }
@@ -51,14 +60,16 @@ type Compilador struct {
 // Toma una lista de tokens y devuelve un Chunk listo para la VM.
 func Compilar(tokens []token.Token) *Funcion {
 	comp := &Compilador{
+		padre:            nil,
 		tokens:           tokens,
 		actual:           0,
 		funcion:          NuevaFuncion(),
 		locales:          make([]Local, 0),
+		upvalues:         make([]UpvalueLocal, 0),
 		profundidadScope: 0,
 	}
 
-	comp.locales = append(comp.locales, Local{profundidad: 0, nombre: ""})
+	comp.locales = append(comp.locales, Local{profundidad: 0, nombre: "", capturada: false})
 	comp.iniciarReglas()
 	for !comp.esFin() {
 		comp.declaracion()
@@ -129,6 +140,10 @@ func variable(c *Compilador, puedeAsignar bool) {
 		// La variable existe en el scope local.
 		opGet = uint8(OpGetLocal)
 		opSet = uint8(OpSetLocal)
+	} else if arg = c.resolverUpvalue(nombre); arg != -1 {
+		// La variable es un upvalue (capturada de un scope padre).
+		opGet = uint8(OpGetUpvalue)
+		opSet = uint8(OpSetUpvalue)
 	} else {
 		// Asumimos que es global.
 		arg = c.funcion.Chunk.AgregarConstante(nombre)
@@ -154,6 +169,37 @@ func (c *Compilador) resolverLocal(nombre string) int {
 	}
 
 	return -1
+}
+
+func (c *Compilador) resolverUpvalue(nombre string) int {
+	if c.padre == nil {
+		return -1
+	}
+
+	local := c.padre.resolverLocal(nombre)
+	if local != -1 {
+		c.padre.locales[local].capturada = true
+		return c.agregarUpvalue(uint8(local), true)
+	}
+
+	upvalue := c.padre.resolverUpvalue(nombre)
+	if upvalue != -1 {
+		return c.agregarUpvalue(uint8(upvalue), false)
+	}
+
+	return -1
+}
+
+func (c *Compilador) agregarUpvalue(indice uint8, esLocal bool) int {
+	for i, upv := range c.upvalues {
+		if upv.indice == indice && upv.esLocal == esLocal {
+			return i
+		}
+	}
+
+	c.upvalues = append(c.upvalues, UpvalueLocal{indice: indice, esLocal: esLocal})
+	c.funcion.UpvalueCount = len(c.upvalues)
+	return len(c.upvalues) - 1
 }
 
 func numero(c *Compilador, puedeAsignar bool) {
@@ -355,16 +401,18 @@ func (c *Compilador) declaracionFuncion() {
 	nombreToken := c.tokenAnterior()
 	indiceGlobal := c.funcion.Chunk.AgregarConstante(nombreToken.Lexema)
 	compiladorFuncion := &Compilador{
+		padre:            c,
 		tokens:           c.tokens,
-		actual:           c.actual, // Hereda la posición actual de los tokens
+		actual:           c.actual,
 		funcion:          NuevaFuncion(),
 		locales:          make([]Local, 0),
+		upvalues:         make([]UpvalueLocal, 0),
 		profundidadScope: 0,
 		reglas:           c.reglas,
 	}
 
 	compiladorFuncion.funcion.Nombre = nombreToken.Lexema
-	compiladorFuncion.locales = append(compiladorFuncion.locales, Local{profundidad: 0, nombre: ""})
+	compiladorFuncion.locales = append(compiladorFuncion.locales, Local{profundidad: 0, nombre: "", capturada: false})
 	compiladorFuncion.consumir(token.LEFT_PAREN, "Se esperaba '(' después del nombre de la función.")
 	if compiladorFuncion.tokenActual().Tipo != token.RIGHT_PAREN {
 		for {
@@ -378,6 +426,7 @@ func (c *Compilador) declaracionFuncion() {
 			compiladorFuncion.locales = append(compiladorFuncion.locales, Local{
 				nombre:      paramNombre,
 				profundidad: 1,
+				capturada:   false,
 			})
 
 			if !compiladorFuncion.coincide(token.COMMA) {
@@ -396,6 +445,15 @@ func (c *Compilador) declaracionFuncion() {
 	indiceFuncion := c.funcion.Chunk.AgregarConstante(compiladorFuncion.funcion)
 	c.emitirByte(uint8(OpClosure))
 	c.emitirByte(uint8(indiceFuncion))
+	for _, upv := range compiladorFuncion.upvalues {
+		if upv.esLocal {
+			c.emitirByte(1)
+		} else {
+			c.emitirByte(0)
+		}
+		c.emitirByte(upv.indice)
+	}
+	
 	c.emitirByte(uint8(OpDefineGlobal))
 	c.emitirByte(uint8(indiceGlobal))
 }
@@ -511,7 +569,7 @@ func (c *Compilador) sentenciaReturn() {
 		c.expresion()
 		c.consumir(token.SEMICOLON, "Se esperaba ';' después del valor de retorno.")
 	}
-	
+
 	c.emitirByte(uint8(OpReturn))
 }
 
@@ -555,7 +613,12 @@ func (c *Compilador) empezarScope() {
 func (c *Compilador) terminarScope() {
 	c.profundidadScope--
 	for len(c.locales) > 0 && c.locales[len(c.locales)-1].profundidad > c.profundidadScope {
-		c.emitirByte(uint8(OpPop))
+		if c.locales[len(c.locales)-1].capturada {
+			c.emitirByte(uint8(OpCloseUpvalue))
+		} else {
+			c.emitirByte(uint8(OpPop))
+		}
+		
 		c.locales = c.locales[:len(c.locales)-1]
 	}
 }
