@@ -43,6 +43,10 @@ const (
 	OpJumpIfFalse
 	OpLoop
 
+	// Llamadas a funciones y Closures
+	OpCall
+	OpClosure
+
 	// Finaliza la ejecución del chunk actual y retorna el control.
 	OpReturn
 )

@@ -7,10 +7,16 @@ import (
 	"github.com/FelipeAscencio/angLOXg/internal/compilador"
 )
 
+// CallFrame representa una función en ejecución junto con su estado.
+type CallFrame struct {
+	closure *compilador.Closure
+	ip      int // Puntero de instrucción (Instruction Pointer).
+	slots   int
+}
+
 // Representa la máquina virtual basada en pila que ejecuta el bytecode.
 type VM struct {
-	chunk    *compilador.Chunk
-	ip       int	// Puntero de instrucción (Instruction Pointer).
+	frames   []*CallFrame
 	pila     []any
 	globales map[string]any
 	salida   io.Writer
@@ -19,6 +25,7 @@ type VM struct {
 // Inicializa una nueva Máquina Virtual.
 func Nueva(salida io.Writer) *VM {
 	return &VM{
+		frames:   make([]*CallFrame, 0, 64),
 		pila:     make([]any, 0, 256),
 		globales: make(map[string]any),
 		salida:   salida,
@@ -26,27 +33,48 @@ func Nueva(salida io.Writer) *VM {
 }
 
 // Arranca el ciclo de la máquina virtual sobre un Chunk compilado.
-func (v *VM) Ejecutar(chunk *compilador.Chunk) bool {
-	v.chunk = chunk
-	v.ip = 0
+func (v *VM) Ejecutar(funcion *compilador.Funcion) bool {
+	closure := compilador.NuevoClosure(funcion)
+	v.push(closure)
+	v.frames = append(v.frames, &CallFrame{
+		closure: closure,
+		ip:      0,
+		slots:   0,
+	})
 
 	return v.correr()
 }
 
 // Ciclo principal (loop) que despacha las instrucciones.
 func (v *VM) correr() bool {
-	for v.ip < len(v.chunk.Instrucciones) {
-		instruccion := compilador.OpCode(v.leerByte())
+	for {
+		frame := v.frameActual()
+		if frame.ip >= len(frame.closure.Funcion.Chunk.Instrucciones) {
+			break
+		}
 
+		instruccion := compilador.OpCode(v.leerByte())
 		switch instruccion {
 		case compilador.OpConstant:
 			constante := v.leerConstante()
 			v.push(constante)
 
 		case compilador.OpAdd:
-			b := v.pop().(float64)
-			a := v.pop().(float64)
-			v.push(a + b)
+			b := v.pop()
+			a := v.pop()
+			if numA, okA := a.(float64); okA {
+				if numB, okB := b.(float64); okB {
+					v.push(numA + numB)
+				} else {
+					fmt.Fprintln(v.salida, "Error en ejecución: Ambos operandos deben ser números.")
+					return false
+				}
+			} else if strA, okA := a.(string); okA {
+				v.push(strA + fmt.Sprintf("%v", b))
+			} else {
+				fmt.Fprintln(v.salida, "Error en ejecución: Operandos incompatibles para '+'.")
+				return false
+			}
 
 		case compilador.OpSubtract:
 			b := v.pop().(float64)
@@ -64,7 +92,6 @@ func (v *VM) correr() bool {
 			v.push(a / b)
 
 		case compilador.OpNegate:
-			// Extraemos el tope, lo negamos y lo volvemos a meter
 			valor := v.pop().(float64)
 			v.push(-valor)
 
@@ -123,50 +150,45 @@ func (v *VM) correr() bool {
 				return false
 			}
 
-			// La asignación deja el valor en la pila, por eso usamos peek(0) en vez de pop().
 			v.globales[nombre] = v.peek(0)
 
 		case compilador.OpGetLocal:
 			slot := v.leerByte()
-			v.push(v.pila[slot])
+			v.push(v.pila[v.frameActual().slots+int(slot)])
 
 		case compilador.OpSetLocal:
 			slot := v.leerByte()
-			v.pila[slot] = v.peek(0)
+			v.pila[v.frameActual().slots+int(slot)] = v.peek(0)
 
 		case compilador.OpJump:
 			offset := int(v.leerShort())
-			v.ip += offset
+			v.frameActual().ip += offset
 
 		case compilador.OpJumpIfFalse:
 			offset := int(v.leerShort())
 			if esFalso(v.peek(0)) {
-				v.ip += offset
+				v.frameActual().ip += offset
 			}
 
 		case compilador.OpLoop:
 			offset := int(v.leerShort())
-			v.ip -= offset
+			v.frameActual().ip -= offset
 
 		case compilador.OpReturn:
-			return true
+			resultado := v.pop()
+			frameActual := v.frameActual()
+			v.frames = v.frames[:len(v.frames)-1]
+			if len(v.frames) == 0 {
+				v.pop()
+				return true
+			}
+
+			v.pila = v.pila[:frameActual.slots]
+			v.push(resultado)
 		}
 	}
 
 	return false
-}
-
-// Consume el byte actual y avanza el IP.
-func (v *VM) leerByte() uint8 {
-	b := v.chunk.Instrucciones[v.ip]
-	v.ip++
-	return b
-}
-
-// Lee el siguiente byte como índice y obtiene la constante del pool.
-func (v *VM) leerConstante() any {
-	indice := v.leerByte()
-	return v.chunk.Constantes[indice]
 }
 
 // Agrega un valor al tope de la pila.
@@ -213,8 +235,28 @@ func (v *VM) peek(distancia int) any {
 	return v.pila[len(v.pila)-1-distancia]
 }
 
-// Lee dos bytes seguidos y los combina en un entero de 16 bits.
+// ==================
+// Helpers de Lectura
+// ==================
+
+func (v *VM) frameActual() *CallFrame {
+	return v.frames[len(v.frames)-1]
+}
+
+func (v *VM) leerByte() uint8 {
+	frame := v.frameActual()
+	b := frame.closure.Funcion.Chunk.Instrucciones[frame.ip]
+	frame.ip++
+	return b
+}
+
 func (v *VM) leerShort() uint16 {
-	v.ip += 2
-	return uint16(v.chunk.Instrucciones[v.ip-2])<<8 | uint16(v.chunk.Instrucciones[v.ip-1])
+	frame := v.frameActual()
+	frame.ip += 2
+	instrucciones := frame.closure.Funcion.Chunk.Instrucciones
+	return uint16(instrucciones[frame.ip-2])<<8 | uint16(instrucciones[frame.ip-1])
+}
+
+func (v *VM) leerConstante() any {
+	return v.frameActual().closure.Funcion.Chunk.Constantes[v.leerByte()]
 }

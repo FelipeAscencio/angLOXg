@@ -45,9 +45,9 @@ func EjecutarVM(fuente string, salida io.Writer) bool {
 	}
 
 	// Como el escáner al final siempre devuelve EOF, lo enviamos entero
-	chunk := compilador.Compilar(tokens)
+	funcion := compilador.Compilar(tokens)
 	maquina := vm.Nueva(salida)
-	exito := maquina.Ejecutar(chunk)
+	exito := maquina.Ejecutar(funcion)
 	return exito
 }
 

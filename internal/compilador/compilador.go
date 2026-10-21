@@ -40,31 +40,32 @@ type Local struct {
 
 // El Compilador orquesta la traducción de tokens a bytecode (Single-Pass).
 type Compilador struct {
-	tokens []token.Token
-	actual int
-	chunk  *Chunk
-	reglas map[token.TipoDeToken]ReglaParseo
+	tokens           []token.Token
+	actual           int
+	funcion          *Funcion
 	locales          []Local
 	profundidadScope int
+	reglas           map[token.TipoDeToken]ReglaParseo
 }
 
 // Toma una lista de tokens y devuelve un Chunk listo para la VM.
-func Compilar(tokens []token.Token) *Chunk {
+func Compilar(tokens []token.Token) *Funcion {
 	comp := &Compilador{
 		tokens:           tokens,
 		actual:           0,
-		chunk:            NuevoChunk(),
+		funcion:          NuevaFuncion(),
 		locales:          make([]Local, 0),
 		profundidadScope: 0,
 	}
 
+	comp.locales = append(comp.locales, Local{profundidad: 0, nombre: ""})
 	comp.iniciarReglas()
 	for !comp.esFin() {
 		comp.declaracion()
 	}
 
 	comp.emitirByte(uint8(OpReturn))
-	return comp.chunk
+	return comp.funcion
 }
 
 // Configura la tabla del Pratt Parser.
@@ -129,7 +130,7 @@ func variable(c *Compilador, puedeAsignar bool) {
 		opSet = uint8(OpSetLocal)
 	} else {
 		// Asumimos que es global.
-		arg = c.chunk.AgregarConstante(nombre)
+		arg = c.funcion.Chunk.AgregarConstante(nombre)
 		opGet = uint8(OpGetGlobal)
 		opSet = uint8(OpSetGlobal)
 	}
@@ -265,29 +266,29 @@ func (c *Compilador) consumir(tipo token.TipoDeToken, mensaje string) {
 }
 
 func (c *Compilador) emitirByte(b uint8) {
-	c.chunk.Escribir(b, c.tokenAnterior().Linea)
+	c.funcion.Chunk.Escribir(b, c.tokenAnterior().Linea)
 }
 
 func (c *Compilador) emitirSalto(instruccion uint8) int {
 	c.emitirByte(instruccion)
 	c.emitirByte(0xff)
 	c.emitirByte(0xff)
-	return len(c.chunk.Instrucciones) - 2
+	return len(c.funcion.Chunk.Instrucciones) - 2
 }
 
 func (c *Compilador) parchearSalto(offset int) {
-	salto := len(c.chunk.Instrucciones) - offset - 2
+	salto := len(c.funcion.Chunk.Instrucciones) - offset - 2
 	if salto > 65535 {
 		fmt.Fprintf(os.Stderr, "El código a saltar es demasiado grande.\n")
 	}
 
-	c.chunk.Instrucciones[offset] = uint8((salto >> 8) & 0xff)
-	c.chunk.Instrucciones[offset+1] = uint8(salto & 0xff)
+	c.funcion.Chunk.Instrucciones[offset] = uint8((salto >> 8) & 0xff)
+	c.funcion.Chunk.Instrucciones[offset+1] = uint8(salto & 0xff)
 }
 
 func (c *Compilador) emitirLoop(inicio int) {
 	c.emitirByte(uint8(OpLoop))
-	salto := len(c.chunk.Instrucciones) - inicio + 2
+	salto := len(c.funcion.Chunk.Instrucciones) - inicio + 2
 	if salto > 65535 {
 		fmt.Fprintf(os.Stderr, "El cuerpo del bucle es demasiado grande.\n")
 	}
@@ -297,7 +298,7 @@ func (c *Compilador) emitirLoop(inicio int) {
 }
 
 func (c *Compilador) emitirConstante(valor any) {
-	indice := c.chunk.AgregarConstante(valor)
+	indice := c.funcion.Chunk.AgregarConstante(valor)
 	c.emitirByte(uint8(OpConstant))
 	c.emitirByte(uint8(indice))
 }
@@ -340,7 +341,7 @@ func (c *Compilador) declaracionVariable() {
 		})
 	} else {
 		// Es una variable global.
-		indiceGlobal := c.chunk.AgregarConstante(nombreToken.Lexema)
+		indiceGlobal := c.funcion.Chunk.AgregarConstante(nombreToken.Lexema)
 		c.emitirByte(uint8(OpDefineGlobal))
 		c.emitirByte(uint8(indiceGlobal))
 	}
@@ -394,7 +395,7 @@ func (c *Compilador) sentenciaIf() {
 }
 
 func (c *Compilador) sentenciaWhile() {
-	inicioLoop := len(c.chunk.Instrucciones)
+	inicioLoop := len(c.funcion.Chunk.Instrucciones)
 	c.consumir(token.LEFT_PAREN, "Se esperaba '(' después del 'while'.")
 	c.expresion()
 	c.consumir(token.RIGHT_PAREN, "Se esperaba ')' después de la condición.")
@@ -417,7 +418,7 @@ func (c *Compilador) sentenciaFor() {
 		c.sentenciaExpresion()
 	}
 
-	inicioLoop := len(c.chunk.Instrucciones)
+	inicioLoop := len(c.funcion.Chunk.Instrucciones)
 	saltoSalida := -1
 	if !c.coincide(token.SEMICOLON) {
 		c.expresion()
@@ -429,7 +430,7 @@ func (c *Compilador) sentenciaFor() {
 
 	if !c.coincide(token.RIGHT_PAREN) {
 		saltoCuerpo := c.emitirSalto(uint8(OpJump))
-		inicioIncremento := len(c.chunk.Instrucciones)
+		inicioIncremento := len(c.funcion.Chunk.Instrucciones)
 		c.expresion()
 		c.emitirByte(uint8(OpPop))
 		c.consumir(token.RIGHT_PAREN, "Se esperaba ')' después del for.")
