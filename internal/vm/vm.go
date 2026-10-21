@@ -1,0 +1,103 @@
+package vm
+
+import (
+	"fmt"
+	"io"
+
+	"github.com/FelipeAscencio/angLOXg/internal/compilador"
+)
+
+// Representa la máquina virtual basada en pila que ejecuta el bytecode.
+type VM struct {
+	chunk  *compilador.Chunk
+	ip     int     // Puntero de instrucción (Instruction Pointer).
+	pila   []any   // Pila de ejecución para resultados intermedios.
+	salida io.Writer
+}
+
+// Inicializa una nueva Máquina Virtual.
+func Nueva(salida io.Writer) *VM {
+	return &VM{
+		pila:   make([]any, 0, 256),
+		salida: salida,
+	}
+}
+
+// Arranca el ciclo de la máquina virtual sobre un Chunk compilado.
+func (v *VM) Ejecutar(chunk *compilador.Chunk) bool {
+	v.chunk = chunk
+	v.ip = 0
+
+	return v.correr()
+}
+
+// Ciclo principal (loop) que despacha las instrucciones.
+func (v *VM) correr() bool {
+	for v.ip < len(v.chunk.Instrucciones) {
+		instruccion := compilador.OpCode(v.leerByte())
+
+		switch instruccion {
+		case compilador.OpConstant:
+			constante := v.leerConstante()
+			v.push(constante)
+
+		case compilador.OpAdd:
+			b := v.pop().(float64)
+			a := v.pop().(float64)
+			v.push(a + b)
+
+		case compilador.OpSubtract:
+			b := v.pop().(float64)
+			a := v.pop().(float64)
+			v.push(a - b)
+
+		case compilador.OpMultiply:
+			b := v.pop().(float64)
+			a := v.pop().(float64)
+			v.push(a * b)
+
+		case compilador.OpDivide:
+			b := v.pop().(float64)
+			a := v.pop().(float64)
+			v.push(a / b)
+
+		case compilador.OpNegate:
+			// Extraemos el tope, lo negamos y lo volvemos a meter
+			valor := v.pop().(float64)
+			v.push(-valor)
+
+		case compilador.OpReturn:
+			if len(v.pila) > 0 {
+				fmt.Fprintln(v.salida, v.pop())
+			}
+			return true
+		}
+	}
+	return false
+}
+
+// Consume el byte actual y avanza el IP.
+func (v *VM) leerByte() uint8 {
+	b := v.chunk.Instrucciones[v.ip]
+	v.ip++
+	return b
+}
+
+// Lee el siguiente byte como índice y obtiene la constante del pool.
+func (v *VM) leerConstante() any {
+	indice := v.leerByte()
+	return v.chunk.Constantes[indice]
+}
+
+// Agrega un valor al tope de la pila.
+func (v *VM) push(valor any) {
+	v.pila = append(v.pila, valor)
+}
+
+// Retira y devuelve el valor en el tope de la pila.
+func (v *VM) pop() any {
+	tope := len(v.pila) - 1
+	valor := v.pila[tope]
+	v.pila = v.pila[:tope]
+	return valor
+}

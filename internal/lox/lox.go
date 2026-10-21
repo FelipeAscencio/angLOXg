@@ -10,6 +10,8 @@ import (
 	"github.com/FelipeAscencio/angLOXg/internal/semantica"
 	"github.com/FelipeAscencio/angLOXg/internal/sintaxis"
 	"github.com/FelipeAscencio/angLOXg/internal/token"
+	"github.com/FelipeAscencio/angLOXg/internal/compilador"
+	"github.com/FelipeAscencio/angLOXg/internal/vm"
 )
 
 // Ejecuta código Lox completo y escribe la salida o errores en el escritor provisto.
@@ -37,15 +39,16 @@ func Ejecutar(fuente string, salida io.Writer) bool {
 
 // Ejecuta código Lox utilizando el compilador de bytecode y la Máquina Virtual (Single-Pass).
 func EjecutarVM(fuente string, salida io.Writer) bool {
-	// Reutilizamos el escáner del Tree-Walk.
 	tokens, ok := escanearFuente(fuente, salida)
 	if !ok {
 		return false
 	}
 
-	fmt.Fprintln(salida, "--- MODO VM ACTIVADO ---")
-	fmt.Fprintln(salida, "Tokens listos para el Single-Pass Compiler:", len(tokens))
-	return true
+	// Como el escáner al final siempre devuelve EOF, lo enviamos entero
+	chunk := compilador.Compilar(tokens)
+	maquina := vm.Nueva(salida)
+	exito := maquina.Ejecutar(chunk)
+	return exito
 }
 
 // Ejecuta las fases de escaneo, parseo y análisis semántico sin llegar a interpretar.
