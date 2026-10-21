@@ -38,6 +38,11 @@ const (
 	OpGetLocal
 	OpSetLocal
 
+	// Control de flujo
+	OpJump
+	OpJumpIfFalse
+	OpLoop
+
 	// Finaliza la ejecución del chunk actual y retorna el control.
 	OpReturn
 )

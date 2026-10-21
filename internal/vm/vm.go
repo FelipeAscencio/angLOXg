@@ -134,6 +134,20 @@ func (v *VM) correr() bool {
 			slot := v.leerByte()
 			v.pila[slot] = v.peek(0)
 
+		case compilador.OpJump:
+			offset := int(v.leerShort())
+			v.ip += offset
+
+		case compilador.OpJumpIfFalse:
+			offset := int(v.leerShort())
+			if esFalso(v.peek(0)) {
+				v.ip += offset
+			}
+
+		case compilador.OpLoop:
+			offset := int(v.leerShort())
+			v.ip -= offset
+
 		case compilador.OpReturn:
 			return true
 		}
@@ -197,4 +211,10 @@ func sonIguales(a, b any) bool {
 // Lee un valor de la pila sin sacarlo. La distancia es desde el tope (0 es el tope actual).
 func (v *VM) peek(distancia int) any {
 	return v.pila[len(v.pila)-1-distancia]
+}
+
+// Lee dos bytes seguidos y los combina en un entero de 16 bits.
+func (v *VM) leerShort() uint16 {
+	v.ip += 2
+	return uint16(v.chunk.Instrucciones[v.ip-2])<<8 | uint16(v.chunk.Instrucciones[v.ip-1])
 }

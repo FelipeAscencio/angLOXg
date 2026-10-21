@@ -88,6 +88,8 @@ func (c *Compilador) iniciarReglas() {
 		token.LESS:          {prefijo: nil, infijo: binario, precedencia: PrecComparison},
 		token.LESS_EQUAL:    {prefijo: nil, infijo: binario, precedencia: PrecComparison},
 		token.IDENTIFIER:    {prefijo: variable, infijo: nil, precedencia: PrecNone},
+		token.AND:           {prefijo: nil, infijo: and, precedencia: PrecAnd},
+		token.OR:            {prefijo: nil, infijo: or, precedencia: PrecOr},
 	}
 }
 
@@ -142,7 +144,6 @@ func variable(c *Compilador, puedeAsignar bool) {
 	}
 }
 
-// Simula la búsqueda en la pila recorriendo el arreglo de locales hacia atrás.
 func (c *Compilador) resolverLocal(nombre string) int {
 	for i := len(c.locales) - 1; i >= 0; i-- {
 		if c.locales[i].nombre == nombre {
@@ -222,6 +223,22 @@ func binario(c *Compilador, puedeAsignar bool) {
 	}
 }
 
+func and(c *Compilador, puedeAsignar bool) {
+	saltoFinal := c.emitirSalto(uint8(OpJumpIfFalse))
+	c.emitirByte(uint8(OpPop))
+	c.parsearPrecedencia(PrecAnd)
+	c.parchearSalto(saltoFinal)
+}
+
+func or(c *Compilador, puedeAsignar bool) {
+	saltoElse := c.emitirSalto(uint8(OpJumpIfFalse))
+	saltoFinal := c.emitirSalto(uint8(OpJump))
+	c.parchearSalto(saltoElse)
+	c.emitirByte(uint8(OpPop))
+	c.parsearPrecedencia(PrecOr)
+	c.parchearSalto(saltoFinal)
+}
+
 // ====================
 // Navegación y emisión
 // ====================
@@ -249,6 +266,34 @@ func (c *Compilador) consumir(tipo token.TipoDeToken, mensaje string) {
 
 func (c *Compilador) emitirByte(b uint8) {
 	c.chunk.Escribir(b, c.tokenAnterior().Linea)
+}
+
+func (c *Compilador) emitirSalto(instruccion uint8) int {
+	c.emitirByte(instruccion)
+	c.emitirByte(0xff)
+	c.emitirByte(0xff)
+	return len(c.chunk.Instrucciones) - 2
+}
+
+func (c *Compilador) parchearSalto(offset int) {
+	salto := len(c.chunk.Instrucciones) - offset - 2
+	if salto > 65535 {
+		fmt.Fprintf(os.Stderr, "El código a saltar es demasiado grande.\n")
+	}
+
+	c.chunk.Instrucciones[offset] = uint8((salto >> 8) & 0xff)
+	c.chunk.Instrucciones[offset+1] = uint8(salto & 0xff)
+}
+
+func (c *Compilador) emitirLoop(inicio int) {
+	c.emitirByte(uint8(OpLoop))
+	salto := len(c.chunk.Instrucciones) - inicio + 2
+	if salto > 65535 {
+		fmt.Fprintf(os.Stderr, "El cuerpo del bucle es demasiado grande.\n")
+	}
+
+	c.emitirByte(uint8((salto >> 8) & 0xff))
+	c.emitirByte(uint8(salto & 0xff))
 }
 
 func (c *Compilador) emitirConstante(valor any) {
@@ -304,6 +349,12 @@ func (c *Compilador) declaracionVariable() {
 func (c *Compilador) sentencia() {
 	if c.coincide(token.PRINT) {
 		c.sentenciaImprimir()
+	} else if c.coincide(token.IF) {
+		c.sentenciaIf()
+	} else if c.coincide(token.WHILE) {
+		c.sentenciaWhile()
+	} else if c.coincide(token.FOR) {
+		c.sentenciaFor()
 	} else if c.coincide(token.LEFT_BRACE) {
 		c.empezarScope()
 		c.bloque()
@@ -323,6 +374,78 @@ func (c *Compilador) sentenciaExpresion() {
 	c.expresion()
 	c.consumir(token.SEMICOLON, "Se esperaba ';' después de la expresión.")
 	c.emitirByte(uint8(OpPop))
+}
+
+func (c *Compilador) sentenciaIf() {
+	c.consumir(token.LEFT_PAREN, "Se esperaba '(' después del 'if'.")
+	c.expresion()
+	c.consumir(token.RIGHT_PAREN, "Se esperaba ')' después de la condición.")
+	saltoIf := c.emitirSalto(uint8(OpJumpIfFalse))
+	c.emitirByte(uint8(OpPop))
+	c.sentencia()
+	saltoElse := c.emitirSalto(uint8(OpJump))
+	c.parchearSalto(saltoIf)
+	c.emitirByte(uint8(OpPop))
+	if c.coincide(token.ELSE) {
+		c.sentencia()
+	}
+
+	c.parchearSalto(saltoElse)
+}
+
+func (c *Compilador) sentenciaWhile() {
+	inicioLoop := len(c.chunk.Instrucciones)
+	c.consumir(token.LEFT_PAREN, "Se esperaba '(' después del 'while'.")
+	c.expresion()
+	c.consumir(token.RIGHT_PAREN, "Se esperaba ')' después de la condición.")
+	saltoSalida := c.emitirSalto(uint8(OpJumpIfFalse))
+	c.emitirByte(uint8(OpPop))
+	c.sentencia()
+	c.emitirLoop(inicioLoop)
+	c.parchearSalto(saltoSalida)
+	c.emitirByte(uint8(OpPop))
+}
+
+func (c *Compilador) sentenciaFor() {
+	c.empezarScope()
+	c.consumir(token.LEFT_PAREN, "Se esperaba '(' después del 'for'.")
+	if c.coincide(token.SEMICOLON) {
+		// No hacemos nada.
+	} else if c.coincide(token.VAR) {
+		c.declaracionVariable()
+	} else {
+		c.sentenciaExpresion()
+	}
+
+	inicioLoop := len(c.chunk.Instrucciones)
+	saltoSalida := -1
+	if !c.coincide(token.SEMICOLON) {
+		c.expresion()
+		c.consumir(token.SEMICOLON, "Se esperaba ';' después de la condición del for.")
+		
+		saltoSalida = c.emitirSalto(uint8(OpJumpIfFalse))
+		c.emitirByte(uint8(OpPop))
+	}
+
+	if !c.coincide(token.RIGHT_PAREN) {
+		saltoCuerpo := c.emitirSalto(uint8(OpJump))
+		inicioIncremento := len(c.chunk.Instrucciones)
+		c.expresion()
+		c.emitirByte(uint8(OpPop))
+		c.consumir(token.RIGHT_PAREN, "Se esperaba ')' después del for.")
+		c.emitirLoop(inicioLoop)
+		inicioLoop = inicioIncremento
+		c.parchearSalto(saltoCuerpo)
+	}
+
+	c.sentencia()
+	c.emitirLoop(inicioLoop)
+	if saltoSalida != -1 {
+		c.parchearSalto(saltoSalida)
+		c.emitirByte(uint8(OpPop))
+	}
+	
+	c.terminarScope()
 }
 
 func (c *Compilador) expresion() {
