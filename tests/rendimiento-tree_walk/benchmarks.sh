@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Asegura que el script se ejecute parado en tests/rendimiento, sin importar desde dónde se llame.
+# Asegura que el script se ejecute parado en tests/rendimiento-tree_walk, sin importar desde dónde se llame.
 cd "$(dirname "$0")"
 
 # Archivo de salida para las métricas.
