@@ -26,6 +26,11 @@ func (f *LoxFunction) Aridad() int {
 	return len(f.Declaracion.Params)
 }
 
+// Devuelve la representación de la función tal como la muestra Lox.
+func (f *LoxFunction) String() string {
+	return fmt.Sprintf("<fn %s>", f.Declaracion.Name.Lexema)
+}
+
 func (f *LoxFunction) Llamar(intp *Interprete, argumentos []any) (any, error) {
 	entorno := NuevoEntorno(f.Closure)
 	for i, param := range f.Declaracion.Params {
@@ -36,7 +41,7 @@ func (f *LoxFunction) Llamar(intp *Interprete, argumentos []any) (any, error) {
 	if ret, ok := err.(*ValorRetorno); ok {
 		return ret.Valor, nil
 	}
-	
+
 	return nil, err
 }
 
@@ -79,7 +84,7 @@ func (i *Interprete) buscarVariable(nombre token.Token, expr sintaxis.Expr) (any
 	if distancia, ok := i.locales[expr]; ok {
 		return i.entorno.ObtenerEn(distancia, nombre.Lexema), nil
 	}
-	
+
 	return i.globales.Obtener(nombre)
 }
 
@@ -191,7 +196,7 @@ func (i *Interprete) Ejecutar(stmt sintaxis.Stmt) error {
 
 		return &ValorRetorno{Valor: valor}
 	}
-	
+
 	return nil
 }
 
@@ -331,7 +336,7 @@ func (i *Interprete) Evaluar(expr sintaxis.Expr) (any, error) {
 		if err != nil {
 			return nil, err
 		}
-		
+
 		if distancia, ok := i.locales[e]; ok {
 			i.entorno.AsignarEn(distancia, e.Name.Lexema, valor)
 		} else {
@@ -352,7 +357,7 @@ func (i *Interprete) Evaluar(expr sintaxis.Expr) (any, error) {
 			if i.esVerdadero(izquierda) {
 				return izquierda, nil
 			}
-			
+
 		} else if e.Operator.Tipo == token.AND {
 			if !i.esVerdadero(izquierda) {
 				return izquierda, nil

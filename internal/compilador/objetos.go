@@ -48,3 +48,8 @@ func NuevoClosure(f *Funcion) *Closure {
 		Upvalues: make([]*ObjUpvalue, f.UpvalueCount),
 	}
 }
+
+// Devuelve la representación de la función que envuelve el closure.
+func (c *Closure) String() string {
+	return c.Funcion.String()
+}
