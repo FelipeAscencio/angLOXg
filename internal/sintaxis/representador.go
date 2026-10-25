@@ -30,6 +30,17 @@ func Representar(expresion Expr) string {
 	case *Assign:
 		return encerrar("=", n.Name.Lexema, Representar(n.Value))
 
+	case *ArrayLiteral:
+		partes := make([]string, 0, len(n.Elements))
+		for _, elemento := range n.Elements {
+			partes = append(partes, Representar(elemento))
+		}
+
+		return encerrar("array", partes...)
+
+	case *Index:
+		return encerrar("index", Representar(n.Object), Representar(n.Index))
+
 	case *This:
 		return n.Keyword.Lexema
 

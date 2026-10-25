@@ -82,6 +82,9 @@ func (p *Parser) primary() sintaxis.Expr {
 	case p.match(token.NUMBER, token.STRING):
 		return &sintaxis.Literal{Value: p.previous().Literal}
 
+	case p.match(token.LEFT_BRACKET):
+		return p.arrayLiteral()
+
 	case p.match(token.SUPER):
 		palabraClave := p.previous()
 		p.consume(token.DOT, "se esperaba '.' después de 'super'")

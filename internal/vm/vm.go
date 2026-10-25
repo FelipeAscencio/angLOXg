@@ -321,6 +321,37 @@ func (v *VM) correr() bool {
 
 			v.push(&compilador.MetodoLigado{Receptor: instancia, Metodo: metodo})
 
+		case compilador.OpArray:
+			cantidad := int(v.leerByte())
+
+			// Los elementos están en la pila en orden: se los lleva de una.
+			elementos := make([]any, cantidad)
+			copy(elementos, v.pila[len(v.pila)-cantidad:])
+			v.pila = v.pila[:len(v.pila)-cantidad]
+
+			v.push(compilador.NuevoArray(elementos))
+
+		case compilador.OpGetIndex:
+			indice := v.pop()
+			array, esArray := v.pop().(*compilador.Array)
+			if !esArray {
+				fmt.Fprintln(v.salida, "Error en ejecución: Solo los arrays se pueden indexar.")
+				return false
+			}
+
+			posicion, esEntero := posicionDeArray(indice)
+			if !esEntero {
+				fmt.Fprintln(v.salida, "Error en ejecución: El índice debe ser un número entero.")
+				return false
+			}
+
+			if posicion < 0 || posicion >= len(array.Elementos) {
+				fmt.Fprintln(v.salida, "Error en ejecución: Índice fuera de rango.")
+				return false
+			}
+
+			v.push(array.Elementos[posicion])
+
 		case compilador.OpInherit:
 			superclase, esClase := v.peek(1).(*compilador.Clase)
 			if !esClase {
@@ -530,4 +561,17 @@ func (v *VM) llamarClosure(closure *compilador.Closure, cantidadArgs int) bool {
 	})
 
 	return true
+}
+
+// Convierte un índice de Lox en una posición del array.
+//
+// Los números de Lox son todos de punto flotante, así que hay que descartar los
+// que tengan parte decimal: "a[1.5]" no apunta a ninguna posición.
+func posicionDeArray(indice any) (int, bool) {
+	numero, esNumero := indice.(float64)
+	if !esNumero || numero != float64(int(numero)) {
+		return 0, false
+	}
+
+	return int(numero), true
 }

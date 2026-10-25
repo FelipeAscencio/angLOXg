@@ -61,6 +61,10 @@ const (
 	OpInherit
 	OpGetSuper
 
+	// Arrays
+	OpArray
+	OpGetIndex
+
 	// Finaliza la ejecución del chunk actual y retorna el control.
 	OpReturn
 )

@@ -206,6 +206,22 @@ func (r *Resolver) ResolverExpresion(expr sintaxis.Expr) error {
 			}
 		}
 
+	// Literal de array.
+	case *sintaxis.ArrayLiteral:
+		for _, elemento := range e.Elements {
+			if err := r.ResolverExpresion(elemento); err != nil {
+				return err
+			}
+		}
+
+	// Lectura de un elemento por su posición.
+	case *sintaxis.Index:
+		if err := r.ResolverExpresion(e.Object); err != nil {
+			return err
+		}
+
+		return r.ResolverExpresion(e.Index)
+
 	// Referencia a un método de la superclase.
 	case *sintaxis.Super:
 		if !r.dentroClase {

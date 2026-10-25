@@ -438,6 +438,39 @@ func (i *Interprete) Evaluar(expr sintaxis.Expr) (any, error) {
 		return i.Evaluar(e.Right)
 
 	// Invocación de funciones ejecutables.
+	// Literal de array: los elementos se evalúan al crearlo.
+	case *sintaxis.ArrayLiteral:
+		elementos := make([]any, 0, len(e.Elements))
+		for _, elemento := range e.Elements {
+			valor, err := i.Evaluar(elemento)
+			if err != nil {
+				return nil, err
+			}
+
+			elementos = append(elementos, valor)
+		}
+
+		return NuevoArray(elementos), nil
+
+	// Lectura de un elemento por su posición.
+	case *sintaxis.Index:
+		objeto, err := i.Evaluar(e.Object)
+		if err != nil {
+			return nil, err
+		}
+
+		array, esArray := objeto.(*LoxArray)
+		if !esArray {
+			return nil, NewErrorRuntime(e.Bracket, "Solo los arrays se pueden indexar.")
+		}
+
+		indice, err := i.Evaluar(e.Index)
+		if err != nil {
+			return nil, err
+		}
+
+		return array.Obtener(e.Bracket, indice)
+
 	// Referencia a un método de la superclase.
 	case *sintaxis.Super:
 		distancia, resuelto := i.locales[e]

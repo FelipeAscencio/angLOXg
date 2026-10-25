@@ -32,6 +32,8 @@ var operandosPorOpcode = map[OpCode]int{
 	OpSetProperty:  1,
 	OpGetSuper:     1,
 	OpInherit:      0,
+	OpGetIndex:     0,
+	OpArray:        1,
 	OpDefineGlobal: 1,
 	OpGetGlobal:    1,
 	OpSetGlobal:    1,
@@ -62,6 +64,7 @@ var nombresDeOpcode = map[OpCode]string{
 	OpClass:  "OpClass", OpMethod: "OpMethod",
 	OpGetProperty: "OpGetProperty", OpSetProperty: "OpSetProperty",
 	OpInherit: "OpInherit", OpGetSuper: "OpGetSuper",
+	OpArray: "OpArray", OpGetIndex: "OpGetIndex",
 }
 
 // desensamblar recorre el bytecode de una función y devuelve una instrucción

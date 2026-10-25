@@ -116,6 +116,12 @@ func (p *Parser) call() sintaxis.Expr {
 			nombre := p.consume(token.IDENTIFIER, "se esperaba el nombre de la propiedad después del '.'")
 			expression = &sintaxis.Get{Object: expression, Name: nombre}
 
+		case p.match(token.LEFT_BRACKET):
+			corchete := p.previous()
+			indice := p.expression()
+			p.consume(token.RIGHT_BRACKET, "se esperaba ']' después del índice")
+			expression = &sintaxis.Index{Object: expression, Bracket: corchete, Index: indice}
+
 		default:
 			return expression
 		}
@@ -160,4 +166,25 @@ func (p *Parser) binaryLeft(siguiente func() sintaxis.Expr, operadores ...token.
 	}
 
 	return expression
+}
+
+// arrayLiteral reconoce "[a, b, c]". Se llama con el corchete de apertura ya
+// consumido.
+func (p *Parser) arrayLiteral() sintaxis.Expr {
+	corchete := p.previous()
+	elementos := []sintaxis.Expr{}
+
+	if !p.check(token.RIGHT_BRACKET) {
+		for {
+			elementos = append(elementos, p.expression())
+
+			if !p.match(token.COMMA) {
+				break
+			}
+		}
+	}
+
+	p.consume(token.RIGHT_BRACKET, "se esperaba ']' para cerrar el array")
+
+	return &sintaxis.ArrayLiteral{Bracket: corchete, Elements: elementos}
 }

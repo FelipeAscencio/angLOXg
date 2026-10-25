@@ -44,6 +44,24 @@ var casosUnCaracter = []casoDeEscaneo{
 		esperado: []tokenEsperado{},
 	},
 	{
+		nombre: "corchetes",
+		fuente: "[]",
+		esperado: []tokenEsperado{
+			{token.LEFT_BRACKET, "[", nil, 1},
+			{token.RIGHT_BRACKET, "]", nil, 1},
+		},
+	},
+	{
+		nombre: "indexado de un array",
+		fuente: "a[0]",
+		esperado: []tokenEsperado{
+			{token.IDENTIFIER, "a", nil, 1},
+			{token.LEFT_BRACKET, "[", nil, 1},
+			{token.NUMBER, "0", float64(0), 1},
+			{token.RIGHT_BRACKET, "]", nil, 1},
+		},
+	},
+	{
 		nombre: "punto",
 		fuente: ".",
 		esperado: []tokenEsperado{

@@ -1,6 +1,9 @@
 package compilador
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // Funcion representa la estructura estática de una función compilada.
 type Funcion struct {
@@ -98,4 +101,29 @@ func NuevoClosure(f *Funcion) *Closure {
 // Devuelve la representación de la función que envuelve el closure.
 func (c *Closure) String() string {
 	return c.Funcion.String()
+}
+
+// Array representa un array de Lox en tiempo de ejecución.
+type Array struct {
+	Elementos []any
+}
+
+// Crea un array con los elementos indicados.
+func NuevoArray(elementos []any) *Array {
+	return &Array{Elementos: elementos}
+}
+
+// Devuelve la representación del array tal como la muestra Lox.
+func (a *Array) String() string {
+	partes := make([]string, 0, len(a.Elementos))
+	for _, elemento := range a.Elementos {
+		if elemento == nil {
+			partes = append(partes, "nil")
+			continue
+		}
+
+		partes = append(partes, fmt.Sprintf("%v", elemento))
+	}
+
+	return "[" + strings.Join(partes, ", ") + "]"
 }

@@ -19,6 +19,8 @@ var todasLasExpresiones = []Expr{
 	&Set{Object: &Literal{}, Value: &Literal{}},
 	&This{},
 	&Super{},
+	&ArrayLiteral{},
+	&Index{Object: &Literal{}, Index: &Literal{}},
 }
 
 // Instancia de cada nodo de sentencia existente en el paquete.
@@ -63,7 +65,7 @@ func TestRepresentadorContemplaTodosLosNodos(t *testing.T) {
 
 // Verifica que las listas de nodos incluyan exactamente la cantidad de tipos definidos en el paquete.
 func TestListasDeNodosEstanCompletas(t *testing.T) {
-	const expresionesDefinidas = 12
+	const expresionesDefinidas = 14
 	const sentenciasDefinidas = 9
 
 	if len(todasLasExpresiones) != expresionesDefinidas {

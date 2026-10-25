@@ -108,6 +108,7 @@ func (c *Compilador) iniciarReglas() {
 		token.DOT:           {prefijo: nil, infijo: punto, precedencia: PrecCall},
 		token.THIS:          {prefijo: este, infijo: nil, precedencia: PrecNone},
 		token.SUPER:         {prefijo: superior, infijo: nil, precedencia: PrecNone},
+		token.LEFT_BRACKET:  {prefijo: arreglo, infijo: indexado, precedencia: PrecCall},
 	}
 }
 
@@ -889,4 +890,37 @@ func superior(c *Compilador, puedeAsignar bool) {
 
 	c.emitirByte(uint8(OpGetSuper))
 	c.emitirByte(uint8(indiceNombre))
+}
+
+// Reconoce el literal "[a, b, c]" y emite la instrucción que arma el array.
+func arreglo(c *Compilador, puedeAsignar bool) {
+	cantidad := 0
+
+	if c.tokenActual().Tipo != token.RIGHT_BRACKET {
+		for {
+			c.expresion()
+			cantidad++
+
+			if cantidad > 255 {
+				fmt.Fprintf(os.Stderr, "[Línea %d] Error: Un literal de array no puede tener más de 255 elementos.\n", c.tokenActual().Linea)
+			}
+
+			if !c.coincide(token.COMMA) {
+				break
+			}
+		}
+	}
+
+	c.consumir(token.RIGHT_BRACKET, "Se esperaba ']' para cerrar el array.")
+
+	// Los elementos quedaron en la pila: la instrucción se los lleva.
+	c.emitirByte(uint8(OpArray))
+	c.emitirByte(uint8(cantidad))
+}
+
+// Reconoce la lectura "a[i]".
+func indexado(c *Compilador, puedeAsignar bool) {
+	c.expresion()
+	c.consumir(token.RIGHT_BRACKET, "Se esperaba ']' después del índice.")
+	c.emitirByte(uint8(OpGetIndex))
 }

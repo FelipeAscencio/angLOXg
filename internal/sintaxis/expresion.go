@@ -55,6 +55,21 @@ type Call struct {
 	Arguments []Expr
 }
 
+// Literal de array, con sus elementos en orden.
+type ArrayLiteral struct {
+	// Corchete de apertura, que se guarda para ubicar los errores de ejecución
+	// del literal en la línea correcta.
+	Bracket  token.Token
+	Elements []Expr
+}
+
+// Lectura de un elemento de un array por su posición.
+type Index struct {
+	Object  Expr
+	Bracket token.Token
+	Index   Expr
+}
+
 // Referencia a un método de la superclase.
 type Super struct {
 	Keyword token.Token
@@ -79,15 +94,17 @@ type Set struct {
 	Value  Expr
 }
 
-func (*Literal) isExpr()  {}
-func (*Grouping) isExpr() {}
-func (*Unary) isExpr()    {}
-func (*Binary) isExpr()   {}
-func (*Logical) isExpr()  {}
-func (*Variable) isExpr() {}
-func (*Assign) isExpr()   {}
-func (*Call) isExpr()     {}
-func (*Get) isExpr()      {}
-func (*Set) isExpr()      {}
-func (*This) isExpr()     {}
-func (*Super) isExpr()    {}
+func (*Literal) isExpr()      {}
+func (*Grouping) isExpr()     {}
+func (*Unary) isExpr()        {}
+func (*Binary) isExpr()       {}
+func (*Logical) isExpr()      {}
+func (*Variable) isExpr()     {}
+func (*Assign) isExpr()       {}
+func (*Call) isExpr()         {}
+func (*Get) isExpr()          {}
+func (*Set) isExpr()          {}
+func (*This) isExpr()         {}
+func (*Super) isExpr()        {}
+func (*ArrayLiteral) isExpr() {}
+func (*Index) isExpr()        {}

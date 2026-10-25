@@ -158,6 +158,32 @@ var casosDeExpresion = []struct {
 		esperado: "(call f 1 2)",
 	},
 	{
+		nombre:   "array vacío",
+		arbol:    &ArrayLiteral{},
+		esperado: "(array)",
+	},
+	{
+		nombre:   "array con elementos",
+		arbol:    &ArrayLiteral{Elements: []Expr{num(1), num(2), num(3)}},
+		esperado: "(array 1 2 3)",
+	},
+	{
+		nombre: "lectura por posición",
+		arbol: &Index{
+			Object: variable("a"),
+			Index:  num(0),
+		},
+		esperado: "(index a 0)",
+	},
+	{
+		nombre: "lecturas por posición encadenadas",
+		arbol: &Index{
+			Object: &Index{Object: variable("m"), Index: num(0)},
+			Index:  num(1),
+		},
+		esperado: "(index (index m 0) 1)",
+	},
+	{
 		nombre:   "referencia a un método de la superclase",
 		arbol:    &Super{Keyword: tok(token.SUPER, "super"), Method: tok(token.IDENTIFIER, "saludar")},
 		esperado: "(super saludar)",
