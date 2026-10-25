@@ -286,23 +286,52 @@ func (v *VM) correr() bool {
 
 		case compilador.OpCall:
 			cantidadArgs := int(v.leerByte())
-			callee := v.peek(cantidadArgs)
-			closure, ok := callee.(*compilador.Closure)
-			if !ok {
-				fmt.Fprintln(v.salida, "Error en ejecución: Solo se pueden llamar funciones.")
+			if !v.llamarValor(v.peek(cantidadArgs), cantidadArgs) {
 				return false
 			}
 
-			if cantidadArgs != closure.Funcion.Aridad {
-				fmt.Fprintf(v.salida, "Error en ejecución: Se esperaban %d argumentos pero se obtuvieron %d.\n", closure.Funcion.Aridad, cantidadArgs)
+		case compilador.OpClass:
+			nombre := v.leerConstante().(string)
+			v.push(compilador.NuevaClase(nombre))
+
+		case compilador.OpMethod:
+			nombre := v.leerConstante().(string)
+			metodo := v.pop().(*compilador.Closure)
+			clase := v.peek(0).(*compilador.Clase)
+			clase.Metodos[nombre] = metodo
+
+		case compilador.OpGetProperty:
+			nombre := v.leerConstante().(string)
+			instancia, esInstancia := v.pop().(*compilador.Instancia)
+			if !esInstancia {
+				fmt.Fprintln(v.salida, "Error en ejecución: Solo las instancias tienen propiedades.")
 				return false
 			}
 
-			v.frames = append(v.frames, &CallFrame{
-				closure: closure,
-				ip:      0,
-				slots:   len(v.pila) - cantidadArgs - 1,
-			})
+			if valor, existe := instancia.Propiedades[nombre]; existe {
+				v.push(valor)
+				break
+			}
+
+			metodo, existe := instancia.Clase.Metodos[nombre]
+			if !existe {
+				fmt.Fprintf(v.salida, "Error en ejecución: Propiedad no definida '%s'.\n", nombre)
+				return false
+			}
+
+			v.push(&compilador.MetodoLigado{Receptor: instancia, Metodo: metodo})
+
+		case compilador.OpSetProperty:
+			nombre := v.leerConstante().(string)
+			valor := v.pop()
+			instancia, esInstancia := v.pop().(*compilador.Instancia)
+			if !esInstancia {
+				fmt.Fprintln(v.salida, "Error en ejecución: Solo las instancias tienen propiedades.")
+				return false
+			}
+
+			instancia.Propiedades[nombre] = valor
+			v.push(valor)
 
 		case compilador.OpReturn:
 			resultado := v.pop()
@@ -414,4 +443,57 @@ func formatearValor(valor any) string {
 	}
 
 	return fmt.Sprintf("%v", valor)
+}
+
+// Despacha una llamada según qué se esté llamando: una función, una clase o un
+// método ya ligado a su instancia.
+func (v *VM) llamarValor(callee any, cantidadArgs int) bool {
+	switch objetivo := callee.(type) {
+	case *compilador.Closure:
+		return v.llamarClosure(objetivo, cantidadArgs)
+
+	case *compilador.Clase:
+		// Instanciar deja la instancia en el lugar del callee, que es el slot
+		// cero del marco: ahí es donde el inicializador encuentra "this".
+		instancia := compilador.NuevaInstancia(objetivo)
+		v.pila[len(v.pila)-cantidadArgs-1] = instancia
+
+		inicializador, tiene := objetivo.Metodos[compilador.NombreDelInicializador]
+		if tiene {
+			return v.llamarClosure(inicializador, cantidadArgs)
+		}
+
+		if cantidadArgs != 0 {
+			fmt.Fprintf(v.salida, "Error en ejecución: Se esperaban 0 argumentos pero se obtuvieron %d.\n", cantidadArgs)
+			return false
+		}
+
+		return true
+
+	case *compilador.MetodoLigado:
+		// El receptor reemplaza al método en el slot cero.
+		v.pila[len(v.pila)-cantidadArgs-1] = objetivo.Receptor
+
+		return v.llamarClosure(objetivo.Metodo, cantidadArgs)
+
+	default:
+		fmt.Fprintln(v.salida, "Error en ejecución: Solo se pueden llamar funciones y clases.")
+		return false
+	}
+}
+
+// Abre un marco nuevo para ejecutar un closure.
+func (v *VM) llamarClosure(closure *compilador.Closure, cantidadArgs int) bool {
+	if cantidadArgs != closure.Funcion.Aridad {
+		fmt.Fprintf(v.salida, "Error en ejecución: Se esperaban %d argumentos pero se obtuvieron %d.\n", closure.Funcion.Aridad, cantidadArgs)
+		return false
+	}
+
+	v.frames = append(v.frames, &CallFrame{
+		closure: closure,
+		ip:      0,
+		slots:   len(v.pila) - cantidadArgs - 1,
+	})
+
+	return true
 }

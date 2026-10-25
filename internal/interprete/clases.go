@@ -4,6 +4,9 @@ import (
 	"github.com/FelipeAscencio/angLOXg/internal/token"
 )
 
+// Nombre del método que Lox usa como constructor.
+const NombreDelInicializador = "init"
+
 // Representa una clase de Lox en tiempo de ejecución.
 type LoxClass struct {
 	Nombre  string
@@ -21,12 +24,24 @@ func (c *LoxClass) BuscarMetodo(nombre string) *LoxFunction {
 
 // Devuelve la cantidad de argumentos que acepta el constructor de la clase.
 func (c *LoxClass) Aridad() int {
+	if inicializador := c.BuscarMetodo(NombreDelInicializador); inicializador != nil {
+		return inicializador.Aridad()
+	}
+
 	return 0
 }
 
-// Crea una instancia nueva de la clase.
+// Crea una instancia nueva de la clase y corre su inicializador, si tiene.
 func (c *LoxClass) Llamar(intp *Interprete, argumentos []any) (any, error) {
-	return NuevaInstancia(c), nil
+	instancia := NuevaInstancia(c)
+
+	if inicializador := c.BuscarMetodo(NombreDelInicializador); inicializador != nil {
+		if _, err := inicializador.Ligar(instancia).Llamar(intp, argumentos); err != nil {
+			return nil, err
+		}
+	}
+
+	return instancia, nil
 }
 
 // Devuelve la representación de la clase tal como la muestra Lox.

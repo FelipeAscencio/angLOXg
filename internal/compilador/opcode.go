@@ -53,6 +53,12 @@ const (
 	OpSetUpvalue
 	OpCloseUpvalue
 
+	// Clases, métodos y propiedades
+	OpClass
+	OpMethod
+	OpGetProperty
+	OpSetProperty
+
 	// Finaliza la ejecución del chunk actual y retorna el control.
 	OpReturn
 )

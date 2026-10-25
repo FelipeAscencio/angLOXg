@@ -26,6 +26,10 @@ var operandosPorOpcode = map[OpCode]int{
 	OpReturn:       0,
 
 	OpConstant:     1,
+	OpClass:        1,
+	OpMethod:       1,
+	OpGetProperty:  1,
+	OpSetProperty:  1,
 	OpDefineGlobal: 1,
 	OpGetGlobal:    1,
 	OpSetGlobal:    1,
@@ -53,6 +57,8 @@ var nombresDeOpcode = map[OpCode]string{
 	OpCall: "OpCall", OpClosure: "OpClosure",
 	OpGetUpvalue: "OpGetUpvalue", OpSetUpvalue: "OpSetUpvalue", OpCloseUpvalue: "OpCloseUpvalue",
 	OpReturn: "OpReturn",
+	OpClass:  "OpClass", OpMethod: "OpMethod",
+	OpGetProperty: "OpGetProperty", OpSetProperty: "OpSetProperty",
 }
 
 // desensamblar recorre el bytecode de una función y devuelve una instrucción
@@ -94,7 +100,8 @@ func desensamblar(fn *Funcion) []string {
 // indexaConstante indica si el operando de la instrucción es un índice al pool
 func indexaConstante(op OpCode) bool {
 	switch op {
-	case OpConstant, OpDefineGlobal, OpGetGlobal, OpSetGlobal, OpClosure:
+	case OpConstant, OpDefineGlobal, OpGetGlobal, OpSetGlobal, OpClosure,
+		OpClass, OpMethod, OpGetProperty, OpSetProperty:
 		return true
 	default:
 		return false

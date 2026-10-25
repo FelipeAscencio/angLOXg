@@ -18,8 +18,9 @@ type LoxCallable interface {
 }
 
 type LoxFunction struct {
-	Declaracion *sintaxis.Function
-	Closure     *Entorno
+	Declaracion     *sintaxis.Function
+	Closure         *Entorno
+	EsInicializador bool
 }
 
 func (f *LoxFunction) Aridad() int {
@@ -35,7 +36,11 @@ func (f *LoxFunction) Ligar(instancia *LoxInstance) *LoxFunction {
 	entorno := NuevoEntorno(f.Closure)
 	entorno.Definir("this", instancia)
 
-	return &LoxFunction{Declaracion: f.Declaracion, Closure: entorno}
+	return &LoxFunction{
+		Declaracion:     f.Declaracion,
+		Closure:         entorno,
+		EsInicializador: f.EsInicializador,
+	}
 }
 
 // Devuelve la representación de la función tal como la muestra Lox.
@@ -50,6 +55,17 @@ func (f *LoxFunction) Llamar(intp *Interprete, argumentos []any) (any, error) {
 	}
 
 	err := intp.ejecutarBloque(f.Declaracion.Body, entorno)
+
+	// Un inicializador siempre devuelve la instancia, sin importar por dónde
+	// haya terminado: instanciar una clase no puede dar otra cosa.
+	if f.EsInicializador {
+		if _, esRetorno := err.(*ValorRetorno); esRetorno || err == nil {
+			return f.Closure.ObtenerEn(0, "this"), nil
+		}
+
+		return nil, err
+	}
+
 	if ret, ok := err.(*ValorRetorno); ok {
 		return ret.Valor, nil
 	}
@@ -201,8 +217,9 @@ func (i *Interprete) Ejecutar(stmt sintaxis.Stmt) error {
 		metodos := make(map[string]*LoxFunction, len(s.Methods))
 		for _, metodo := range s.Methods {
 			metodos[metodo.Name.Lexema] = &LoxFunction{
-				Declaracion: metodo,
-				Closure:     i.entorno,
+				Declaracion:     metodo,
+				Closure:         i.entorno,
+				EsInicializador: metodo.Name.Lexema == NombreDelInicializador,
 			}
 		}
 

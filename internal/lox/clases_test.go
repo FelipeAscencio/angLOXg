@@ -342,3 +342,74 @@ func TestMetodos(t *testing.T) {
 func TestReferenciasAThis(t *testing.T) {
 	correrCasosDeClases(t, casosThis)
 }
+
+var casosInit = []casoDeClases{
+	{
+		nombre:   "el init corre al instanciar",
+		fuente:   `class A { init() { print "creada"; } } A();`,
+		esperado: []string{"creada"},
+		exito:    true,
+	},
+	{
+		nombre:   "el init recibe argumentos",
+		fuente:   "class P { init(x, y) { this.x = x; this.y = y; } } var p = P(3, 4); print p.x + p.y;",
+		esperado: []string{"7"},
+		exito:    true,
+	},
+	{
+		nombre:   "instanciar devuelve la instancia, no lo que retorne el init",
+		fuente:   "class P { init(x) { this.x = x; } } print P(1);",
+		esperado: []string{"instancia de P"},
+		exito:    true,
+	},
+	{
+		nombre:   "la aridad de la clase es la del init",
+		fuente:   "class P { init(x) {} } P();",
+		esperado: []string{"Se esperaban 1 argumentos pero se obtuvieron 0.", "[línea 1]"},
+		exito:    false,
+	},
+	{
+		nombre:   "sin init la clase no acepta argumentos",
+		fuente:   "class P {} P(1);",
+		esperado: []string{"Se esperaban 0 argumentos pero se obtuvieron 1.", "[línea 1]"},
+		exito:    false,
+	},
+	{
+		nombre: "un return pelado dentro del init corta y devuelve la instancia",
+		fuente: `class P { init() { this.x = 1; return; this.x = 2; } } print P().x;`,
+		// El return sin valor es válido dentro del init: corta la ejecución.
+		esperado: []string{"1"},
+		exito:    true,
+	},
+	{
+		nombre: "el init no puede devolver un valor",
+		fuente: "class P { init() { return 1; } }",
+		// Sería contradictorio: instanciar siempre devuelve la instancia.
+		esperado: []string{"No se puede devolver un valor desde un inicializador"},
+		exito:    false,
+	},
+	{
+		nombre:   "llamar al init a mano devuelve la instancia",
+		fuente:   "class P { init() { this.x = 1; } } var p = P(); print p.init() == p;",
+		esperado: []string{"true"},
+		exito:    true,
+	},
+	{
+		nombre:   "el init puede llamar a otros métodos",
+		fuente:   "class P { init() { this.preparar(); } preparar() { this.listo = true; } } print P().listo;",
+		esperado: []string{"true"},
+		exito:    true,
+	},
+	{
+		nombre: "cada instancia corre su propio init",
+		fuente: `class C { init(n) { this.n = n; } }
+			var a = C(1); var b = C(2);
+			print a.n; print b.n;`,
+		esperado: []string{"1", "2"},
+		exito:    true,
+	},
+}
+
+func TestConstructorInit(t *testing.T) {
+	correrCasosDeClases(t, casosInit)
+}

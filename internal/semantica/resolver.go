@@ -13,6 +13,7 @@ type Resolver struct {
 	intp        *interprete.Interprete
 	scopes      []map[string]bool
 	dentroClase bool
+	dentroInit  bool
 }
 
 // Crea una nueva instancia del resolvedor asociada al intérprete.
@@ -77,7 +78,13 @@ func (r *Resolver) ResolverSentencia(stmt sintaxis.Stmt) error {
 		r.scopes[len(r.scopes)-1]["this"] = true
 
 		for _, metodo := range s.Methods {
-			if err := r.resolverFuncion(metodo); err != nil {
+			initAnterior := r.dentroInit
+			r.dentroInit = metodo.Name.Lexema == interprete.NombreDelInicializador
+
+			err := r.resolverFuncion(metodo)
+			r.dentroInit = initAnterior
+
+			if err != nil {
 				r.endScope()
 				r.dentroClase = claseAnterior
 
@@ -115,6 +122,10 @@ func (r *Resolver) ResolverSentencia(stmt sintaxis.Stmt) error {
 	// Sentencia de retorno.
 	case *sintaxis.Return:
 		if s.Value != nil {
+			if r.dentroInit {
+				return fmt.Errorf("[línea %d] No se puede devolver un valor desde un inicializador", s.Keyword.Linea)
+			}
+
 			return r.ResolverExpresion(s.Value)
 		}
 

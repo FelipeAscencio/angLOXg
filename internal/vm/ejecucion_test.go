@@ -180,7 +180,7 @@ var casosFunciones = []casoDeEjecucion{
 	{
 		nombre:   "llamar a algo que no es una función",
 		fuente:   "var x = 1; x();",
-		esperado: []string{"Error en ejecución: Solo se pueden llamar funciones."},
+		esperado: []string{"Error en ejecución: Solo se pueden llamar funciones y clases."},
 		exito:    false,
 	},
 	{

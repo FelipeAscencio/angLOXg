@@ -55,6 +55,7 @@ type Compilador struct {
 	upvalues         []UpvalueLocal
 	profundidadScope int
 	reglas           map[token.TipoDeToken]ReglaParseo
+	esInicializador  bool
 }
 
 // Toma una lista de tokens y devuelve un Chunk listo para la VM.
@@ -104,6 +105,8 @@ func (c *Compilador) iniciarReglas() {
 		token.AND:           {prefijo: nil, infijo: and, precedencia: PrecAnd},
 		token.OR:            {prefijo: nil, infijo: or, precedencia: PrecOr},
 		token.FUN:           {prefijo: nil, infijo: nil, precedencia: PrecNone},
+		token.DOT:           {prefijo: nil, infijo: punto, precedencia: PrecCall},
+		token.THIS:          {prefijo: este, infijo: nil, precedencia: PrecNone},
 	}
 }
 
@@ -374,7 +377,9 @@ func (c *Compilador) obtenerRegla(tipo token.TipoDeToken) ReglaParseo {
 // =================================
 
 func (c *Compilador) declaracion() {
-	if c.coincide(token.FUN) {
+	if c.coincide(token.CLASS) {
+		c.declaracionClase()
+	} else if c.coincide(token.FUN) {
 		c.declaracionFuncion()
 	} else if c.coincide(token.VAR) {
 		c.declaracionVariable()
@@ -459,8 +464,7 @@ func (c *Compilador) declaracionFuncion() {
 	compiladorFuncion.consumir(token.LEFT_BRACE, "Se esperaba '{' antes del cuerpo de la función.")
 	compiladorFuncion.profundidadScope = 1
 	compiladorFuncion.bloque()
-	compiladorFuncion.emitirByte(uint8(OpNil))
-	compiladorFuncion.emitirByte(uint8(OpReturn))
+	compiladorFuncion.emitirRetornoImplicito()
 	c.actual = compiladorFuncion.actual
 	indiceFuncion := c.funcion.Chunk.AgregarConstante(compiladorFuncion.funcion)
 	c.emitirByte(uint8(OpClosure))
@@ -588,12 +592,25 @@ func (c *Compilador) sentenciaFor() {
 
 func (c *Compilador) sentenciaReturn() {
 	if c.coincide(token.SEMICOLON) {
-		c.emitirByte(uint8(OpNil))
-	} else {
-		c.expresion()
-		c.consumir(token.SEMICOLON, "Se esperaba ';' después del valor de retorno.")
+		// Un return pelado dentro de un inicializador devuelve la instancia.
+		if c.esInicializador {
+			c.emitirByte(uint8(OpGetLocal))
+			c.emitirByte(0)
+		} else {
+			c.emitirByte(uint8(OpNil))
+		}
+
+		c.emitirByte(uint8(OpReturn))
+
+		return
 	}
 
+	if c.esInicializador {
+		fmt.Fprintf(os.Stderr, "[Línea %d] Error: No se puede devolver un valor desde un inicializador.\n", c.tokenActual().Linea)
+	}
+
+	c.expresion()
+	c.consumir(token.SEMICOLON, "Se esperaba ';' después del valor de retorno.")
 	c.emitirByte(uint8(OpReturn))
 }
 
@@ -662,4 +679,146 @@ func (c *Compilador) coincide(tipo token.TipoDeToken) bool {
 
 func (c *Compilador) esFin() bool {
 	return c.tokenActual().Tipo == token.EOF
+}
+
+// Reconoce "class Nombre { metodos }" y emite el bytecode que arma la clase.
+//
+// La clase queda en la pila mientras se le cuelgan los métodos, y recién al
+// final se la define como variable.
+func (c *Compilador) declaracionClase() {
+	c.consumir(token.IDENTIFIER, "Se esperaba el nombre de la clase.")
+	nombreToken := c.tokenAnterior()
+	indiceNombre := c.funcion.Chunk.AgregarConstante(nombreToken.Lexema)
+
+	c.emitirByte(uint8(OpClass))
+	c.emitirByte(uint8(indiceNombre))
+
+	c.consumir(token.LEFT_BRACE, "Se esperaba '{' antes del cuerpo de la clase.")
+	for c.tokenActual().Tipo != token.RIGHT_BRACE && !c.esFin() {
+		c.metodo()
+	}
+
+	c.consumir(token.RIGHT_BRACE, "Se esperaba '}' después del cuerpo de la clase.")
+
+	if c.profundidadScope > 0 {
+		c.locales = append(c.locales, Local{
+			nombre:      nombreToken.Lexema,
+			profundidad: c.profundidadScope,
+		})
+
+		return
+	}
+
+	indiceGlobal := c.funcion.Chunk.AgregarConstante(nombreToken.Lexema)
+	c.emitirByte(uint8(OpDefineGlobal))
+	c.emitirByte(uint8(indiceGlobal))
+}
+
+// Compila un método y lo cuelga de la clase que está en la pila.
+func (c *Compilador) metodo() {
+	c.consumir(token.IDENTIFIER, "Se esperaba el nombre del método.")
+	nombreToken := c.tokenAnterior()
+	indiceNombre := c.funcion.Chunk.AgregarConstante(nombreToken.Lexema)
+
+	c.compilarCuerpoDeMetodo(nombreToken.Lexema)
+
+	c.emitirByte(uint8(OpMethod))
+	c.emitirByte(uint8(indiceNombre))
+}
+
+// Compila el cuerpo de un método en su propio chunk y emite el OpClosure.
+//
+// El slot cero del marco se llama "this": es donde la máquina deja el receptor
+// antes de entrar, así que "this" se resuelve como cualquier otra local.
+func (c *Compilador) compilarCuerpoDeMetodo(nombre string) {
+	compiladorMetodo := &Compilador{
+		padre:            c,
+		tokens:           c.tokens,
+		actual:           c.actual,
+		funcion:          NuevaFuncion(),
+		locales:          make([]Local, 0),
+		upvalues:         make([]UpvalueLocal, 0),
+		profundidadScope: 0,
+		reglas:           c.reglas,
+		esInicializador:  nombre == NombreDelInicializador,
+	}
+
+	compiladorMetodo.funcion.Nombre = nombre
+	compiladorMetodo.locales = append(compiladorMetodo.locales, Local{
+		profundidad: 0,
+		nombre:      "this",
+		capturada:   false,
+	})
+
+	compiladorMetodo.consumir(token.LEFT_PAREN, "Se esperaba '(' después del nombre del método.")
+	if compiladorMetodo.tokenActual().Tipo != token.RIGHT_PAREN {
+		for {
+			compiladorMetodo.funcion.Aridad++
+			compiladorMetodo.consumir(token.IDENTIFIER, "Se esperaba el nombre del parámetro.")
+			compiladorMetodo.locales = append(compiladorMetodo.locales, Local{
+				nombre:      compiladorMetodo.tokenAnterior().Lexema,
+				profundidad: 1,
+				capturada:   false,
+			})
+
+			if !compiladorMetodo.coincide(token.COMMA) {
+				break
+			}
+		}
+	}
+
+	compiladorMetodo.consumir(token.RIGHT_PAREN, "Se esperaba ')' después de los parámetros.")
+	compiladorMetodo.consumir(token.LEFT_BRACE, "Se esperaba '{' antes del cuerpo del método.")
+	compiladorMetodo.profundidadScope = 1
+	compiladorMetodo.bloque()
+	compiladorMetodo.emitirRetornoImplicito()
+
+	c.actual = compiladorMetodo.actual
+	indiceFuncion := c.funcion.Chunk.AgregarConstante(compiladorMetodo.funcion)
+	c.emitirByte(uint8(OpClosure))
+	c.emitirByte(uint8(indiceFuncion))
+	for _, upv := range compiladorMetodo.upvalues {
+		if upv.esLocal {
+			c.emitirByte(1)
+		} else {
+			c.emitirByte(0)
+		}
+
+		c.emitirByte(upv.indice)
+	}
+}
+
+// Emite el retorno que corre cuando el cuerpo termina sin pasar por un return.
+//
+// Un inicializador devuelve la instancia, que vive en el slot cero; cualquier
+// otro cuerpo devuelve nil.
+func (c *Compilador) emitirRetornoImplicito() {
+	if c.esInicializador {
+		c.emitirByte(uint8(OpGetLocal))
+		c.emitirByte(0)
+	} else {
+		c.emitirByte(uint8(OpNil))
+	}
+
+	c.emitirByte(uint8(OpReturn))
+}
+
+// Reconoce el acceso a una propiedad con punto, de lectura o de escritura.
+func punto(c *Compilador, puedeAsignar bool) {
+	c.consumir(token.IDENTIFIER, "Se esperaba el nombre de la propiedad después del '.'.")
+	indiceNombre := c.funcion.Chunk.AgregarConstante(c.tokenAnterior().Lexema)
+
+	if puedeAsignar && c.coincide(token.EQUAL) {
+		c.expresion()
+		c.emitirByte(uint8(OpSetProperty))
+	} else {
+		c.emitirByte(uint8(OpGetProperty))
+	}
+
+	c.emitirByte(uint8(indiceNombre))
+}
+
+// Reconoce "this", que se resuelve como la local del slot cero del método.
+func este(c *Compilador, puedeAsignar bool) {
+	variable(c, false)
 }
