@@ -55,6 +55,11 @@ type Call struct {
 	Arguments []Expr
 }
 
+// Referencia a la instancia sobre la que se está ejecutando un método.
+type This struct {
+	Keyword token.Token
+}
+
 // Lectura de una propiedad de una instancia.
 type Get struct {
 	Object Expr
@@ -78,3 +83,4 @@ func (*Assign) isExpr()   {}
 func (*Call) isExpr()     {}
 func (*Get) isExpr()      {}
 func (*Set) isExpr()      {}
+func (*This) isExpr()     {}

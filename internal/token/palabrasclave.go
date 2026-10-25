@@ -14,6 +14,7 @@ var palabrasClave = map[string]TipoDeToken{
 	"or":     OR,
 	"print":  PRINT,
 	"return": RETURN,
+	"this":   THIS,
 	"true":   TRUE,
 	"var":    VAR,
 	"while":  WHILE,

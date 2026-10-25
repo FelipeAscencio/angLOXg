@@ -158,6 +158,19 @@ var casosDeExpresion = []struct {
 		esperado: "(call f 1 2)",
 	},
 	{
+		nombre:   "referencia a this",
+		arbol:    &This{Keyword: tok(token.THIS, "this")},
+		esperado: "this",
+	},
+	{
+		nombre: "lectura de una propiedad de this",
+		arbol: &Get{
+			Object: &This{Keyword: tok(token.THIS, "this")},
+			Name:   tok(token.IDENTIFIER, "x"),
+		},
+		esperado: "(get this x)",
+	},
+	{
 		nombre: "lectura de una propiedad",
 		arbol: &Get{
 			Object: variable("p"),

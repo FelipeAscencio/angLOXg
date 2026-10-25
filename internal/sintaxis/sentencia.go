@@ -56,7 +56,8 @@ type Return struct {
 
 // Declaración de una clase.
 type Class struct {
-	Name token.Token
+	Name    token.Token
+	Methods []*Function
 }
 
 func (*ExpressionStmt) isStmt() {}

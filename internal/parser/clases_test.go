@@ -36,9 +36,63 @@ var casosDeclaracionClase = []casoDePrograma{
 		errores: []string{"se esperaba '}'"},
 	},
 	{
-		nombre:  "los métodos todavía no se admiten",
-		fuente:  "class A { metodo() {} }",
-		errores: []string{"el cuerpo de la clase tiene que estar vacío"},
+		nombre:   "clase con un método",
+		fuente:   "class A { saludar() { print 1; } }",
+		esperado: []string{"(class A (fun saludar () (print 1)))"},
+	},
+	{
+		nombre:   "clase con varios métodos",
+		fuente:   "class A { uno() {} dos() {} }",
+		esperado: []string{"(class A (fun uno ()) (fun dos ()))"},
+	},
+	{
+		nombre:   "método con parámetros",
+		fuente:   "class A { sumar(x, y) { return x + y; } }",
+		esperado: []string{"(class A (fun sumar (x y) (return (+ x y))))"},
+	},
+	{
+		nombre:  "un método no lleva la palabra fun",
+		fuente:  "class A { fun metodo() {} }",
+		errores: []string{"se esperaba el nombre del método"},
+	},
+	{
+		nombre:  "método sin paréntesis",
+		fuente:  "class A { metodo {} }",
+		errores: []string{"se esperaba '('"},
+	},
+}
+
+var casosThis = []casoDePrograma{
+	{
+		nombre:   "this suelto en un método",
+		fuente:   "class A { yo() { return this; } }",
+		esperado: []string{"(class A (fun yo () (return this)))"},
+	},
+	{
+		nombre:   "lectura de una propiedad de this",
+		fuente:   "class A { ver() { print this.x; } }",
+		esperado: []string{"(class A (fun ver () (print (get this x))))"},
+	},
+	{
+		nombre:   "escritura de una propiedad de this",
+		fuente:   "class A { poner() { this.x = 1; } }",
+		esperado: []string{"(class A (fun poner () (expr (set this x 1))))"},
+	},
+	{
+		nombre:   "llamada a un método de this",
+		fuente:   "class A { a() { this.b(); } b() {} }",
+		esperado: []string{"(class A (fun a () (expr (call (get this b)))) (fun b ()))"},
+	},
+	{
+		nombre: "this no se puede asignar",
+		fuente: "class A { m() { this = 1; } }",
+		// El destino de una asignación tiene que ser una variable o una
+		// propiedad, y this no es ninguna de las dos. El segundo error sale de
+		// la llave que queda huérfana al descartar la clase entera.
+		errores: []string{
+			"destino de asignación inválido",
+			"se esperaba una expresión",
+		},
 	},
 }
 
@@ -108,4 +162,8 @@ func TestDeclaracionDeClases(t *testing.T) {
 
 func TestAccesoAPropiedades(t *testing.T) {
 	correrCasosDePrograma(t, casosPropiedades)
+}
+
+func TestReferenciasAThis(t *testing.T) {
+	correrCasosDePrograma(t, casosThis)
 }

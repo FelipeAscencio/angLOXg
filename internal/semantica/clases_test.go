@@ -101,3 +101,95 @@ func TestResolucionDelValorDeUnaEscritura(t *testing.T) {
 
 	exigirErrorDeInicializadorPropio(t, err)
 }
+
+// Usar this fuera de una clase es un error semántico: no hay ninguna instancia
+// a la que pueda referirse.
+func TestErrorDeThisFueraDeUnaClase(t *testing.T) {
+	intp := interprete.NuevoInterprete(&bytes.Buffer{})
+	res := semantica.Nuevo(intp)
+
+	sentencias := []sintaxis.Stmt{&sintaxis.Print{
+		Value: &sintaxis.This{Keyword: token.Token{Lexema: "this", Linea: 4}},
+	}}
+
+	err := res.Resolver(sentencias)
+	if err == nil {
+		t.Fatal("se esperaba un error semántico al usar this fuera de una clase")
+	}
+
+	if !strings.Contains(err.Error(), "fuera de una clase") {
+		t.Errorf("mensaje de error inesperado: %v", err)
+	}
+}
+
+// Usar this fuera de una clase también falla dentro de una función suelta.
+func TestErrorDeThisEnUnaFuncionSuelta(t *testing.T) {
+	intp := interprete.NuevoInterprete(&bytes.Buffer{})
+	res := semantica.Nuevo(intp)
+
+	sentencias := []sintaxis.Stmt{&sintaxis.Function{
+		Name: token.Token{Lexema: "suelta", Linea: 1},
+		Body: []sintaxis.Stmt{&sintaxis.Print{
+			Value: &sintaxis.This{Keyword: token.Token{Lexema: "this", Linea: 2}},
+		}},
+	}}
+
+	if err := res.Resolver(sentencias); err == nil {
+		t.Error("se esperaba un error semántico al usar this en una función suelta")
+	}
+}
+
+// Dentro de un método, this es válido.
+func TestThisEsValidoEnUnMetodo(t *testing.T) {
+	intp := interprete.NuevoInterprete(&bytes.Buffer{})
+	res := semantica.Nuevo(intp)
+
+	sentencias := []sintaxis.Stmt{&sintaxis.Class{
+		Name: token.Token{Lexema: "A", Linea: 1},
+		Methods: []*sintaxis.Function{{
+			Name: token.Token{Lexema: "m", Linea: 2},
+			Body: []sintaxis.Stmt{&sintaxis.Print{
+				Value: &sintaxis.This{Keyword: token.Token{Lexema: "this", Linea: 2}},
+			}},
+		}},
+	}}
+
+	if err := res.Resolver(sentencias); err != nil {
+		t.Errorf("no se esperaba un error al usar this en un método: %v", err)
+	}
+}
+
+// Después de cerrar la clase, this vuelve a ser inválido.
+func TestThisVuelveASerInvalidoTrasLaClase(t *testing.T) {
+	intp := interprete.NuevoInterprete(&bytes.Buffer{})
+	res := semantica.Nuevo(intp)
+
+	sentencias := []sintaxis.Stmt{
+		&sintaxis.Class{Name: token.Token{Lexema: "A", Linea: 1}},
+		&sintaxis.Print{Value: &sintaxis.This{Keyword: token.Token{Lexema: "this", Linea: 2}}},
+	}
+
+	if err := res.Resolver(sentencias); err == nil {
+		t.Error("se esperaba un error semántico: el ámbito de la clase ya se cerró")
+	}
+}
+
+// El cuerpo de un método se recorre: un error adentro tiene que salir a la luz.
+func TestResolucionDelCuerpoDeUnMetodo(t *testing.T) {
+	tkA := token.Token{Lexema: "a", Linea: 3}
+	intp := interprete.NuevoInterprete(&bytes.Buffer{})
+	res := semantica.Nuevo(intp)
+
+	sentencias := []sintaxis.Stmt{&sintaxis.Class{
+		Name: token.Token{Lexema: "A", Linea: 1},
+		Methods: []*sintaxis.Function{{
+			Name: token.Token{Lexema: "m", Linea: 2},
+			Body: []sintaxis.Stmt{&sintaxis.Var{
+				Name:        tkA,
+				Initializer: &sintaxis.Variable{Name: tkA},
+			}},
+		}},
+	}}
+
+	exigirErrorDeInicializadorPropio(t, res.Resolver(sentencias))
+}

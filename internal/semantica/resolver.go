@@ -10,8 +10,9 @@ import (
 
 // Analizador semántico (Resolver) encargado de la resolución estática de variables y ámbitos.
 type Resolver struct {
-	intp   *interprete.Interprete
-	scopes []map[string]bool
+	intp        *interprete.Interprete
+	scopes      []map[string]bool
+	dentroClase bool
 }
 
 // Crea una nueva instancia del resolvedor asociada al intérprete.
@@ -64,10 +65,28 @@ func (r *Resolver) ResolverSentencia(stmt sintaxis.Stmt) error {
 			return err
 		}
 
-	// Declaración de clase (sólo declara y define su nombre).
+	// Declaración de clase: abre un ámbito con "this" y resuelve los métodos.
 	case *sintaxis.Class:
 		r.declarar(s.Name)
 		r.definir(s.Name)
+
+		claseAnterior := r.dentroClase
+		r.dentroClase = true
+
+		r.beginScope()
+		r.scopes[len(r.scopes)-1]["this"] = true
+
+		for _, metodo := range s.Methods {
+			if err := r.resolverFuncion(metodo); err != nil {
+				r.endScope()
+				r.dentroClase = claseAnterior
+
+				return err
+			}
+		}
+
+		r.endScope()
+		r.dentroClase = claseAnterior
 
 	// Sentencia de expresión suelta.
 	case *sintaxis.ExpressionStmt:
@@ -151,6 +170,14 @@ func (r *Resolver) ResolverExpresion(expr sintaxis.Expr) error {
 				return err
 			}
 		}
+
+	// Referencia a la instancia actual.
+	case *sintaxis.This:
+		if !r.dentroClase {
+			return fmt.Errorf("[línea %d] No se puede usar 'this' fuera de una clase", e.Keyword.Linea)
+		}
+
+		r.resolverLocal(e, e.Keyword)
 
 	// Lectura de una propiedad (el nombre se resuelve en ejecución).
 	case *sintaxis.Get:

@@ -93,9 +93,27 @@ var casosDeSentencia = []struct {
 		esperado: "(fun sumar (a b) (return a))",
 	},
 	{
-		nombre:   "declaración de clase",
+		nombre:   "declaración de clase sin métodos",
 		arbol:    &Class{Name: tok(token.IDENTIFIER, "Punto")},
 		esperado: "(class Punto)",
+	},
+	{
+		nombre: "declaración de clase con métodos",
+		arbol: &Class{
+			Name: tok(token.IDENTIFIER, "Punto"),
+			Methods: []*Function{
+				{
+					Name: tok(token.IDENTIFIER, "mostrar"),
+					Body: []Stmt{&Print{Value: num(1)}},
+				},
+				{
+					Name:   tok(token.IDENTIFIER, "mover"),
+					Params: []token.Token{tok(token.IDENTIFIER, "dx")},
+					Body:   []Stmt{&Print{Value: variable("dx")}},
+				},
+			},
+		},
+		esperado: "(class Punto (fun mostrar () (print 1)) (fun mover (dx) (print dx)))",
 	},
 	{
 		nombre:   "retorno con valor",

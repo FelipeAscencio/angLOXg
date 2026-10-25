@@ -30,6 +30,9 @@ func Representar(expresion Expr) string {
 	case *Assign:
 		return encerrar("=", n.Name.Lexema, Representar(n.Value))
 
+	case *This:
+		return n.Keyword.Lexema
+
 	case *Get:
 		return encerrar("get", Representar(n.Object), n.Name.Lexema)
 
@@ -91,7 +94,12 @@ func RepresentarSentencia(sentencia Stmt) string {
 		return encerrar("fun", partes...)
 
 	case *Class:
-		return encerrar("class", n.Name.Lexema)
+		partes := []string{n.Name.Lexema}
+		for _, metodo := range n.Methods {
+			partes = append(partes, RepresentarSentencia(metodo))
+		}
+
+		return encerrar("class", partes...)
 
 	case *Return:
 		if n.Value == nil {

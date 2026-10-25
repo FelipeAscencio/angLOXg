@@ -26,6 +26,18 @@ func (f *LoxFunction) Aridad() int {
 	return len(f.Declaracion.Params)
 }
 
+// Devuelve una copia del método atada a una instancia, con "this" definido en
+// un entorno propio.
+//
+// Es lo que hace que un método extraído de una instancia siga viendo esa
+// instancia cuando se lo llama más tarde.
+func (f *LoxFunction) Ligar(instancia *LoxInstance) *LoxFunction {
+	entorno := NuevoEntorno(f.Closure)
+	entorno.Definir("this", instancia)
+
+	return &LoxFunction{Declaracion: f.Declaracion, Closure: entorno}
+}
+
 // Devuelve la representación de la función tal como la muestra Lox.
 func (f *LoxFunction) String() string {
 	return fmt.Sprintf("<fn %s>", f.Declaracion.Name.Lexema)
@@ -186,7 +198,16 @@ func (i *Interprete) Ejecutar(stmt sintaxis.Stmt) error {
 	// Retorno de valor desde una función.
 	// Declaración de clase.
 	case *sintaxis.Class:
-		i.entorno.Definir(s.Name.Lexema, &LoxClass{Nombre: s.Name.Lexema})
+		metodos := make(map[string]*LoxFunction, len(s.Methods))
+		for _, metodo := range s.Methods {
+			metodos[metodo.Name.Lexema] = &LoxFunction{
+				Declaracion: metodo,
+				Closure:     i.entorno,
+			}
+		}
+
+		i.entorno.Definir(s.Name.Lexema, &LoxClass{Nombre: s.Name.Lexema, Metodos: metodos})
+
 		return nil
 
 	case *sintaxis.Return:
@@ -372,6 +393,10 @@ func (i *Interprete) Evaluar(expr sintaxis.Expr) (any, error) {
 		return i.Evaluar(e.Right)
 
 	// Invocación de funciones ejecutables.
+	// Referencia a la instancia sobre la que corre el método.
+	case *sintaxis.This:
+		return i.buscarVariable(e.Keyword, e)
+
 	// Lectura de una propiedad de una instancia.
 	case *sintaxis.Get:
 		objeto, err := i.Evaluar(e.Object)

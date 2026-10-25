@@ -28,13 +28,30 @@ func (p *Parser) classDeclaration() sintaxis.Stmt {
 	nombre := p.consume(token.IDENTIFIER, "se esperaba el nombre de la clase")
 	p.consume(token.LEFT_BRACE, "se esperaba '{' para abrir el cuerpo de la clase")
 
-	if !p.check(token.RIGHT_BRACE) && !p.isAtEnd() {
-		p.fail(p.peek(), "el cuerpo de la clase tiene que estar vacío: los métodos todavía no se admiten")
+	metodos := []*sintaxis.Function{}
+	for !p.check(token.RIGHT_BRACE) && !p.isAtEnd() {
+		metodos = append(metodos, p.method())
 	}
 
 	p.consume(token.RIGHT_BRACE, "se esperaba '}' para cerrar el cuerpo de la clase")
 
-	return &sintaxis.Class{Name: nombre}
+	return &sintaxis.Class{Name: nombre, Methods: metodos}
+}
+
+// Reconoce un método, que es una función sin la palabra clave "fun" adelante.
+func (p *Parser) method() *sintaxis.Function {
+	nombre := p.consume(token.IDENTIFIER, "se esperaba el nombre del método")
+	p.consume(token.LEFT_PAREN, "se esperaba '(' después del nombre del método")
+
+	parametros := p.parameters()
+
+	p.consume(token.LEFT_BRACE, "se esperaba '{' para abrir el cuerpo del método")
+
+	return &sintaxis.Function{
+		Name:   nombre,
+		Params: parametros,
+		Body:   p.block(),
+	}
 }
 
 func (p *Parser) varDeclaration() sintaxis.Stmt {

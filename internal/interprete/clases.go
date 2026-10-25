@@ -6,7 +6,17 @@ import (
 
 // Representa una clase de Lox en tiempo de ejecución.
 type LoxClass struct {
-	Nombre string
+	Nombre  string
+	Metodos map[string]*LoxFunction
+}
+
+// Busca un método de la clase por su nombre.
+func (c *LoxClass) BuscarMetodo(nombre string) *LoxFunction {
+	if metodo, existe := c.Metodos[nombre]; existe {
+		return metodo
+	}
+
+	return nil
 }
 
 // Devuelve la cantidad de argumentos que acepta el constructor de la clase.
@@ -38,10 +48,15 @@ func NuevaInstancia(clase *LoxClass) *LoxInstance {
 	}
 }
 
-// Devuelve el valor de una propiedad de la instancia.
+// Devuelve el valor de una propiedad de la instancia, o un método de su clase
+// ligado a esta instancia.
 func (i *LoxInstance) Obtener(nombre token.Token) (any, error) {
 	if valor, existe := i.propiedades[nombre.Lexema]; existe {
 		return valor, nil
+	}
+
+	if metodo := i.Clase.BuscarMetodo(nombre.Lexema); metodo != nil {
+		return metodo.Ligar(i), nil
 	}
 
 	return nil, NewErrorRuntime(nombre, "Propiedad no definida '"+nombre.Lexema+"'.")

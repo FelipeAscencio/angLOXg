@@ -82,6 +82,9 @@ func (p *Parser) primary() sintaxis.Expr {
 	case p.match(token.NUMBER, token.STRING):
 		return &sintaxis.Literal{Value: p.previous().Literal}
 
+	case p.match(token.THIS):
+		return &sintaxis.This{Keyword: p.previous()}
+
 	case p.match(token.IDENTIFIER):
 		return &sintaxis.Variable{Name: p.previous()}
 

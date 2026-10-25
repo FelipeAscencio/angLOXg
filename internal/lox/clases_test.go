@@ -222,3 +222,123 @@ func TestPropiedadesDeInstancias(t *testing.T) {
 func TestErroresDePropiedades(t *testing.T) {
 	correrCasosDeClases(t, casosErroresDePropiedades)
 }
+
+var casosMetodos = []casoDeClases{
+	{
+		nombre:   "llamada a un método sin argumentos",
+		fuente:   `class A { saludar() { print "hola"; } } A().saludar();`,
+		esperado: []string{"hola"},
+		exito:    true,
+	},
+	{
+		nombre:   "método con parámetros y retorno",
+		fuente:   "class A { sumar(x, y) { return x + y; } } print A().sumar(2, 3);",
+		esperado: []string{"5"},
+		exito:    true,
+	},
+	{
+		nombre:   "un método se puede guardar en una variable",
+		fuente:   `class A { saludar() { return "hola"; } } var m = A().saludar; print m();`,
+		esperado: []string{"hola"},
+		exito:    true,
+	},
+	{
+		nombre:   "un método se imprime como función",
+		fuente:   "class A { m() {} } print A().m;",
+		esperado: []string{"<fn m>"},
+		exito:    true,
+	},
+	{
+		nombre:   "varios métodos en la misma clase",
+		fuente:   "class A { uno() { return 1; } dos() { return 2; } } var a = A(); print a.uno(); print a.dos();",
+		esperado: []string{"1", "2"},
+		exito:    true,
+	},
+	{
+		nombre: "una propiedad tapa a un método del mismo nombre",
+		fuente: `class A { m() { return "metodo"; } } var a = A(); a.m = "propiedad"; print a.m;`,
+		// Las propiedades se buscan antes que los métodos.
+		esperado: []string{"propiedad"},
+		exito:    true,
+	},
+	{
+		nombre:   "llamar a un método que no existe",
+		fuente:   "class A {} A().noExiste();",
+		esperado: []string{"Propiedad no definida 'noExiste'.", "[línea 1]"},
+		exito:    false,
+	},
+}
+
+var casosThis = []casoDeClases{
+	{
+		nombre:   "this devuelve la propia instancia",
+		fuente:   "class A { yo() { return this; } } var a = A(); print a.yo() == a;",
+		esperado: []string{"true"},
+		exito:    true,
+	},
+	{
+		nombre:   "un método escribe una propiedad con this",
+		fuente:   "class A { poner() { this.x = 7; } } var a = A(); a.poner(); print a.x;",
+		esperado: []string{"7"},
+		exito:    true,
+	},
+	{
+		nombre:   "un método lee una propiedad con this",
+		fuente:   "class A { ver() { return this.x; } } var a = A(); a.x = 3; print a.ver();",
+		esperado: []string{"3"},
+		exito:    true,
+	},
+	{
+		nombre:   "un método llama a otro método con this",
+		fuente:   "class A { doble() { return this.valor() * 2; } valor() { return 21; } } print A().doble();",
+		esperado: []string{"42"},
+		exito:    true,
+	},
+	{
+		nombre: "this queda ligado a la instancia correcta",
+		fuente: `class A { nombre() { return this.n; } }
+			var a = A(); var b = A();
+			a.n = "primera"; b.n = "segunda";
+			print a.nombre(); print b.nombre();`,
+		esperado: []string{"primera", "segunda"},
+		exito:    true,
+	},
+	{
+		nombre: "un método extraído se lleva su instancia",
+		fuente: `class A { nombre() { return this.n; } }
+			var a = A(); a.n = "primera";
+			var m = a.nombre;
+			var b = A(); b.n = "segunda";
+			print m();`,
+		// El método quedó ligado a "a" cuando se lo sacó, así que sigue viendo
+		// esa instancia aunque después exista otra.
+		esperado: []string{"primera"},
+		exito:    true,
+	},
+	{
+		nombre:   "un método acumula estado en la instancia",
+		fuente:   "class C { subir() { this.n = this.n + 1; return this.n; } } var c = C(); c.n = 0; print c.subir(); print c.subir();",
+		esperado: []string{"1", "2"},
+		exito:    true,
+	},
+	{
+		nombre:   "this fuera de una clase es un error",
+		fuente:   "print this;",
+		esperado: []string{"No se puede usar 'this' fuera de una clase"},
+		exito:    false,
+	},
+	{
+		nombre:   "this dentro de una función suelta es un error",
+		fuente:   "fun suelta() { return this; }",
+		esperado: []string{"No se puede usar 'this' fuera de una clase"},
+		exito:    false,
+	},
+}
+
+func TestMetodos(t *testing.T) {
+	correrCasosDeClases(t, casosMetodos)
+}
+
+func TestReferenciasAThis(t *testing.T) {
+	correrCasosDeClases(t, casosThis)
+}

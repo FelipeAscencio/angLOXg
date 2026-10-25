@@ -55,7 +55,7 @@ func (e *Entorno) ancestro(distancia int) *Entorno {
 	for i := 0; i < distancia; i++ {
 		actual = actual.Ancestro
 	}
-	
+
 	return actual
 }
 

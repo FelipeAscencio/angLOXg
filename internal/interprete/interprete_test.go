@@ -11,19 +11,43 @@ import (
 // Verifica las reglas semánticas básicas del intérprete (valores de verdad e igualdad).
 func TestReglasSemanticasBasicas(t *testing.T) {
 	i := NuevoInterprete(&bytes.Buffer{})
-	if i.esVerdadero(nil) != false { t.Errorf("nil debe ser falso") }
-	if i.esVerdadero(false) != false { t.Errorf("false debe ser falso") }
-	if i.esVerdadero(true) != true { t.Errorf("true debe ser verdadero") }
-	if i.esVerdadero(0) != true { t.Errorf("0 debe ser verdadero en Lox") }
-	if !i.esIgual(nil, nil) { t.Errorf("nil == nil") }
-	if i.esIgual(nil, 5) { t.Errorf("nil != 5") }
-	if !i.esIgual(5.0, 5.0) { t.Errorf("5 == 5") }
-	if i.esIgual(5.0, 6.0) { t.Errorf("5 != 6") }
+	if i.esVerdadero(nil) != false {
+		t.Errorf("nil debe ser falso")
+	}
+	if i.esVerdadero(false) != false {
+		t.Errorf("false debe ser falso")
+	}
+	if i.esVerdadero(true) != true {
+		t.Errorf("true debe ser verdadero")
+	}
+	if i.esVerdadero(0) != true {
+		t.Errorf("0 debe ser verdadero en Lox")
+	}
+	if !i.esIgual(nil, nil) {
+		t.Errorf("nil == nil")
+	}
+	if i.esIgual(nil, 5) {
+		t.Errorf("nil != 5")
+	}
+	if !i.esIgual(5.0, 5.0) {
+		t.Errorf("5 == 5")
+	}
+	if i.esIgual(5.0, 6.0) {
+		t.Errorf("5 != 6")
+	}
 	tk := token.Token{Tipo: token.MINUS}
-	if i.checkNumeroOperando(tk, 5.0) != nil { t.Errorf("5.0 es num") }
-	if i.checkNumeroOperando(tk, "5") == nil { t.Errorf("str no es num") }
-	if i.checkNumerosOperandos(tk, 5.0, 5.0) != nil { t.Errorf("num, num es valido") }
-	if i.checkNumerosOperandos(tk, 5.0, "5") == nil { t.Errorf("num, str es invalido") }
+	if i.checkNumeroOperando(tk, 5.0) != nil {
+		t.Errorf("5.0 es num")
+	}
+	if i.checkNumeroOperando(tk, "5") == nil {
+		t.Errorf("str no es num")
+	}
+	if i.checkNumerosOperandos(tk, 5.0, 5.0) != nil {
+		t.Errorf("num, num es valido")
+	}
+	if i.checkNumerosOperandos(tk, 5.0, "5") == nil {
+		t.Errorf("num, str es invalido")
+	}
 }
 
 // Verifica la correcta evaluación de expresiones aritméticas, unarias y lógicas.
@@ -61,7 +85,9 @@ func TestEvaluarExpresionesAritmeticasYLogicas(t *testing.T) {
 	}
 
 	valOr, _ := i.Evaluar(&sintaxis.Logical{Left: &sintaxis.Literal{Value: true}, Operator: token.Token{Tipo: token.OR}, Right: str})
-	if valOr != true { t.Errorf("OR cortocircuito falló") }
+	if valOr != true {
+		t.Errorf("OR cortocircuito falló")
+	}
 }
 
 // Comprueba la ejecución de sentencias de impresión, declaraciones y control de flujo.
@@ -69,8 +95,10 @@ func TestEjecutarSentenciasYControlDeFlujo(t *testing.T) {
 	var buf bytes.Buffer
 	i := NuevoInterprete(&buf)
 	i.Ejecutar(&sintaxis.Print{Value: &sintaxis.Literal{Value: "salida"}})
-	if buf.String() != "salida\n" { t.Errorf("Print falló") }
-	
+	if buf.String() != "salida\n" {
+		t.Errorf("Print falló")
+	}
+
 	i.Ejecutar(&sintaxis.Var{Name: token.Token{Lexema: "x"}, Initializer: &sintaxis.Literal{Value: 99.0}})
 	if val, _ := i.globales.Obtener(token.Token{Lexema: "x"}); val != 99.0 {
 		t.Errorf("Declaración de variable falló")
@@ -98,16 +126,18 @@ func TestLlamadasYRetornos(t *testing.T) {
 			&sintaxis.Return{Value: varNode},
 		},
 	}
-	
+
 	loxFn := &LoxFunction{Declaracion: fnNode, Closure: i.entorno}
-	if loxFn.Aridad() != 1 { t.Errorf("Aridad incorrecta") }
+	if loxFn.Aridad() != 1 {
+		t.Errorf("Aridad incorrecta")
+	}
 	res, err := loxFn.Llamar(i, []any{"argumento inyectado"})
-	if err != nil { 
-		t.Errorf("Llamar devolvió error inesperado: %v", err) 
+	if err != nil {
+		t.Errorf("Llamar devolvió error inesperado: %v", err)
 	}
 
-	if res != "argumento inyectado" { 
-		t.Errorf("El retorno de la función no fue capturado correctamente") 
+	if res != "argumento inyectado" {
+		t.Errorf("El retorno de la función no fue capturado correctamente")
 	}
 }
 
@@ -248,8 +278,8 @@ func TestPropagacionDeErroresEnEjecutar(t *testing.T) {
 		&sintaxis.If{Condition: exprMala, Then: &sintaxis.Block{}},
 		&sintaxis.While{Condition: exprMala, Body: &sintaxis.Block{}},
 		&sintaxis.While{
-			Condition: &sintaxis.Literal{Value: true}, 
-			Body:      &sintaxis.ExpressionStmt{Expression: exprMala}, 
+			Condition: &sintaxis.Literal{Value: true},
+			Body:      &sintaxis.ExpressionStmt{Expression: exprMala},
 		},
 		&sintaxis.Block{Statements: []sintaxis.Stmt{&sintaxis.ExpressionStmt{Expression: exprMala}}},
 		&sintaxis.Return{Value: exprMala},
@@ -294,7 +324,7 @@ func TestErrorEnCuerpoDeFuncion(t *testing.T) {
 			&sintaxis.ExpressionStmt{Expression: &sintaxis.Variable{Name: token.Token{Lexema: "noexiste"}}},
 		},
 	}
-	
+
 	loxFn := &LoxFunction{Declaracion: fnNode, Closure: i.entorno}
 	_, err := loxFn.Llamar(i, []any{})
 	if err == nil {

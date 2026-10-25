@@ -11,7 +11,7 @@ import (
 func TestErrorRuntime(t *testing.T) {
 	tk := token.Token{Lexema: "+", Linea: 10}
 	err := NewErrorRuntime(tk, "Prueba de error de ejecución")
-	
+
 	msg := err.Error()
 	if !strings.Contains(msg, "Prueba de error de ejecución") {
 		t.Errorf("El error no contiene el mensaje esperado")
