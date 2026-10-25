@@ -6,18 +6,70 @@ nav_order: 9
 
 # 🧬 Diferencias de implementación y agregados
 
-## Funcionalidades extra (Nuestras innovaciones)
+## Extras: agregados al lenguaje
 
-Decidimos ir un paso más allá de los requisitos básicos del trabajo práctico y agregar herramientas que nos faciliten tanto el desarrollo como la demostración del intérprete. Nuestros agregados fueron:
+Decidimos ir un paso más allá de los requisitos básicos y extender el lenguaje con dos cosas que Lox estándar no tiene. Las dos están soportadas en los **dos motores de ejecución** y tienen sus propias pruebas.
 
-*   **Intérprete web (Playground vía WebAssembly):** Nuestra mayor innovación fue llevar angLOXg al navegador. Gracias a la capacidad de Go para compilar a WebAssembly (WASM), logramos que el intérprete corra 100% del lado del cliente sin necesitar un servidor backend. Armamos una interfaz web con un editor de scripts completo y una consola interactiva (REPL) en vivo.
+### Arrays
+
+Nuestro agregado principal. Lox no tiene ningún tipo de dato compuesto, así que un programa no puede guardar una colección de valores sin inventar una clase para cada caso. Agregamos arrays con literales y lectura por posición:
+
+```javascript
+var dias = ["lunes", "martes", "miercoles"];
+for (var i = 0; i < 3; i = i + 1) print dias[i];
+
+var matriz = [[1, 2, 3], [4, 5, 6]];
+print matriz[1][2];   // 6
+
+print [1, "dos", true, nil];
+```
+
+Los arrays son **valores de primera clase**: se guardan en variables, se pasan y se devuelven de funciones, viven en propiedades de instancias y se anidan entre sí.
+
+```javascript
+class Caja {
+  init(cosas) { this.cosas = cosas; }
+  primera() { return this.cosas[0]; }
+}
+
+print Caja([42, 43]).primera();   // 42
+```
+
+**Alcance deliberado.** Esta versión es de **solo lectura**: no hay asignación por índice (`a[0] = 1`), ni largo, ni métodos para agregar o quitar elementos. Fue una decisión consciente de mantener el agregado chico y bien probado en lugar de grande y a medias. Intentar asignar a una posición da un error de sintaxis claro (`destino de asignación inválido`).
+
+**Decisiones de diseño que tomamos:**
+
+*   **El indexado liga al nivel de la llamada**, igual que el `(` de una invocación y el `.` de una propiedad. Por eso `a[0] + 1` suma el elemento y no indexa la suma, y `a[0].x`, `p.lista[0]` y `a[0]()` se combinan en cualquier orden.
+*   **Los elementos se evalúan al crear el array**, no al leerlos. En `var a = [x, x * 2]`, cambiar `x` después no modifica lo que guarda `a`.
+*   **El índice tiene que ser un entero.** Como todos los números de Lox son de punto flotante, `a[1.5]` no apunta a ninguna posición: preferimos cortar con *"El índice debe ser un número entero"* antes que truncar en silencio.
+*   **Un índice fuera de rango es un error de ejecución**, igual que en la mayoría de los lenguajes, en lugar de devolver `nil` y esconder el problema. Cubre también el índice negativo y el array vacío.
+*   **La identidad es por referencia**, como en las instancias de clase: `[1] == [1]` da `false`, pero `var a = [1]; var b = a;` hace que `a == b` dé `true`.
+
+**Cómo lo resuelve cada motor:**
+
+| | Intérprete de árbol | Máquina virtual |
+|:---|:---|:---|
+| **Representación** | Un tipo `LoxArray` con un slice de valores | Un tipo `Array` análogo, en el paquete del compilador |
+| **Creación** | El evaluador recorre los elementos del nodo y arma el slice | El opcode `OpArray` lleva como operando la **cantidad de elementos**, que ya están apilados, y se los lleva de una |
+| **Lectura** | El nodo `Index` evalúa objeto e índice y valida el rango | El opcode `OpGetIndex` saca índice y array de la pila y valida igual |
+
+El operando de un solo byte de `OpArray` impone un techo de 255 elementos por literal, el mismo límite que ya tenían los argumentos de una función. El compilador avisa si se pasa.
+
+### Operador de módulo (`%`)
+
+Lox estándar no tiene operador de resto. Lo agregamos con la misma precedencia que la multiplicación y la división.
+
+Tuvo una complicación propia de Go que vale contar: el operador `%` de Go **solo acepta enteros**, y los números de Lox son todos de punto flotante. Los dos motores lo resuelven con una conversión explícita a entero, no con el operador nativo.
+
+## Extras: herramientas de desarrollo
+
+*   **Intérprete web (Playground vía WebAssembly):** llevamos angLOXg al navegador. Gracias a la capacidad de Go para compilar a WebAssembly (WASM), el intérprete corre 100% del lado del cliente sin necesitar un servidor backend. Armamos una interfaz web con un editor de scripts completo y una consola interactiva (REPL) en vivo.
 *   **Flags de inspección (Modos de ejecución):** Tanto en la consola tradicional (CLI) como en la página web, agregamos la posibilidad de "pausar" la ejecución en distintas etapas del intérprete. Esto es ideal para entender qué pasa por debajo del capó. Implementamos 5 modos visuales:
     1.  **Ejecución completa:** El comportamiento normal de Lox, con el intérprete de recorrido de árbol.
     2.  **Modo escáner (`--escaneo`):** Muestra únicamente la lista de Tokens generada.
     3.  **Modo parser (`--arbol`):** Muestra la estructura del Árbol de Sintaxis Abstracta (AST) formateada como texto.
     4.  **Modo resolver (`--resolucion`):** Ejecuta hasta la fase de resolución de ámbitos y referencias, frenando antes de evaluar el código.
     5.  **Modo máquina virtual (`--vm`):** Compila el programa a bytecode y lo ejecuta en nuestra VM, en lugar de recorrer el árbol.
-*   **Operador de módulo (`%`):** Lox estándar no tiene operador de resto. Lo agregamos al lenguaje con la misma precedencia que la multiplicación y la división, y está soportado en los dos motores de ejecución.
 
 ## El impacto del lenguaje: Go vs. Python
 
@@ -84,6 +136,4 @@ Los mecanismos de POO dejaron esto especialmente a la vista. Las dos máquinas h
 
 El caso que obliga a hacerlo bien es la herencia de varios niveles. Con `class C < B < A`, cuando un método de `B` llama a `super.m()`, tiene que llegar a `A` aunque la instancia sea de `C`. Si `super` se resolviera mirando la clase de la instancia, `C` llevaría de nuevo a `B` y la llamada se volvería recursiva para siempre. Por eso en los dos motores `super` se resuelve **léxicamente**, por el lugar donde está escrito, y no por el tipo del receptor.
 
-### Un detalle de Go en el camino
-
-El operador `%` que agregamos al lenguaje se complicó más de lo esperado en la máquina virtual: todos los números de Lox son de punto flotante, y el operador `%` de Go **solo acepta enteros**. En el intérprete y en la VM el resto se calcula con una conversión explícita, no con el operador nativo.
+Los arrays que agregamos al lenguaje siguieron el mismo patrón: un tipo con un slice en el intérprete de árbol, y un par de opcodes que operan sobre la pila en la máquina virtual.
