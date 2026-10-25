@@ -96,34 +96,57 @@ func (v *VM) correr() bool {
 				if numB, okB := b.(float64); okB {
 					v.push(numA + numB)
 				} else {
-					fmt.Fprintln(v.salida, "Error en ejecución: Ambos operandos deben ser números.")
+					fmt.Fprintln(v.salida, "Error en ejecución: Los operandos deben ser dos números o dos cadenas.")
 					return false
 				}
 			} else if strA, okA := a.(string); okA {
-				v.push(strA + fmt.Sprintf("%v", b))
+				strB, okB := b.(string)
+				if !okB {
+					fmt.Fprintln(v.salida, "Error en ejecución: Los operandos deben ser dos números o dos cadenas.")
+					return false
+				}
+
+				v.push(strA + strB)
 			} else {
-				fmt.Fprintln(v.salida, "Error en ejecución: Operandos incompatibles para '+'.")
+				fmt.Fprintln(v.salida, "Error en ejecución: Los operandos deben ser dos números o dos cadenas.")
 				return false
 			}
 
 		case compilador.OpSubtract:
-			b := v.pop().(float64)
-			a := v.pop().(float64)
+			a, b, ok := v.operandosNumericos()
+			if !ok {
+				return false
+			}
+
 			v.push(a - b)
 
 		case compilador.OpMultiply:
-			b := v.pop().(float64)
-			a := v.pop().(float64)
+			a, b, ok := v.operandosNumericos()
+			if !ok {
+				return false
+			}
+
 			v.push(a * b)
 
 		case compilador.OpDivide:
-			b := v.pop().(float64)
-			a := v.pop().(float64)
+			a, b, ok := v.operandosNumericos()
+			if !ok {
+				return false
+			}
+
+			if b == 0 {
+				fmt.Fprintln(v.salida, "Error en ejecución: División por cero.")
+				return false
+			}
+
 			v.push(a / b)
 
 		case compilador.OpModulo:
-			b := v.pop().(float64)
-			a := v.pop().(float64)
+			a, b, ok := v.operandosNumericos()
+			if !ok {
+				return false
+			}
+
 			if b == 0 {
 				fmt.Fprintln(v.salida, "Error en ejecución: Módulo por cero.")
 				return false
@@ -132,7 +155,12 @@ func (v *VM) correr() bool {
 			v.push(float64(int(a) % int(b)))
 
 		case compilador.OpNegate:
-			valor := v.pop().(float64)
+			valor, esNumero := v.pop().(float64)
+			if !esNumero {
+				fmt.Fprintln(v.salida, "Error en ejecución: El operando debe ser un número.")
+				return false
+			}
+
 			v.push(-valor)
 
 		case compilador.OpNil:
@@ -150,13 +178,19 @@ func (v *VM) correr() bool {
 			v.push(sonIguales(a, b))
 
 		case compilador.OpGreater:
-			b := v.pop().(float64)
-			a := v.pop().(float64)
+			a, b, ok := v.operandosNumericos()
+			if !ok {
+				return false
+			}
+
 			v.push(a > b)
 
 		case compilador.OpLess:
-			b := v.pop().(float64)
-			a := v.pop().(float64)
+			a, b, ok := v.operandosNumericos()
+			if !ok {
+				return false
+			}
+
 			v.push(a < b)
 
 		case compilador.OpNot:
@@ -167,7 +201,7 @@ func (v *VM) correr() bool {
 			v.pop()
 
 		case compilador.OpPrint:
-			fmt.Fprintln(v.salida, v.pop())
+			fmt.Fprintln(v.salida, formatearValor(v.pop()))
 
 		case compilador.OpDefineGlobal:
 			nombre := v.leerConstante().(string)
@@ -296,7 +330,7 @@ func (v *VM) push(valor any) {
 // Retira y devuelve el valor en el tope de la pila.
 func (v *VM) pop() any {
 	if len(v.pila) == 0 {
-		return nil 
+		return nil
 	}
 
 	tope := len(v.pila) - 1
@@ -356,4 +390,28 @@ func (v *VM) leerShort() uint16 {
 
 func (v *VM) leerConstante() any {
 	return v.frameActual().closure.Funcion.Chunk.Constantes[v.leerByte()]
+}
+
+// Saca los dos operandos del tope de la pila y verifica que ambos sean números.
+func (v *VM) operandosNumericos() (izquierda, derecha float64, ok bool) {
+	valorDerecha := v.pop()
+	valorIzquierda := v.pop()
+
+	derecha, okDerecha := valorDerecha.(float64)
+	izquierda, okIzquierda := valorIzquierda.(float64)
+	if !okIzquierda || !okDerecha {
+		fmt.Fprintln(v.salida, "Error en ejecución: Los operandos deben ser números.")
+		return 0, 0, false
+	}
+
+	return izquierda, derecha, true
+}
+
+// Escribe un valor de Lox como lo espera el lenguaje, con el nulo como "nil".
+func formatearValor(valor any) string {
+	if valor == nil {
+		return "nil"
+	}
+
+	return fmt.Sprintf("%v", valor)
 }
