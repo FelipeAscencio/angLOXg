@@ -244,7 +244,7 @@ func binario(c *Compilador, puedeAsignar bool) {
 	tipoOperador := c.tokenAnterior().Tipo
 	regla := c.obtenerRegla(tipoOperador)
 	c.parsearPrecedencia(regla.precedencia + 1)
-	
+
 	switch tipoOperador {
 	case token.PLUS:
 		c.emitirByte(uint8(OpAdd))
@@ -299,10 +299,18 @@ func (c *Compilador) avanzar() {
 }
 
 func (c *Compilador) tokenActual() token.Token {
+	if c.actual >= len(c.tokens) {
+		return token.Nuevo(token.EOF, "", nil, 0)
+	}
+
 	return c.tokens[c.actual]
 }
 
 func (c *Compilador) tokenAnterior() token.Token {
+	if c.actual == 0 {
+		return c.tokenActual()
+	}
+
 	return c.tokens[c.actual-1]
 }
 
@@ -403,6 +411,15 @@ func (c *Compilador) declaracionFuncion() {
 	c.consumir(token.IDENTIFIER, "Se esperaba el nombre de la función.")
 	nombreToken := c.tokenAnterior()
 	indiceGlobal := c.funcion.Chunk.AgregarConstante(nombreToken.Lexema)
+
+	esLocal := c.profundidadScope > 0
+	if esLocal {
+		c.locales = append(c.locales, Local{
+			nombre:      nombreToken.Lexema,
+			profundidad: c.profundidadScope,
+		})
+	}
+
 	compiladorFuncion := &Compilador{
 		padre:            c,
 		tokens:           c.tokens,
@@ -456,7 +473,11 @@ func (c *Compilador) declaracionFuncion() {
 		}
 		c.emitirByte(upv.indice)
 	}
-	
+
+	if esLocal {
+		return
+	}
+
 	c.emitirByte(uint8(OpDefineGlobal))
 	c.emitirByte(uint8(indiceGlobal))
 }
@@ -539,7 +560,7 @@ func (c *Compilador) sentenciaFor() {
 	if !c.coincide(token.SEMICOLON) {
 		c.expresion()
 		c.consumir(token.SEMICOLON, "Se esperaba ';' después de la condición del for.")
-		
+
 		saltoSalida = c.emitirSalto(uint8(OpJumpIfFalse))
 		c.emitirByte(uint8(OpPop))
 	}
@@ -561,7 +582,7 @@ func (c *Compilador) sentenciaFor() {
 		c.parchearSalto(saltoSalida)
 		c.emitirByte(uint8(OpPop))
 	}
-	
+
 	c.terminarScope()
 }
 
@@ -591,7 +612,7 @@ func llamada(c *Compilador, puedeAsignar bool) {
 			}
 		}
 	}
-	
+
 	c.consumir(token.RIGHT_PAREN, "Se esperaba ')' después de los argumentos.")
 	c.emitirByte(uint8(OpCall))
 	c.emitirByte(uint8(cantidadArgumentos))
@@ -621,7 +642,7 @@ func (c *Compilador) terminarScope() {
 		} else {
 			c.emitirByte(uint8(OpPop))
 		}
-		
+
 		c.locales = c.locales[:len(c.locales)-1]
 	}
 }
