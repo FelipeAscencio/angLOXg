@@ -14,6 +14,7 @@ type Resolver struct {
 	scopes      []map[string]bool
 	dentroClase bool
 	dentroInit  bool
+	dentroSub   bool
 }
 
 // Crea una nueva instancia del resolvedor asociada al intérprete.
@@ -71,8 +72,29 @@ func (r *Resolver) ResolverSentencia(stmt sintaxis.Stmt) error {
 		r.declarar(s.Name)
 		r.definir(s.Name)
 
+		if s.Superclass != nil {
+			if s.Superclass.Name.Lexema == s.Name.Lexema {
+				return fmt.Errorf("[línea %d] Una clase no puede heredar de sí misma", s.Name.Linea)
+			}
+
+			if err := r.ResolverExpresion(s.Superclass); err != nil {
+				return err
+			}
+		}
+
 		claseAnterior := r.dentroClase
+		subAnterior := r.dentroSub
 		r.dentroClase = true
+		r.dentroSub = s.Superclass != nil
+
+		// Son dos ámbitos anidados y no uno: en ejecución, "super" vive en el
+		// entorno que creó la clase y "this" en el que liga el método a su
+		// instancia. Si se los pusiera juntos, las distancias que calcula el
+		// resolvedor no coincidirían con la cadena de entornos real.
+		if s.Superclass != nil {
+			r.beginScope()
+			r.scopes[len(r.scopes)-1]["super"] = true
+		}
 
 		r.beginScope()
 		r.scopes[len(r.scopes)-1]["this"] = true
@@ -85,15 +107,17 @@ func (r *Resolver) ResolverSentencia(stmt sintaxis.Stmt) error {
 			r.dentroInit = initAnterior
 
 			if err != nil {
-				r.endScope()
+				r.cerrarAmbitosDeClase(s.Superclass != nil)
 				r.dentroClase = claseAnterior
+				r.dentroSub = subAnterior
 
 				return err
 			}
 		}
 
-		r.endScope()
+		r.cerrarAmbitosDeClase(s.Superclass != nil)
 		r.dentroClase = claseAnterior
+		r.dentroSub = subAnterior
 
 	// Sentencia de expresión suelta.
 	case *sintaxis.ExpressionStmt:
@@ -181,6 +205,18 @@ func (r *Resolver) ResolverExpresion(expr sintaxis.Expr) error {
 				return err
 			}
 		}
+
+	// Referencia a un método de la superclase.
+	case *sintaxis.Super:
+		if !r.dentroClase {
+			return fmt.Errorf("[línea %d] No se puede usar 'super' fuera de una clase", e.Keyword.Linea)
+		}
+
+		if !r.dentroSub {
+			return fmt.Errorf("[línea %d] No se puede usar 'super' en una clase sin superclase", e.Keyword.Linea)
+		}
+
+		r.resolverLocal(e, e.Keyword)
 
 	// Referencia a la instancia actual.
 	case *sintaxis.This:
@@ -277,4 +313,12 @@ func (r *Resolver) definir(nombre token.Token) {
 	}
 
 	r.scopes[len(r.scopes)-1][nombre.Lexema] = true
+}
+
+// Cierra los ámbitos que abrió una declaración de clase.
+func (r *Resolver) cerrarAmbitosDeClase(teniaSuperclase bool) {
+	r.endScope()
+	if teniaSuperclase {
+		r.endScope()
+	}
 }

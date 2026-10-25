@@ -98,6 +98,14 @@ var casosDeSentencia = []struct {
 		esperado: "(class Punto)",
 	},
 	{
+		nombre: "declaración de clase con superclase",
+		arbol: &Class{
+			Name:       tok(token.IDENTIFIER, "Perro"),
+			Superclass: &Variable{Name: tok(token.IDENTIFIER, "Animal")},
+		},
+		esperado: "(class Perro <Animal)",
+	},
+	{
 		nombre: "declaración de clase con métodos",
 		arbol: &Class{
 			Name: tok(token.IDENTIFIER, "Punto"),

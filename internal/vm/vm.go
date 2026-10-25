@@ -321,6 +321,40 @@ func (v *VM) correr() bool {
 
 			v.push(&compilador.MetodoLigado{Receptor: instancia, Metodo: metodo})
 
+		case compilador.OpInherit:
+			superclase, esClase := v.peek(1).(*compilador.Clase)
+			if !esClase {
+				fmt.Fprintln(v.salida, "Error en ejecución: La superclase debe ser una clase.")
+				return false
+			}
+
+			// Los métodos de la superclase se copian en la subclase al definir
+			// la clase. Como los métodos propios se cuelgan después, los que
+			// se repiten quedan sobrescritos.
+			subclase := v.peek(0).(*compilador.Clase)
+			for nombre, metodo := range superclase.Metodos {
+				subclase.Metodos[nombre] = metodo
+			}
+
+			v.pop()
+
+		case compilador.OpGetSuper:
+			nombre := v.leerConstante().(string)
+			superclase := v.pop().(*compilador.Clase)
+			instancia, esInstancia := v.pop().(*compilador.Instancia)
+			if !esInstancia {
+				fmt.Fprintln(v.salida, "Error en ejecución: Solo las instancias tienen propiedades.")
+				return false
+			}
+
+			metodo, existe := superclase.Metodos[nombre]
+			if !existe {
+				fmt.Fprintf(v.salida, "Error en ejecución: Propiedad no definida '%s'.\n", nombre)
+				return false
+			}
+
+			v.push(&compilador.MetodoLigado{Receptor: instancia, Metodo: metodo})
+
 		case compilador.OpSetProperty:
 			nombre := v.leerConstante().(string)
 			valor := v.pop()

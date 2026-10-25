@@ -58,6 +58,9 @@ type Return struct {
 type Class struct {
 	Name    token.Token
 	Methods []*Function
+
+	// Superclase de la que hereda, o nil si la clase no hereda de ninguna.
+	Superclass *Variable
 }
 
 func (*ExpressionStmt) isStmt() {}

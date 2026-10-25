@@ -107,6 +107,7 @@ func (c *Compilador) iniciarReglas() {
 		token.FUN:           {prefijo: nil, infijo: nil, precedencia: PrecNone},
 		token.DOT:           {prefijo: nil, infijo: punto, precedencia: PrecCall},
 		token.THIS:          {prefijo: este, infijo: nil, precedencia: PrecNone},
+		token.SUPER:         {prefijo: superior, infijo: nil, precedencia: PrecNone},
 	}
 }
 
@@ -690,16 +691,50 @@ func (c *Compilador) declaracionClase() {
 	nombreToken := c.tokenAnterior()
 	indiceNombre := c.funcion.Chunk.AgregarConstante(nombreToken.Lexema)
 
+	// La clase se crea y se define como variable antes de los métodos, para
+	// que su nombre ya se pueda leer mientras se la arma.
 	c.emitirByte(uint8(OpClass))
 	c.emitirByte(uint8(indiceNombre))
+	c.definirClase(nombreToken)
+
+	tieneSuperclase := c.coincide(token.LESS)
+	if tieneSuperclase {
+		c.consumir(token.IDENTIFIER, "Se esperaba el nombre de la superclase.")
+		nombreSuper := c.tokenAnterior()
+
+		if nombreSuper.Lexema == nombreToken.Lexema {
+			fmt.Fprintf(os.Stderr, "[Línea %d] Error: Una clase no puede heredar de sí misma.\n", nombreSuper.Linea)
+		}
+
+		// La superclase queda en la pila como una local llamada "super". Los
+		// métodos la capturan como upvalue, así cada "super" apunta al nivel
+		// donde fue escrito y no a la clase de la instancia.
+		c.empezarScope()
+		c.emitirLecturaDeVariable(nombreSuper.Lexema)
+		c.locales = append(c.locales, Local{nombre: "super", profundidad: c.profundidadScope})
+
+		c.emitirLecturaDeVariable(nombreToken.Lexema)
+		c.emitirByte(uint8(OpInherit))
+	}
 
 	c.consumir(token.LEFT_BRACE, "Se esperaba '{' antes del cuerpo de la clase.")
+
+	// Los métodos se cuelgan de la clase, así que hay que traerla a la pila.
+	c.emitirLecturaDeVariable(nombreToken.Lexema)
 	for c.tokenActual().Tipo != token.RIGHT_BRACE && !c.esFin() {
 		c.metodo()
 	}
 
 	c.consumir(token.RIGHT_BRACE, "Se esperaba '}' después del cuerpo de la clase.")
+	c.emitirByte(uint8(OpPop))
 
+	if tieneSuperclase {
+		c.terminarScope()
+	}
+}
+
+// Define la clase que quedó en la pila como variable global o local.
+func (c *Compilador) definirClase(nombreToken token.Token) {
 	if c.profundidadScope > 0 {
 		c.locales = append(c.locales, Local{
 			nombre:      nombreToken.Lexema,
@@ -712,6 +747,24 @@ func (c *Compilador) declaracionClase() {
 	indiceGlobal := c.funcion.Chunk.AgregarConstante(nombreToken.Lexema)
 	c.emitirByte(uint8(OpDefineGlobal))
 	c.emitirByte(uint8(indiceGlobal))
+}
+
+// Emite la lectura de una variable, resolviéndola como local, upvalue o global.
+func (c *Compilador) emitirLecturaDeVariable(nombre string) {
+	arg := c.resolverLocal(nombre)
+	operacion := uint8(OpGetLocal)
+
+	if arg == -1 {
+		if arg = c.resolverUpvalue(nombre); arg != -1 {
+			operacion = uint8(OpGetUpvalue)
+		} else {
+			arg = c.funcion.Chunk.AgregarConstante(nombre)
+			operacion = uint8(OpGetGlobal)
+		}
+	}
+
+	c.emitirByte(operacion)
+	c.emitirByte(uint8(arg))
 }
 
 // Compila un método y lo cuelga de la clase que está en la pila.
@@ -821,4 +874,19 @@ func punto(c *Compilador, puedeAsignar bool) {
 // Reconoce "this", que se resuelve como la local del slot cero del método.
 func este(c *Compilador, puedeAsignar bool) {
 	variable(c, false)
+}
+
+// Reconoce "super.metodo", que busca el método en la superclase capturada.
+func superior(c *Compilador, puedeAsignar bool) {
+	c.consumir(token.DOT, "Se esperaba '.' después de 'super'.")
+	c.consumir(token.IDENTIFIER, "Se esperaba el nombre del método de la superclase.")
+	indiceNombre := c.funcion.Chunk.AgregarConstante(c.tokenAnterior().Lexema)
+
+	// Primero el receptor y después la superclase: la máquina los saca en ese
+	// orden para armar el método ligado.
+	c.emitirLecturaDeVariable("this")
+	c.emitirLecturaDeVariable("super")
+
+	c.emitirByte(uint8(OpGetSuper))
+	c.emitirByte(uint8(indiceNombre))
 }

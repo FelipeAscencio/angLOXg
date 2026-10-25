@@ -33,6 +33,9 @@ func Representar(expresion Expr) string {
 	case *This:
 		return n.Keyword.Lexema
 
+	case *Super:
+		return encerrar("super", n.Method.Lexema)
+
 	case *Get:
 		return encerrar("get", Representar(n.Object), n.Name.Lexema)
 
@@ -95,6 +98,10 @@ func RepresentarSentencia(sentencia Stmt) string {
 
 	case *Class:
 		partes := []string{n.Name.Lexema}
+		if n.Superclass != nil {
+			partes = append(partes, "<"+n.Superclass.Name.Lexema)
+		}
+
 		for _, metodo := range n.Methods {
 			partes = append(partes, RepresentarSentencia(metodo))
 		}

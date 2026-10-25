@@ -55,6 +55,12 @@ type Call struct {
 	Arguments []Expr
 }
 
+// Referencia a un método de la superclase.
+type Super struct {
+	Keyword token.Token
+	Method  token.Token
+}
+
 // Referencia a la instancia sobre la que se está ejecutando un método.
 type This struct {
 	Keyword token.Token
@@ -84,3 +90,4 @@ func (*Call) isExpr()     {}
 func (*Get) isExpr()      {}
 func (*Set) isExpr()      {}
 func (*This) isExpr()     {}
+func (*Super) isExpr()    {}

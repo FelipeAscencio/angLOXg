@@ -58,6 +58,8 @@ const (
 	OpMethod
 	OpGetProperty
 	OpSetProperty
+	OpInherit
+	OpGetSuper
 
 	// Finaliza la ejecución del chunk actual y retorna el control.
 	OpReturn

@@ -158,6 +158,11 @@ var casosDeExpresion = []struct {
 		esperado: "(call f 1 2)",
 	},
 	{
+		nombre:   "referencia a un método de la superclase",
+		arbol:    &Super{Keyword: tok(token.SUPER, "super"), Method: tok(token.IDENTIFIER, "saludar")},
+		esperado: "(super saludar)",
+	},
+	{
 		nombre:   "referencia a this",
 		arbol:    &This{Keyword: tok(token.THIS, "this")},
 		esperado: "this",

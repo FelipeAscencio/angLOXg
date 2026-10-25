@@ -156,7 +156,7 @@ func TestErroresEnFuncionesYLlamadas(t *testing.T) {
 		Callee:    &sintaxis.Literal{Value: "funcion"},
 		Arguments: []sintaxis.Expr{&sintaxis.Variable{Name: tkX}},
 	}
-	
+
 	r2 := semantica.Nuevo(intp)
 	bloqueCall := &sintaxis.Block{Statements: []sintaxis.Stmt{varMalo, &sintaxis.ExpressionStmt{Expression: callMalo}}}
 	if err := r2.ResolverSentencia(bloqueCall); err == nil {
@@ -172,7 +172,7 @@ func TestPropagacionDeErroresEnExpresionesComplejas(t *testing.T) {
 		Name:        tkX,
 		Initializer: &sintaxis.Variable{Name: tkX},
 	}
-	
+
 	exprMala := &sintaxis.Variable{Name: tkX}
 	lit := &sintaxis.Literal{Value: 1.0}
 	casosExpr := []sintaxis.Expr{

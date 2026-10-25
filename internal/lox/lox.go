@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/FelipeAscencio/angLOXg/internal/compilador"
 	"github.com/FelipeAscencio/angLOXg/internal/escaner"
 	"github.com/FelipeAscencio/angLOXg/internal/interprete"
 	"github.com/FelipeAscencio/angLOXg/internal/parser"
 	"github.com/FelipeAscencio/angLOXg/internal/semantica"
 	"github.com/FelipeAscencio/angLOXg/internal/sintaxis"
 	"github.com/FelipeAscencio/angLOXg/internal/token"
-	"github.com/FelipeAscencio/angLOXg/internal/compilador"
 	"github.com/FelipeAscencio/angLOXg/internal/vm"
 )
 

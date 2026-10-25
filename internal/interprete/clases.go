@@ -9,14 +9,21 @@ const NombreDelInicializador = "init"
 
 // Representa una clase de Lox en tiempo de ejecución.
 type LoxClass struct {
-	Nombre  string
-	Metodos map[string]*LoxFunction
+	Nombre     string
+	Metodos    map[string]*LoxFunction
+	Superclase *LoxClass
 }
 
 // Busca un método de la clase por su nombre.
 func (c *LoxClass) BuscarMetodo(nombre string) *LoxFunction {
 	if metodo, existe := c.Metodos[nombre]; existe {
 		return metodo
+	}
+
+	// Si la clase no lo define, se sigue buscando hacia arriba en la cadena de
+	// superclases.
+	if c.Superclase != nil {
+		return c.Superclase.BuscarMetodo(nombre)
 	}
 
 	return nil

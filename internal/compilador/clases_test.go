@@ -6,22 +6,26 @@ var casosClases = []casoDeCompilacion{
 	{
 		nombre: "clase sin métodos",
 		fuente: "class P {}",
+		// La clase se define como variable antes de los métodos, y después se
+		// la vuelve a traer a la pila para colgárselos. El OpPop la saca.
 		esperado: []string{
 			`OpClass 0 -> "P"`,
 			`OpDefineGlobal 1 -> "P"`,
+			`OpGetGlobal 2 -> "P"`,
+			"OpPop",
 			"OpReturn",
 		},
 	},
 	{
 		nombre: "clase con un método",
 		fuente: "class P { m() { return 1; } }",
-		// La clase queda en la pila mientras se le cuelga el método, y recién
-		// después se define como global.
 		esperado: []string{
 			`OpClass 0 -> "P"`,
-			"OpClosure 2 -> <fn m>",
-			`OpMethod 1 -> "m"`,
-			`OpDefineGlobal 3 -> "P"`,
+			`OpDefineGlobal 1 -> "P"`,
+			`OpGetGlobal 2 -> "P"`,
+			"OpClosure 4 -> <fn m>",
+			`OpMethod 3 -> "m"`,
+			"OpPop",
 			"OpReturn",
 		},
 	},
@@ -30,19 +34,23 @@ var casosClases = []casoDeCompilacion{
 		fuente:      "class P { uno() {} dos() {} }",
 		soloNombres: true,
 		esperado: []string{
-			"OpClass",
+			"OpClass", "OpDefineGlobal", "OpGetGlobal",
 			"OpClosure", "OpMethod",
 			"OpClosure", "OpMethod",
-			"OpDefineGlobal",
+			"OpPop",
 			"OpReturn",
 		},
 	},
 	{
 		nombre: "una clase local no va a la tabla de globales",
 		fuente: "{ class P {} }",
-		// El OpPop del final es el que cierra el ámbito del bloque.
+		// Sin OpDefineGlobal: la clase se queda en la pila como local. El
+		// primer OpPop saca la copia que se trajo para los métodos y el
+		// segundo cierra el ámbito del bloque.
 		esperado: []string{
 			`OpClass 0 -> "P"`,
+			"OpGetLocal 1",
+			"OpPop",
 			"OpPop",
 			"OpReturn",
 		},
@@ -69,6 +77,61 @@ var casosClases = []casoDeCompilacion{
 		soloNombres: true,
 		esperado:    []string{"OpGetGlobal", "OpGetProperty", "OpGetProperty", "OpPrint", "OpReturn"},
 	},
+}
+
+var casosHerenciaBytecode = []casoDeCompilacion{
+	{
+		nombre:      "clase con superclase",
+		fuente:      "class B < A {}",
+		soloNombres: true,
+		// La superclase se lee y queda en la pila como la local "super". El
+		// OpInherit copia sus métodos y el OpPop del final cierra ese ámbito.
+		esperado: []string{
+			"OpClass", "OpDefineGlobal",
+			"OpGetGlobal", "OpGetGlobal", "OpInherit",
+			"OpGetGlobal", "OpPop",
+			"OpPop",
+			"OpReturn",
+		},
+	},
+	{
+		nombre:      "llamada a super dentro de un método",
+		fuente:      "class B < A { m() { super.m(); } }",
+		soloNombres: true,
+		// Al cerrar el ámbito sale OpCloseUpvalue y no OpPop: el método se
+		// llevó capturada la superclase, así que no alcanza con sacarla de la
+		// pila, hay que dejarla viva en el heap.
+		esperado: []string{
+			"OpClass", "OpDefineGlobal",
+			"OpGetGlobal", "OpGetGlobal", "OpInherit",
+			"OpGetGlobal", "OpClosure", "OpMethod", "OpPop",
+			"OpCloseUpvalue",
+			"OpReturn",
+		},
+	},
+}
+
+func TestBytecodeDeHerencia(t *testing.T) {
+	correrCasosDeCompilacion(t, casosHerenciaBytecode)
+}
+
+func TestSuperSeCapturaComoUpvalue(t *testing.T) {
+	programa := compilarFuente(t, "class B < A { m() { super.m(); } }")
+
+	metodo := funcionConstante(programa, "m")
+	if metodo == nil {
+		t.Fatal("el método compilado no quedó en el pool de constantes")
+	}
+
+	// El método captura la superclase: es lo que hace que cada "super" apunte
+	// al nivel donde fue escrito y no a la clase de la instancia.
+	if metodo.UpvalueCount != 1 {
+		t.Errorf("el método captura %d upvalues y se esperaba 1, que es super", metodo.UpvalueCount)
+	}
+
+	if !contieneInstruccion(desensamblar(metodo), "OpGetSuper") {
+		t.Errorf("el método no emite OpGetSuper: %v", desensamblar(metodo))
+	}
 }
 
 func TestBytecodeDeClases(t *testing.T) {

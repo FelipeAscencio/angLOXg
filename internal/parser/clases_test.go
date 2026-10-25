@@ -167,3 +167,51 @@ func TestAccesoAPropiedades(t *testing.T) {
 func TestReferenciasAThis(t *testing.T) {
 	correrCasosDePrograma(t, casosThis)
 }
+
+var casosHerencia = []casoDePrograma{
+	{
+		nombre:   "clase con superclase",
+		fuente:   "class Perro < Animal {}",
+		esperado: []string{"(class Perro <Animal)"},
+	},
+	{
+		nombre:   "clase con superclase y métodos",
+		fuente:   "class Perro < Animal { ladrar() { print 1; } }",
+		esperado: []string{"(class Perro <Animal (fun ladrar () (print 1)))"},
+	},
+	{
+		nombre:   "llamada a un método de la superclase",
+		fuente:   "class Perro < Animal { hablar() { super.hablar(); } }",
+		esperado: []string{"(class Perro <Animal (fun hablar () (expr (call (super hablar)))))"},
+	},
+	{
+		nombre:   "un método de la superclase se puede guardar",
+		fuente:   "class Perro < Animal { m() { var f = super.hablar; } }",
+		esperado: []string{"(class Perro <Animal (fun m () (var f (super hablar))))"},
+	},
+	{
+		nombre:  "la superclase tiene que ser un nombre",
+		fuente:  "class Perro < 1 {}",
+		errores: []string{"se esperaba el nombre de la superclase"},
+	},
+	{
+		nombre: "super tiene que ir seguido de un punto",
+		fuente: "class P < A { m() { super; } }",
+		errores: []string{
+			"se esperaba '.' después de 'super'",
+			"se esperaba una expresión",
+		},
+	},
+	{
+		nombre: "super tiene que nombrar un método",
+		fuente: "class P < A { m() { super.1; } }",
+		errores: []string{
+			"se esperaba el nombre del método de la superclase",
+			"se esperaba una expresión",
+		},
+	},
+}
+
+func TestHerencia(t *testing.T) {
+	correrCasosDePrograma(t, casosHerencia)
+}

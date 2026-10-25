@@ -214,16 +214,44 @@ func (i *Interprete) Ejecutar(stmt sintaxis.Stmt) error {
 	// Retorno de valor desde una función.
 	// Declaración de clase.
 	case *sintaxis.Class:
+		var superclase *LoxClass
+		if s.Superclass != nil {
+			valor, err := i.Evaluar(s.Superclass)
+			if err != nil {
+				return err
+			}
+
+			clase, esClase := valor.(*LoxClass)
+			if !esClase {
+				return NewErrorRuntime(s.Superclass.Name, "La superclase debe ser una clase.")
+			}
+
+			superclase = clase
+		}
+
+		// Los métodos se cierran sobre un entorno donde vive "super", para que
+		// una llamada a super.m encuentre la superclase que corresponde al
+		// nivel donde se escribió, y no a la clase de la instancia.
+		entornoMetodos := i.entorno
+		if superclase != nil {
+			entornoMetodos = NuevoEntorno(i.entorno)
+			entornoMetodos.Definir("super", superclase)
+		}
+
 		metodos := make(map[string]*LoxFunction, len(s.Methods))
 		for _, metodo := range s.Methods {
 			metodos[metodo.Name.Lexema] = &LoxFunction{
 				Declaracion:     metodo,
-				Closure:         i.entorno,
+				Closure:         entornoMetodos,
 				EsInicializador: metodo.Name.Lexema == NombreDelInicializador,
 			}
 		}
 
-		i.entorno.Definir(s.Name.Lexema, &LoxClass{Nombre: s.Name.Lexema, Metodos: metodos})
+		i.entorno.Definir(s.Name.Lexema, &LoxClass{
+			Nombre:     s.Name.Lexema,
+			Metodos:    metodos,
+			Superclase: superclase,
+		})
 
 		return nil
 
@@ -410,6 +438,26 @@ func (i *Interprete) Evaluar(expr sintaxis.Expr) (any, error) {
 		return i.Evaluar(e.Right)
 
 	// Invocación de funciones ejecutables.
+	// Referencia a un método de la superclase.
+	case *sintaxis.Super:
+		distancia, resuelto := i.locales[e]
+		if !resuelto {
+			return nil, NewErrorRuntime(e.Keyword, "No se pudo resolver 'super'.")
+		}
+
+		superclase := i.entorno.ObtenerEn(distancia, "super").(*LoxClass)
+
+		// "this" vive un nivel más abajo que "super": el entorno de la llamada
+		// al método está anidado dentro del que creó la clase.
+		instancia := i.entorno.ObtenerEn(distancia-1, "this").(*LoxInstance)
+
+		metodo := superclase.BuscarMetodo(e.Method.Lexema)
+		if metodo == nil {
+			return nil, NewErrorRuntime(e.Method, "Propiedad no definida '"+e.Method.Lexema+"'.")
+		}
+
+		return metodo.Ligar(instancia), nil
+
 	// Referencia a la instancia sobre la que corre el método.
 	case *sintaxis.This:
 		return i.buscarVariable(e.Keyword, e)

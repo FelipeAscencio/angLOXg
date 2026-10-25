@@ -18,7 +18,7 @@ func TestCoberturaDeErroresYExtremos(t *testing.T) {
 	}{
 		// 1. Operadores Unarios.
 		{"Negación aritmética inválida", `print -"hola";`, true, "operando"},
-		
+
 		// 2. Operadores Binarios.
 		{"Resta inválida", `print 5 - "hola";`, true, "operandos"},
 		{"Multiplicación inválida", `print 5 * false;`, true, "operandos"},
@@ -26,16 +26,16 @@ func TestCoberturaDeErroresYExtremos(t *testing.T) {
 		{"Suma mixta", `print 2 + "hola";`, true, "dos números o dos cadenas"},
 		{"Menor qué inválido", `print 5 < "5";`, true, "operandos"},
 		{"Mayor o igual inválido", `print 5 >= false;`, true, "operandos"},
-		
+
 		// 3. Casos por Cero.
 		{"División por cero", `print 10 / 0;`, true, "cero"},
 		{"Módulo por cero", `print 10 % 0;`, true, "cero"},
-		
+
 		// 4. Llamadas a Funciones.
 		{"Llamar a no-invocable", `var a = 5; a();`, true, "Solo se pueden llamar"},
 		{"Faltan argumentos", `fun f(a, b) {} f(1);`, true, "argumentos"},
 		{"Sobran argumentos", `fun f(a) {} f(1, 2, 3);`, true, "argumentos"},
-		
+
 		// 5. Variables e Igualdad.
 		{"Igualdad tipos distintos", `print 1 == "1";`, false, ""},
 		{"Igualdad de nulos", `print nil == nil;`, false, ""},
@@ -52,11 +52,11 @@ func TestCoberturaDeErroresYExtremos(t *testing.T) {
 			if c.falla && ok {
 				t.Errorf("Se esperaba un error pero el script pasó: %s", c.fuente)
 			}
-			
+
 			if !c.falla && !ok {
 				t.Errorf("El script falló inesperadamente: %s\nSalida: %s", c.fuente, salida.String())
 			}
-			
+
 			if c.falla && c.error != "" {
 				if !strings.Contains(salida.String(), c.error) {
 					t.Errorf("Se esperaba que el error contuviera '%s', pero la salida fue: %s", c.error, salida.String())

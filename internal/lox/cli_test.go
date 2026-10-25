@@ -22,7 +22,7 @@ func TestModosCLI(t *testing.T) {
 // Verifica que el intérprete detecte y reporte fallos ante errores léxicos y sintácticos.
 func TestErroresEjecucion(t *testing.T) {
 	var salida bytes.Buffer
-	
+
 	if lox.Ejecutar("?", &salida) {
 		t.Errorf("Se esperaba fallo por error léxico")
 	}

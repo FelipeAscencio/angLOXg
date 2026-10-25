@@ -26,6 +26,14 @@ func (p *Parser) declaration() sintaxis.Stmt {
 // Reconoce la declaración de una clase con el cuerpo vacío.
 func (p *Parser) classDeclaration() sintaxis.Stmt {
 	nombre := p.consume(token.IDENTIFIER, "se esperaba el nombre de la clase")
+
+	// La superclase es opcional y se escribe con "<" después del nombre.
+	var superclase *sintaxis.Variable
+	if p.match(token.LESS) {
+		nombreSuper := p.consume(token.IDENTIFIER, "se esperaba el nombre de la superclase")
+		superclase = &sintaxis.Variable{Name: nombreSuper}
+	}
+
 	p.consume(token.LEFT_BRACE, "se esperaba '{' para abrir el cuerpo de la clase")
 
 	metodos := []*sintaxis.Function{}
@@ -35,7 +43,7 @@ func (p *Parser) classDeclaration() sintaxis.Stmt {
 
 	p.consume(token.RIGHT_BRACE, "se esperaba '}' para cerrar el cuerpo de la clase")
 
-	return &sintaxis.Class{Name: nombre, Methods: metodos}
+	return &sintaxis.Class{Name: nombre, Methods: metodos, Superclass: superclase}
 }
 
 // Reconoce un método, que es una función sin la palabra clave "fun" adelante.

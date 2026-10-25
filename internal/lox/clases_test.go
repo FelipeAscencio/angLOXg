@@ -413,3 +413,91 @@ var casosInit = []casoDeClases{
 func TestConstructorInit(t *testing.T) {
 	correrCasosDeClases(t, casosInit)
 }
+
+var casosHerencia = []casoDeClases{
+	{
+		nombre:   "un método se hereda de la superclase",
+		fuente:   `class A { saludar() { print "hola"; } } class B < A {} B().saludar();`,
+		esperado: []string{"hola"},
+		exito:    true,
+	},
+	{
+		nombre:   "la subclase puede sobrescribir un método",
+		fuente:   `class A { m() { print "base"; } } class B < A { m() { print "derivada"; } } B().m();`,
+		esperado: []string{"derivada"},
+		exito:    true,
+	},
+	{
+		nombre:   "super llama al método de la superclase",
+		fuente:   `class A { m() { print "base"; } } class B < A { m() { super.m(); print "derivada"; } } B().m();`,
+		esperado: []string{"base", "derivada"},
+		exito:    true,
+	},
+	{
+		nombre:   "super ve this de la instancia real",
+		fuente:   "class A { ver() { return this.x; } } class B < A { } var b = B(); b.x = 5; print b.ver();",
+		esperado: []string{"5"},
+		exito:    true,
+	},
+	{
+		nombre: "herencia de tres niveles",
+		fuente: `class A { m() { return "A"; } }
+			class B < A { m() { return super.m() + "B"; } }
+			class C < B { m() { return super.m() + "C"; } }
+			print C().m();`,
+		esperado: []string{"ABC"},
+		exito:    true,
+	},
+	{
+		nombre:   "el init se hereda",
+		fuente:   "class A { init(x) { this.x = x; } } class B < A {} print B(7).x;",
+		esperado: []string{"7"},
+		exito:    true,
+	},
+	{
+		nombre:   "la subclase puede llamar al init de la superclase",
+		fuente:   "class A { init(x) { this.x = x; } } class B < A { init(x) { super.init(x * 2); } } print B(3).x;",
+		esperado: []string{"6"},
+		exito:    true,
+	},
+	{
+		nombre:   "las propiedades son de la instancia, no de la clase",
+		fuente:   "class A {} class B < A {} var a = A(); var b = B(); a.x = 1; b.x = 2; print a.x; print b.x;",
+		esperado: []string{"1", "2"},
+		exito:    true,
+	},
+	{
+		nombre:   "una clase no puede heredar de sí misma",
+		fuente:   "class A < A {}",
+		esperado: []string{"Una clase no puede heredar de sí misma"},
+		exito:    false,
+	},
+	{
+		nombre:   "la superclase tiene que ser una clase",
+		fuente:   "var noEsClase = 1; class A < noEsClase {}",
+		esperado: []string{"La superclase debe ser una clase.", "[línea 1]"},
+		exito:    false,
+	},
+	{
+		nombre:   "super fuera de una clase es un error",
+		fuente:   "print super.m;",
+		esperado: []string{"No se puede usar 'super' fuera de una clase"},
+		exito:    false,
+	},
+	{
+		nombre:   "super en una clase sin superclase es un error",
+		fuente:   "class A { m() { super.m(); } }",
+		esperado: []string{"No se puede usar 'super' en una clase sin superclase"},
+		exito:    false,
+	},
+	{
+		nombre:   "un método heredado que no existe",
+		fuente:   "class A {} class B < A {} B().noExiste();",
+		esperado: []string{"Propiedad no definida 'noExiste'.", "[línea 1]"},
+		exito:    false,
+	},
+}
+
+func TestHerencia(t *testing.T) {
+	correrCasosDeClases(t, casosHerencia)
+}

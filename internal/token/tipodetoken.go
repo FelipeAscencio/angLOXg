@@ -52,6 +52,7 @@ const (
 	OR
 	PRINT
 	RETURN
+	SUPER
 	THIS
 	TRUE
 	VAR
@@ -97,6 +98,7 @@ var nombresDeTipos = [...]string{
 	OR:            "OR",
 	PRINT:         "PRINT",
 	RETURN:        "RETURN",
+	SUPER:         "SUPER",
 	THIS:          "THIS",
 	TRUE:          "TRUE",
 	VAR:           "VAR",
