@@ -158,6 +158,31 @@ var casosDeExpresion = []struct {
 		esperado: "(call f 1 2)",
 	},
 	{
+		nombre: "lectura de una propiedad",
+		arbol: &Get{
+			Object: variable("p"),
+			Name:   tok(token.IDENTIFIER, "x"),
+		},
+		esperado: "(get p x)",
+	},
+	{
+		nombre: "lectura de propiedades encadenadas",
+		arbol: &Get{
+			Object: &Get{Object: variable("a"), Name: tok(token.IDENTIFIER, "b")},
+			Name:   tok(token.IDENTIFIER, "c"),
+		},
+		esperado: "(get (get a b) c)",
+	},
+	{
+		nombre: "escritura de una propiedad",
+		arbol: &Set{
+			Object: variable("p"),
+			Name:   tok(token.IDENTIFIER, "x"),
+			Value:  num(3),
+		},
+		esperado: "(set p x 3)",
+	},
+	{
 		nombre: "llamadas encadenadas",
 		arbol: &Call{
 			Callee:    &Call{Callee: variable("f")},

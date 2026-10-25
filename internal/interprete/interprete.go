@@ -184,6 +184,11 @@ func (i *Interprete) Ejecutar(stmt sintaxis.Stmt) error {
 		return nil
 
 	// Retorno de valor desde una función.
+	// Declaración de clase.
+	case *sintaxis.Class:
+		i.entorno.Definir(s.Name.Lexema, &LoxClass{Nombre: s.Name.Lexema})
+		return nil
+
 	case *sintaxis.Return:
 		var valor any
 		var err error
@@ -367,6 +372,41 @@ func (i *Interprete) Evaluar(expr sintaxis.Expr) (any, error) {
 		return i.Evaluar(e.Right)
 
 	// Invocación de funciones ejecutables.
+	// Lectura de una propiedad de una instancia.
+	case *sintaxis.Get:
+		objeto, err := i.Evaluar(e.Object)
+		if err != nil {
+			return nil, err
+		}
+
+		instancia, esInstancia := objeto.(*LoxInstance)
+		if !esInstancia {
+			return nil, NewErrorRuntime(e.Name, "Solo las instancias tienen propiedades.")
+		}
+
+		return instancia.Obtener(e.Name)
+
+	// Escritura de una propiedad de una instancia.
+	case *sintaxis.Set:
+		objeto, err := i.Evaluar(e.Object)
+		if err != nil {
+			return nil, err
+		}
+
+		instancia, esInstancia := objeto.(*LoxInstance)
+		if !esInstancia {
+			return nil, NewErrorRuntime(e.Name, "Solo las instancias tienen propiedades.")
+		}
+
+		valor, err := i.Evaluar(e.Value)
+		if err != nil {
+			return nil, err
+		}
+
+		instancia.Asignar(e.Name, valor)
+
+		return valor, nil
+
 	case *sintaxis.Call:
 		callee, err := i.Evaluar(e.Callee)
 		if err != nil {

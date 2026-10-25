@@ -8,6 +8,9 @@ import (
 // Reconoce declaraciones permitidas en cuerpos de programas o bloques.
 func (p *Parser) declaration() sintaxis.Stmt {
 	switch {
+	case p.match(token.CLASS):
+		return p.classDeclaration()
+
 	case p.match(token.VAR):
 		return p.varDeclaration()
 
@@ -20,6 +23,20 @@ func (p *Parser) declaration() sintaxis.Stmt {
 }
 
 // Reconoce declaraciones de variables ("var x;" o "var x = expresion;").
+// Reconoce la declaración de una clase con el cuerpo vacío.
+func (p *Parser) classDeclaration() sintaxis.Stmt {
+	nombre := p.consume(token.IDENTIFIER, "se esperaba el nombre de la clase")
+	p.consume(token.LEFT_BRACE, "se esperaba '{' para abrir el cuerpo de la clase")
+
+	if !p.check(token.RIGHT_BRACE) && !p.isAtEnd() {
+		p.fail(p.peek(), "el cuerpo de la clase tiene que estar vacío: los métodos todavía no se admiten")
+	}
+
+	p.consume(token.RIGHT_BRACE, "se esperaba '}' para cerrar el cuerpo de la clase")
+
+	return &sintaxis.Class{Name: nombre}
+}
+
 func (p *Parser) varDeclaration() sintaxis.Stmt {
 	nombre := p.consume(token.IDENTIFIER, "se esperaba el nombre de la variable")
 

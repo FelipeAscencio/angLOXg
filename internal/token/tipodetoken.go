@@ -13,6 +13,7 @@ const (
 	LEFT_BRACE
 	RIGHT_BRACE
 	COMMA
+	DOT
 	MINUS
 	PLUS
 	SEMICOLON
@@ -41,6 +42,7 @@ const (
 
 	// Palabras clave.
 	AND
+	CLASS
 	ELSE
 	FALSE
 	FUN
@@ -65,6 +67,7 @@ var nombresDeTipos = [...]string{
 	LEFT_BRACE:    "LEFT_BRACE",
 	RIGHT_BRACE:   "RIGHT_BRACE",
 	COMMA:         "COMMA",
+	DOT:           "DOT",
 	MINUS:         "MINUS",
 	PLUS:          "PLUS",
 	SEMICOLON:     "SEMICOLON",
@@ -83,6 +86,7 @@ var nombresDeTipos = [...]string{
 	STRING:        "STRING",
 	NUMBER:        "NUMBER",
 	AND:           "AND",
+	CLASS:         "CLASS",
 	ELSE:          "ELSE",
 	FALSE:         "FALSE",
 	FUN:           "FUN",

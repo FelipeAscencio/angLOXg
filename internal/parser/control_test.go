@@ -20,14 +20,14 @@ var casosAsignacion = []casoDePrograma{
 		esperado: []string{"(expr (= a (= b 1)))"},
 	},
 	{
-		nombre:   "destino inválido",
-		fuente:   "1 = 2;",
-		errores:  []string{"destino de asignación inválido"},
+		nombre:  "destino inválido",
+		fuente:  "1 = 2;",
+		errores: []string{"destino de asignación inválido"},
 	},
 	{
-		nombre:   "destino inválido con una expresión",
-		fuente:   "a + b = 1;",
-		errores:  []string{"destino de asignación inválido"},
+		nombre:  "destino inválido con una expresión",
+		fuente:  "a + b = 1;",
+		errores: []string{"destino de asignación inválido"},
 	},
 }
 
@@ -94,9 +94,9 @@ var casosCondicionales = []casoDePrograma{
 		esperado: []string{"(print 1)"},
 	},
 	{
-		nombre:   "condicional sin paréntesis de cierre",
-		fuente:   "if (a print 1;",
-		errores:  []string{"se esperaba ')'"},
+		nombre:  "condicional sin paréntesis de cierre",
+		fuente:  "if (a print 1;",
+		errores: []string{"se esperaba ')'"},
 	},
 }
 

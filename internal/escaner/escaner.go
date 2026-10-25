@@ -60,6 +60,8 @@ func (e *Escaner) escanearToken() {
 		e.agregarToken(token.RIGHT_BRACE, nil)
 	case ',':
 		e.agregarToken(token.COMMA, nil)
+	case '.':
+		e.agregarToken(token.DOT, nil)
 	case '-':
 		e.agregarToken(token.MINUS, nil)
 	case '+':

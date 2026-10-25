@@ -47,10 +47,9 @@ var casosIdentificadores = []casoDeEscaneo{
 		},
 	},
 	{
-		nombre: "class, this y super son identificadores comunes",
-		fuente: "class this super",
+		nombre: "this y super son identificadores comunes",
+		fuente: "this super",
 		esperado: []tokenEsperado{
-			{token.IDENTIFIER, "class", nil, 1},
 			{token.IDENTIFIER, "this", nil, 1},
 			{token.IDENTIFIER, "super", nil, 1},
 		},
@@ -61,9 +60,10 @@ var casosIdentificadores = []casoDeEscaneo{
 var casosPalabrasClave = []casoDeEscaneo{
 	{
 		nombre: "todas las palabras reservadas",
-		fuente: "and else false fun for if nil or print return true var while",
+		fuente: "and class else false fun for if nil or print return true var while",
 		esperado: []tokenEsperado{
 			{token.AND, "and", nil, 1},
+			{token.CLASS, "class", nil, 1},
 			{token.ELSE, "else", nil, 1},
 			{token.FALSE, "false", nil, 1},
 			{token.FUN, "fun", nil, 1},

@@ -25,9 +25,9 @@ var casosUnarios = []casoDeParseo{
 		esperado: "(! (! false))",
 	},
 	{
-		nombre:   "unario sin operando",
-		fuente:   "-",
-		errores:  []string{"se esperaba una expresión"},
+		nombre:  "unario sin operando",
+		fuente:  "-",
+		errores: []string{"se esperaba una expresión"},
 	},
 }
 
@@ -123,14 +123,14 @@ var casosAsociatividad = []casoDeParseo{
 		esperado: "(== (== 1 2) 3)",
 	},
 	{
-		nombre:   "binario sin operando derecho",
-		fuente:   "1 +",
-		errores:  []string{"se esperaba una expresión"},
+		nombre:  "binario sin operando derecho",
+		fuente:  "1 +",
+		errores: []string{"se esperaba una expresión"},
 	},
 	{
-		nombre:   "binario sin operando izquierdo",
-		fuente:   "* 1",
-		errores:  []string{"se esperaba una expresión"},
+		nombre:  "binario sin operando izquierdo",
+		fuente:  "* 1",
+		errores: []string{"se esperaba una expresión"},
 	},
 }
 

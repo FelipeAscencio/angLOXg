@@ -4,6 +4,7 @@ package token
 // que no figure en este conjunto se interpreta por defecto como un identificador.
 var palabrasClave = map[string]TipoDeToken{
 	"and":    AND,
+	"class":  CLASS,
 	"else":   ELSE,
 	"false":  FALSE,
 	"fun":    FUN,

@@ -33,6 +33,12 @@ func (p *Parser) assignment() sintaxis.Expr {
 		return &sintaxis.Assign{Name: variable.Name, Value: valor}
 	}
 
+	// Un acceso con punto a la izquierda del "=" no era una lectura sino una
+	// escritura, y recién acá se sabe.
+	if lectura, esLectura := destino.(*sintaxis.Get); esLectura {
+		return &sintaxis.Set{Object: lectura.Object, Name: lectura.Name, Value: valor}
+	}
+
 	p.fail(igual, "destino de asignación inválido")
 
 	return nil
@@ -101,11 +107,19 @@ func (p *Parser) unary() sintaxis.Expr {
 func (p *Parser) call() sintaxis.Expr {
 	expression := p.primary()
 
-	for p.match(token.LEFT_PAREN) {
-		expression = p.finishCall(expression)
-	}
+	for {
+		switch {
+		case p.match(token.LEFT_PAREN):
+			expression = p.finishCall(expression)
 
-	return expression
+		case p.match(token.DOT):
+			nombre := p.consume(token.IDENTIFIER, "se esperaba el nombre de la propiedad después del '.'")
+			expression = &sintaxis.Get{Object: expression, Name: nombre}
+
+		default:
+			return expression
+		}
+	}
 }
 
 // Consume los argumentos y el paréntesis de cierre de una llamada a función.

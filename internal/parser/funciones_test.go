@@ -40,9 +40,9 @@ var casosLlamadas = []casoDePrograma{
 		esperado: []string{"(expr (* (call f 1) 2))"},
 	},
 	{
-		nombre:   "llamada sin cerrar",
-		fuente:   "f(1;",
-		errores:  []string{"se esperaba ')'"},
+		nombre:  "llamada sin cerrar",
+		fuente:  "f(1;",
+		errores: []string{"se esperaba ')'"},
 	},
 }
 
@@ -86,24 +86,24 @@ var casosDeclaracionFuncion = []casoDePrograma{
 		},
 	},
 	{
-		nombre:   "función sin nombre",
-		fuente:   "fun () {}",
-		errores:  []string{"se esperaba el nombre de la función"},
+		nombre:  "función sin nombre",
+		fuente:  "fun () {}",
+		errores: []string{"se esperaba el nombre de la función"},
 	},
 	{
-		nombre:   "función sin paréntesis",
-		fuente:   "fun f {}",
-		errores:  []string{"se esperaba '(' después del nombre de la función"},
+		nombre:  "función sin paréntesis",
+		fuente:  "fun f {}",
+		errores: []string{"se esperaba '(' después del nombre de la función"},
 	},
 	{
-		nombre:   "parámetro que no es un nombre",
-		fuente:   "fun f(1) {}",
-		errores:  []string{"se esperaba el nombre del parámetro"},
+		nombre:  "parámetro que no es un nombre",
+		fuente:  "fun f(1) {}",
+		errores: []string{"se esperaba el nombre del parámetro"},
 	},
 	{
-		nombre:   "función sin cuerpo",
-		fuente:   "fun f();",
-		errores:  []string{"se esperaba '{' para abrir el cuerpo de la función"},
+		nombre:  "función sin cuerpo",
+		fuente:  "fun f();",
+		errores: []string{"se esperaba '{' para abrir el cuerpo de la función"},
 	},
 }
 

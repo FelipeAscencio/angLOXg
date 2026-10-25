@@ -44,10 +44,20 @@ var casosUnCaracter = []casoDeEscaneo{
 		esperado: []tokenEsperado{},
 	},
 	{
-		nombre:   "el punto suelto no es un token",
-		fuente:   ".",
-		errores:  []string{"carácter inesperado"},
-		esperado: []tokenEsperado{},
+		nombre: "punto",
+		fuente: ".",
+		esperado: []tokenEsperado{
+			{token.DOT, ".", nil, 1},
+		},
+	},
+	{
+		nombre: "acceso a una propiedad",
+		fuente: "p.x",
+		esperado: []tokenEsperado{
+			{token.IDENTIFIER, "p", nil, 1},
+			{token.DOT, ".", nil, 1},
+			{token.IDENTIFIER, "x", nil, 1},
+		},
 	},
 	{
 		nombre:  "los errores se acumulan y el escaneo sigue",

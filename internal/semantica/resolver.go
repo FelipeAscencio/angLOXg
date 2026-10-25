@@ -64,6 +64,11 @@ func (r *Resolver) ResolverSentencia(stmt sintaxis.Stmt) error {
 			return err
 		}
 
+	// Declaración de clase (sólo declara y define su nombre).
+	case *sintaxis.Class:
+		r.declarar(s.Name)
+		r.definir(s.Name)
+
 	// Sentencia de expresión suelta.
 	case *sintaxis.ExpressionStmt:
 		return r.ResolverExpresion(s.Expression)
@@ -146,6 +151,18 @@ func (r *Resolver) ResolverExpresion(expr sintaxis.Expr) error {
 				return err
 			}
 		}
+
+	// Lectura de una propiedad (el nombre se resuelve en ejecución).
+	case *sintaxis.Get:
+		return r.ResolverExpresion(e.Object)
+
+	// Escritura de una propiedad.
+	case *sintaxis.Set:
+		if err := r.ResolverExpresion(e.Value); err != nil {
+			return err
+		}
+
+		return r.ResolverExpresion(e.Object)
 
 	// Expresión agrupada entre paréntesis.
 	case *sintaxis.Grouping:

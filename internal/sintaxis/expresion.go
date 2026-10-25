@@ -55,6 +55,19 @@ type Call struct {
 	Arguments []Expr
 }
 
+// Lectura de una propiedad de una instancia.
+type Get struct {
+	Object Expr
+	Name   token.Token
+}
+
+// Escritura de una propiedad de una instancia.
+type Set struct {
+	Object Expr
+	Name   token.Token
+	Value  Expr
+}
+
 func (*Literal) isExpr()  {}
 func (*Grouping) isExpr() {}
 func (*Unary) isExpr()    {}
@@ -63,3 +76,5 @@ func (*Logical) isExpr()  {}
 func (*Variable) isExpr() {}
 func (*Assign) isExpr()   {}
 func (*Call) isExpr()     {}
+func (*Get) isExpr()      {}
+func (*Set) isExpr()      {}

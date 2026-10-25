@@ -93,6 +93,11 @@ var casosDeSentencia = []struct {
 		esperado: "(fun sumar (a b) (return a))",
 	},
 	{
+		nombre:   "declaración de clase",
+		arbol:    &Class{Name: tok(token.IDENTIFIER, "Punto")},
+		esperado: "(class Punto)",
+	},
+	{
 		nombre:   "retorno con valor",
 		arbol:    &Return{Value: num(1)},
 		esperado: "(return 1)",

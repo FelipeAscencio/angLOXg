@@ -54,6 +54,11 @@ type Return struct {
 	Value   Expr
 }
 
+// Declaración de una clase.
+type Class struct {
+	Name token.Token
+}
+
 func (*ExpressionStmt) isStmt() {}
 func (*Print) isStmt()          {}
 func (*Var) isStmt()            {}
@@ -62,3 +67,4 @@ func (*If) isStmt()             {}
 func (*While) isStmt()          {}
 func (*Function) isStmt()       {}
 func (*Return) isStmt()         {}
+func (*Class) isStmt()          {}

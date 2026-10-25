@@ -71,27 +71,27 @@ var casosNumeros = []casoDeEscaneo{
 		},
 	},
 	{
-		nombre:   "un número no puede terminar en punto",
-		fuente:   "123.",
-		errores:  []string{"carácter inesperado"},
+		nombre: "un número no se lleva el punto final",
+		fuente: "123.",
 		esperado: []tokenEsperado{
 			{token.NUMBER, "123", float64(123), 1},
+			{token.DOT, ".", nil, 1},
 		},
 	},
 	{
-		nombre:   "un número no puede empezar con punto",
-		fuente:   ".5",
-		errores:  []string{"carácter inesperado"},
+		nombre: "un número no puede empezar con punto",
+		fuente: ".5",
 		esperado: []tokenEsperado{
+			{token.DOT, ".", nil, 1},
 			{token.NUMBER, "5", float64(5), 1},
 		},
 	},
 	{
-		nombre:   "un número no puede tener dos puntos",
-		fuente:   "1.2.3",
-		errores:  []string{"carácter inesperado"},
+		nombre: "un número no puede tener dos puntos",
+		fuente: "1.2.3",
 		esperado: []tokenEsperado{
 			{token.NUMBER, "1.2", 1.2, 1},
+			{token.DOT, ".", nil, 1},
 			{token.NUMBER, "3", float64(3), 1},
 		},
 	},
