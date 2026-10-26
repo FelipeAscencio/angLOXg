@@ -85,6 +85,14 @@ var casosUnCaracter = []casoDeEscaneo{
 			{token.PLUS, "+", nil, 1},
 		},
 	},
+	{
+		nombre: "Operador ternario",
+		fuente: "? :",
+		esperado: []tokenEsperado{
+			{token.QUESTION, "?", nil, 1},
+			{token.COLON, ":", nil, 1},
+		},
+	},
 }
 
 // Casos de prueba para tokens de uno o dos caracteres.
