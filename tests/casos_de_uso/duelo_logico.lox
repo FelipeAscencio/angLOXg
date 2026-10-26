@@ -1,0 +1,64 @@
+print "=== DUELO LÓGICO: ADIVINÁ EL NÚMERO ===";
+
+// Clase base que representa las reglas del juego
+class MotorJuego {
+    init(secreto) {
+        this.secreto = secreto;
+    }
+
+    // Valida el intento usando el operador ternario para definir el estado
+    evaluar(intento) {
+        return intento == this.secreto ? "¡Victoria!" : "Fallo";
+    }
+}
+
+// Subclase que representa al jugador IA, heredando las reglas del motor
+class InteligenciaArtificial < MotorJuego {
+    init(secreto, historial) {
+        // Inicializamos la superclase con el número secreto
+        super.init(secreto);
+        
+        // Guardamos el array de intentos como estado interno
+        this.historial = historial;
+        
+        // Al no tener un método .length nativo, hardcodeamos el tamaño conocido
+        this.cantidadIntentos = 4;
+    }
+
+    ejecutarSimulacion() {
+        var i = 0;
+        var partidaGanada = false;
+
+        print "Iniciando deducción de la IA...";
+
+        while (i < this.cantidadIntentos and !partidaGanada) {
+            // Lectura de valores del array por posición
+            var intentoActual = this.historial[i];
+            
+            // Delegamos la validación a la superclase
+            var estado = super.evaluar(intentoActual);
+
+            // Operador ternario anidado para formatear el mensaje en consola
+            var mensajeSalida = estado == "¡Victoria!" 
+                ? " -> ÉXITO: El número secreto es " 
+                : " -> Sigue intentando. Falló con el ";
+
+            print mensajeSalida;
+            print intentoActual;
+
+            if (estado == "¡Victoria!") {
+                partidaGanada = true;
+            }
+
+            i = i + 1;
+        }
+    }
+}
+
+// Historial de intentos hardcodeado usando la nueva sintaxis de Arrays
+var intentosRealizados = [10, 25, 18, 20];
+var numeroSecreto = 20;
+
+// Instanciamos el objeto y arrancamos la partida
+var bot = InteligenciaArtificial(numeroSecreto, intentosRealizados);
+bot.ejecutarSimulacion();
