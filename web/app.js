@@ -5,6 +5,7 @@ const runBtn = document.getElementById("run-btn");
 const clearBtn = document.getElementById("clear-btn");
 const btnExample1 = document.getElementById("btn-example-1");
 const btnExample2 = document.getElementById("btn-example-2");
+const btnCase4 = document.getElementById("btn-case-4");
 const btnCase1 = document.getElementById("btn-case-1");
 const btnCase2 = document.getElementById("btn-case-2");
 const btnCase3 = document.getElementById("btn-case-3");
@@ -63,7 +64,76 @@ btnExample2.addEventListener("click", () => {
     codeInput.value = 'fun fibonacci(n) {\n    if (n <= 1) return n;\n    return fibonacci(n - 1) + fibonacci(n - 2);\n}\n\nprint fibonacci(10);';
 });
 
-// Carga el Caso de Uso 1: Motor analítico para procesamiento de series de sensores.
+// Carga el Caso de Uso 1: Duelo Lógico con IA (Arrays, Ternario y POO).
+btnCase4.addEventListener("click", () => {
+    codeInput.value = 
+`print "=== DUELO LÓGICO: ADIVINÁ EL NÚMERO ===";
+
+// Clase base que representa las reglas del juego
+class MotorJuego {
+    init(secreto) {
+        this.secreto = secreto;
+    }
+
+    // Valida el intento usando el operador ternario para definir el estado
+    evaluar(intento) {
+        return intento == this.secreto ? "¡Victoria!" : "Fallo";
+    }
+}
+
+// Subclase que representa al jugador IA, heredando las reglas del motor
+class InteligenciaArtificial < MotorJuego {
+    init(secreto, historial) {
+        // Inicializamos la superclase con el número secreto
+        super.init(secreto);
+        
+        // Guardamos el array de intentos como estado interno
+        this.historial = historial;
+        
+        // Al no tener un método .length nativo, hardcodeamos el tamaño conocido
+        this.cantidadIntentos = 4;
+    }
+
+    ejecutarSimulacion() {
+        var i = 0;
+        var partidaGanada = false;
+
+        print "Iniciando deducción de la IA...";
+
+        while (i < this.cantidadIntentos and !partidaGanada) {
+            // Lectura de valores del array por posición
+            var intentoActual = this.historial[i];
+            
+            // Delegamos la validación a la superclase
+            var estado = super.evaluar(intentoActual);
+
+            // Operador ternario anidado para formatear el mensaje en consola
+            var mensajeSalida = estado == "¡Victoria!" 
+                ? " -> ÉXITO: El número secreto es " 
+                : " -> Sigue intentando. Falló con el ";
+
+            print mensajeSalida;
+            print intentoActual;
+
+            if (estado == "¡Victoria!") {
+                partidaGanada = true;
+            }
+
+            i = i + 1;
+        }
+    }
+}
+
+// Historial de intentos hardcodeado usando la nueva sintaxis de Arrays
+var intentosRealizados = [10, 25, 18, 20];
+var numeroSecreto = 20;
+
+// Instanciamos el objeto y arrancamos la partida
+var bot = InteligenciaArtificial(numeroSecreto, intentosRealizados);
+bot.ejecutarSimulacion();`;
+});
+
+// Carga el Caso de Uso 2: Motor analítico para procesamiento de series de sensores.
 btnCase1.addEventListener("click", () => {
     codeInput.value = 
 `// Calcula el promedio (media aritmética) de una lista simulada de 5 valores numéricos.
@@ -130,7 +200,7 @@ print maximo;
 print minimo;`;
 });
 
-// Carga el Caso de Uso 2: Sistema de gestión de descuentos escalados (E-Commerce).
+// Carga el Caso de Uso 3: Sistema de gestión de descuentos escalados (E-Commerce).
 btnCase2.addEventListener("click", () => {
     codeInput.value = 
 `// Generador de políticas de descuento basado en el volumen de unidades
@@ -191,7 +261,7 @@ print "Monto final a cobrar (incluyendo impuestos aplicables):";
 print totalFinal;`;
 });
 
-// Carga el Caso de Uso 3: Motor de validación de riesgo crediticio.
+// Carga el Caso de Uso 4: Motor de validación de riesgo crediticio.
 btnCase3.addEventListener("click", () => {
     codeInput.value = 
 `// Valida si la antigüedad laboral cumple con los requisitos mínimos según el sector
@@ -273,7 +343,8 @@ replInput.addEventListener("keydown", (event) => {
                 if (result) {
                     appendReplLine(result, "output");
                 }
-            } else {
+            } else {const btnExample1 = document.getElementById("btn-example-1");
+const btnExample2 = document.getElementById("btn-example-2");
                 appendReplLine("Error: El motor Wasm no está inicializado.", "error");
             }
         } catch (e) {
