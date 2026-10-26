@@ -94,6 +94,13 @@ type Set struct {
 	Value  Expr
 }
 
+// Representa un operador ternario (condicion ? verdadero : falso).
+type Ternary struct {
+	Condition Expr
+	TrueExpr  Expr
+	FalseExpr Expr
+}
+
 func (*Literal) isExpr()      {}
 func (*Grouping) isExpr()     {}
 func (*Unary) isExpr()        {}
@@ -108,3 +115,4 @@ func (*This) isExpr()         {}
 func (*Super) isExpr()        {}
 func (*ArrayLiteral) isExpr() {}
 func (*Index) isExpr()        {}
+func (*Ternary) isExpr() {}

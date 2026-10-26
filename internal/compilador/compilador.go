@@ -109,6 +109,7 @@ func (c *Compilador) iniciarReglas() {
 		token.THIS:          {prefijo: este, infijo: nil, precedencia: PrecNone},
 		token.SUPER:         {prefijo: superior, infijo: nil, precedencia: PrecNone},
 		token.LEFT_BRACKET:  {prefijo: arreglo, infijo: indexado, precedencia: PrecCall},
+		token.QUESTION:      {prefijo: nil, infijo: ternario, precedencia: PrecAssignment},
 	}
 }
 
@@ -923,4 +924,17 @@ func indexado(c *Compilador, puedeAsignar bool) {
 	c.expresion()
 	c.consumir(token.RIGHT_BRACKET, "Se esperaba ']' después del índice.")
 	c.emitirByte(uint8(OpGetIndex))
+}
+
+// Compila el cuerpo de un operador ternario, emitiendo saltos lógicos.
+func ternario(c *Compilador, puedeAsignar bool) {
+	saltoFalso := c.emitirSalto(uint8(OpJumpIfFalse))
+	c.emitirByte(uint8(OpPop))
+	c.parsearPrecedencia(PrecAssignment)
+	saltoFin := c.emitirSalto(uint8(OpJump))
+	c.parchearSalto(saltoFalso)
+	c.emitirByte(uint8(OpPop))
+	c.consumir(token.COLON, "Se esperaba ':' después de la rama verdadera.")
+	c.parsearPrecedencia(PrecAssignment)
+	c.parchearSalto(saltoFin)
 }

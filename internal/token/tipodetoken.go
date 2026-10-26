@@ -22,6 +22,10 @@ const (
 	STAR
 	PERCENT
 
+	// Operadores ternarios.
+	QUESTION
+	COLON
+
 	// El "/" es un token de un solo carácter, salvo cuando viene duplicado
 	// ("//"): ahí arranca un comentario y el escáner descarta el resto de la
 	// línea.
@@ -79,6 +83,8 @@ var nombresDeTipos = [...]string{
 	SEMICOLON:     "SEMICOLON",
 	STAR:          "STAR",
 	PERCENT:       "PERCENT",
+	QUESTION:      "QUESTION",
+	COLON:         "COLON",
 	SLASH:         "SLASH",
 	BANG:          "BANG",
 	BANG_EQUAL:    "BANG_EQUAL",

@@ -556,6 +556,19 @@ func (i *Interprete) Evaluar(expr sintaxis.Expr) (any, error) {
 		}
 
 		return funcion.Llamar(i, argumentos)
+
+	// Operador ternario.
+	case *sintaxis.Ternary:
+		condicion, err := i.Evaluar(e.Condition)
+		if err != nil {
+			return nil, err
+		}
+
+		if i.esVerdadero(condicion) {
+			return i.Evaluar(e.TrueExpr)
+		}
+
+		return i.Evaluar(e.FalseExpr)
 	}
 
 	return nil, nil

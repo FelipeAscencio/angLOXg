@@ -76,6 +76,10 @@ func (e *Escaner) escanearToken() {
 		e.agregarToken(token.STAR, nil)
 	case '%':
 		e.agregarToken(token.PERCENT, nil)
+	case '?':
+		e.agregarToken(token.QUESTION, nil)
+	case ':':
+		e.agregarToken(token.COLON, nil)
 
 	// Tokens de uno o dos caracteres.
 	case '!':

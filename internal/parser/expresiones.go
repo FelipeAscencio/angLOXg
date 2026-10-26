@@ -17,7 +17,7 @@ import (
 
 // Reconoce expresiones de asignación ("x = valor").
 func (p *Parser) assignment() sintaxis.Expr {
-	destino := p.or()
+	destino := p.ternary()
 
 	if !p.match(token.EQUAL) {
 		return destino
@@ -187,4 +187,18 @@ func (p *Parser) arrayLiteral() sintaxis.Expr {
 	p.consume(token.RIGHT_BRACKET, "se esperaba ']' para cerrar el array")
 
 	return &sintaxis.ArrayLiteral{Bracket: corchete, Elements: elementos}
+}
+
+// Reconoce el operador ternario "? :" con asociatividad a la derecha.
+func (p *Parser) ternary() sintaxis.Expr {
+	expr := p.or()
+
+	if p.match(token.QUESTION) {
+		verdadero := p.expression()
+		p.consume(token.COLON, "se esperaba ':' después de la rama verdadera del ternario")
+		falso := p.ternary()
+		expr = &sintaxis.Ternary{Condition: expr, TrueExpr: verdadero, FalseExpr: falso}
+	}
+
+	return expr
 }
