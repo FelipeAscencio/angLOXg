@@ -24,17 +24,12 @@ func (p *Parser) assignment() sintaxis.Expr {
 	}
 
 	igual := p.previous()
-
-	// La llamada recursiva es lo que hace que "a = b = 1" se lea como
-	// "a = (b = 1)", o sea que asocie a la derecha.
 	valor := p.assignment()
 
 	if variable, esVariable := destino.(*sintaxis.Variable); esVariable {
 		return &sintaxis.Assign{Name: variable.Name, Value: valor}
 	}
 
-	// Un acceso con punto a la izquierda del "=" no era una lectura sino una
-	// escritura, y recién acá se sabe.
 	if lectura, esLectura := destino.(*sintaxis.Get); esLectura {
 		return &sintaxis.Set{Object: lectura.Object, Name: lectura.Name, Value: valor}
 	}
@@ -168,8 +163,7 @@ func (p *Parser) binaryLeft(siguiente func() sintaxis.Expr, operadores ...token.
 	return expression
 }
 
-// arrayLiteral reconoce "[a, b, c]". Se llama con el corchete de apertura ya
-// consumido.
+// arrayLiteral reconoce "[a, b, c]". Se llama con el corchete de apertura ya consumido.
 func (p *Parser) arrayLiteral() sintaxis.Expr {
 	corchete := p.previous()
 	elementos := []sintaxis.Expr{}

@@ -2,7 +2,6 @@ package compilador
 
 import "testing"
 
-// El control de flujo se arma con saltos. Los desplazamientos concretos son un
 var casosControlDeFlujo = []casoDeCompilacion{
 	{
 		nombre:      "condicional sin rama falsa",
@@ -71,14 +70,13 @@ var casosControlDeFlujo = []casoDeCompilacion{
 	},
 }
 
-// El for no tiene instrucciones propias: se compila con los mismos saltos que
 var casosBucleFor = []casoDeCompilacion{
 	{
 		nombre:      "for completo",
 		fuente:      "for (var i = 0; i < 3; i = i + 1) print i;",
 		soloNombres: true,
 		esperado: []string{
-			"OpConstant", // i = 0
+			"OpConstant",
 
 			"OpGetLocal", "OpConstant", "OpLess",
 			"OpJumpIfFalse", "OpPop",
@@ -86,13 +84,13 @@ var casosBucleFor = []casoDeCompilacion{
 			"OpJump",
 
 			"OpGetLocal", "OpConstant", "OpAdd", "OpSetLocal", "OpPop",
-			"OpLoop", // vuelve a la condición
+			"OpLoop",
 
 			"OpGetLocal", "OpPrint",
-			"OpLoop", // vuelve al incremento
+			"OpLoop",
 
-			"OpPop", // descarte de la condición
-			"OpPop", // cierre del ámbito de i
+			"OpPop",
+			"OpPop",
 			"OpReturn",
 		},
 	},

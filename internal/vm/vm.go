@@ -359,9 +359,6 @@ func (v *VM) correr() bool {
 				return false
 			}
 
-			// Los métodos de la superclase se copian en la subclase al definir
-			// la clase. Como los métodos propios se cuelgan después, los que
-			// se repiten quedan sobrescritos.
 			subclase := v.peek(0).(*compilador.Clase)
 			for nombre, metodo := range superclase.Metodos {
 				subclase.Metodos[nombre] = metodo
@@ -518,8 +515,6 @@ func (v *VM) llamarValor(callee any, cantidadArgs int) bool {
 		return v.llamarClosure(objetivo, cantidadArgs)
 
 	case *compilador.Clase:
-		// Instanciar deja la instancia en el lugar del callee, que es el slot
-		// cero del marco: ahí es donde el inicializador encuentra "this".
 		instancia := compilador.NuevaInstancia(objetivo)
 		v.pila[len(v.pila)-cantidadArgs-1] = instancia
 
@@ -536,9 +531,7 @@ func (v *VM) llamarValor(callee any, cantidadArgs int) bool {
 		return true
 
 	case *compilador.MetodoLigado:
-		// El receptor reemplaza al método en el slot cero.
 		v.pila[len(v.pila)-cantidadArgs-1] = objetivo.Receptor
-
 		return v.llamarClosure(objetivo.Metodo, cantidadArgs)
 
 	default:
@@ -564,9 +557,6 @@ func (v *VM) llamarClosure(closure *compilador.Closure, cantidadArgs int) bool {
 }
 
 // Convierte un índice de Lox en una posición del array.
-//
-// Los números de Lox son todos de punto flotante, así que hay que descartar los
-// que tengan parte decimal: "a[1.5]" no apunta a ninguna posición.
 func posicionDeArray(indice any) (int, bool) {
 	numero, esNumero := indice.(float64)
 	if !esNumero || numero != float64(int(numero)) {

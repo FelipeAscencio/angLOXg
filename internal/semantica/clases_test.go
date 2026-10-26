@@ -11,8 +11,6 @@ import (
 	"github.com/FelipeAscencio/angLOXg/internal/token"
 )
 
-// resolverBloque resuelve las sentencias dentro de un ámbito local y devuelve
-// el error, si hubo.
 func resolverBloque(sentencias ...sintaxis.Stmt) error {
 	intp := interprete.NuevoInterprete(&bytes.Buffer{})
 	res := semantica.Nuevo(intp)
@@ -20,11 +18,6 @@ func resolverBloque(sentencias ...sintaxis.Stmt) error {
 	return res.Resolver([]sintaxis.Stmt{&sintaxis.Block{Statements: sentencias}})
 }
 
-// exigirErrorDeInicializadorPropio verifica que el resolvedor haya detectado la
-// lectura de una variable dentro de su propio inicializador.
-//
-// Cada caso mete esa lectura en un lugar distinto de un nodo nuevo: si el
-// resolvedor no desciende hasta ahí, el error no aparece y el test falla.
 func exigirErrorDeInicializadorPropio(t *testing.T, err error) {
 	t.Helper()
 
@@ -102,8 +95,7 @@ func TestResolucionDelValorDeUnaEscritura(t *testing.T) {
 	exigirErrorDeInicializadorPropio(t, err)
 }
 
-// Usar this fuera de una clase es un error semántico: no hay ninguna instancia
-// a la que pueda referirse.
+// Usar this fuera de una clase es un error semántico.
 func TestErrorDeThisFueraDeUnaClase(t *testing.T) {
 	intp := interprete.NuevoInterprete(&bytes.Buffer{})
 	res := semantica.Nuevo(intp)

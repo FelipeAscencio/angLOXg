@@ -261,8 +261,6 @@ var casosHerenciaVM = []casoDeEjecucion{
 			class B < A { m() { return super.m() + "B"; } }
 			class C < B { m() { return super.m() + "C"; } }
 			print C().m();`,
-		// Cada super apunta al nivel donde se escribió, no a la clase de la
-		// instancia: si no, esto sería una recursión infinita.
 		esperado: []string{"ABC"},
 		exito:    true,
 	},

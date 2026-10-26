@@ -8,8 +8,6 @@ import (
 	"github.com/FelipeAscencio/angLOXg/internal/lox"
 )
 
-// casoDeClases es una entrada de una tabla de pruebas de punta a punta: un
-// fuente y lo que el intérprete tiene que escribir al ejecutarlo.
 type casoDeClases struct {
 	nombre   string
 	fuente   string
@@ -17,8 +15,6 @@ type casoDeClases struct {
 	exito    bool
 }
 
-// ejecutarFuente corre un programa completo por el tree-walk y devuelve las
-// líneas que escribió.
 func ejecutarFuente(fuente string) ([]string, bool) {
 	var salida bytes.Buffer
 	exito := lox.Ejecutar(fuente, &salida)
@@ -31,8 +27,6 @@ func ejecutarFuente(fuente string) ([]string, bool) {
 	return strings.Split(strings.TrimSuffix(texto, "\n"), "\n"), exito
 }
 
-// correrCasosDeClases ejecuta una tabla de pruebas. Un error de ejecución
-// ocupa dos renglones: el mensaje y la línea del fuente.
 func correrCasosDeClases(t *testing.T, casos []casoDeClases) {
 	t.Helper()
 
@@ -97,7 +91,6 @@ var casosDeclaracionEInstancia = []casoDeClases{
 	{
 		nombre: "la clase no acepta argumentos todavía",
 		fuente: "class Punto {} Punto(1);",
-		// El constructor "init" viene en una tanda siguiente.
 		esperado: []string{"Se esperaban 0 argumentos pero se obtuvieron 1.", "[línea 1]"},
 		exito:    false,
 	},
@@ -127,7 +120,6 @@ var casosPropiedades = []casoDeClases{
 	{
 		nombre: "dos instancias no comparten propiedades",
 		fuente: "class P {} var a = P(); var b = P(); a.x = 1; b.x = 2; print a.x; print b.x;",
-		// Cada instancia tiene su propia tabla de propiedades.
 		esperado: []string{"1", "2"},
 		exito:    true,
 	},
@@ -257,7 +249,6 @@ var casosMetodos = []casoDeClases{
 	{
 		nombre: "una propiedad tapa a un método del mismo nombre",
 		fuente: `class A { m() { return "metodo"; } } var a = A(); a.m = "propiedad"; print a.m;`,
-		// Las propiedades se buscan antes que los métodos.
 		esperado: []string{"propiedad"},
 		exito:    true,
 	},
@@ -310,8 +301,6 @@ var casosThis = []casoDeClases{
 			var m = a.nombre;
 			var b = A(); b.n = "segunda";
 			print m();`,
-		// El método quedó ligado a "a" cuando se lo sacó, así que sigue viendo
-		// esa instancia aunque después exista otra.
 		esperado: []string{"primera"},
 		exito:    true,
 	},
@@ -377,14 +366,12 @@ var casosInit = []casoDeClases{
 	{
 		nombre: "un return pelado dentro del init corta y devuelve la instancia",
 		fuente: `class P { init() { this.x = 1; return; this.x = 2; } } print P().x;`,
-		// El return sin valor es válido dentro del init: corta la ejecución.
 		esperado: []string{"1"},
 		exito:    true,
 	},
 	{
 		nombre: "el init no puede devolver un valor",
 		fuente: "class P { init() { return 1; } }",
-		// Sería contradictorio: instanciar siempre devuelve la instancia.
 		esperado: []string{"No se puede devolver un valor desde un inicializador"},
 		exito:    false,
 	},

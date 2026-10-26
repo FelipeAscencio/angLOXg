@@ -86,11 +86,6 @@ func (r *Resolver) ResolverSentencia(stmt sintaxis.Stmt) error {
 		subAnterior := r.dentroSub
 		r.dentroClase = true
 		r.dentroSub = s.Superclass != nil
-
-		// Son dos ámbitos anidados y no uno: en ejecución, "super" vive en el
-		// entorno que creó la clase y "this" en el que liga el método a su
-		// instancia. Si se los pusiera juntos, las distancias que calcula el
-		// resolvedor no coincidirían con la cadena de entornos real.
 		if s.Superclass != nil {
 			r.beginScope()
 			r.scopes[len(r.scopes)-1]["super"] = true
@@ -168,7 +163,6 @@ func (r *Resolver) ResolverSentencia(stmt sintaxis.Stmt) error {
 // Resuelve una expresión determinando alcances estáticos y validando restricciones semánticas.
 func (r *Resolver) ResolverExpresion(expr sintaxis.Expr) error {
 	switch e := expr.(type) {
-	// Referencia a variable (valida uso en propio inicializador y resuelve distancia local).
 	case *sintaxis.Variable:
 		if len(r.scopes) > 0 {
 			if definido, existe := r.scopes[len(r.scopes)-1][e.Name.Lexema]; existe && !definido {

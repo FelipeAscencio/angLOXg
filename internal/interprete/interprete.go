@@ -27,11 +27,7 @@ func (f *LoxFunction) Aridad() int {
 	return len(f.Declaracion.Params)
 }
 
-// Devuelve una copia del método atada a una instancia, con "this" definido en
-// un entorno propio.
-//
-// Es lo que hace que un método extraído de una instancia siga viendo esa
-// instancia cuando se lo llama más tarde.
+// Devuelve una copia del método atada a una instancia, con "this" definido en un entorno propio.
 func (f *LoxFunction) Ligar(instancia *LoxInstance) *LoxFunction {
 	entorno := NuevoEntorno(f.Closure)
 	entorno.Definir("this", instancia)
@@ -55,9 +51,6 @@ func (f *LoxFunction) Llamar(intp *Interprete, argumentos []any) (any, error) {
 	}
 
 	err := intp.ejecutarBloque(f.Declaracion.Body, entorno)
-
-	// Un inicializador siempre devuelve la instancia, sin importar por dónde
-	// haya terminado: instanciar una clase no puede dar otra cosa.
 	if f.EsInicializador {
 		if _, esRetorno := err.(*ValorRetorno); esRetorno || err == nil {
 			return f.Closure.ObtenerEn(0, "this"), nil
@@ -81,9 +74,9 @@ func (v *ValorRetorno) Error() string {
 	return "retorno"
 }
 
-// ===========
-// Intérprete.
-// ===========
+// ==========
+// Intérprete
+// ==========
 
 type Interprete struct {
 	Salida   io.Writer
@@ -229,9 +222,6 @@ func (i *Interprete) Ejecutar(stmt sintaxis.Stmt) error {
 			superclase = clase
 		}
 
-		// Los métodos se cierran sobre un entorno donde vive "super", para que
-		// una llamada a super.m encuentre la superclase que corresponde al
-		// nivel donde se escribió, y no a la clase de la instancia.
 		entornoMetodos := i.entorno
 		if superclase != nil {
 			entornoMetodos = NuevoEntorno(i.entorno)
@@ -437,8 +427,7 @@ func (i *Interprete) Evaluar(expr sintaxis.Expr) (any, error) {
 
 		return i.Evaluar(e.Right)
 
-	// Invocación de funciones ejecutables.
-	// Literal de array: los elementos se evalúan al crearlo.
+	// Literal de array: Los elementos se evalúan al crearlo.
 	case *sintaxis.ArrayLiteral:
 		elementos := make([]any, 0, len(e.Elements))
 		for _, elemento := range e.Elements {
@@ -479,11 +468,7 @@ func (i *Interprete) Evaluar(expr sintaxis.Expr) (any, error) {
 		}
 
 		superclase := i.entorno.ObtenerEn(distancia, "super").(*LoxClass)
-
-		// "this" vive un nivel más abajo que "super": el entorno de la llamada
-		// al método está anidado dentro del que creó la clase.
 		instancia := i.entorno.ObtenerEn(distancia-1, "this").(*LoxInstance)
-
 		metodo := superclase.BuscarMetodo(e.Method.Lexema)
 		if metodo == nil {
 			return nil, NewErrorRuntime(e.Method, "Propiedad no definida '"+e.Method.Lexema+"'.")
@@ -574,9 +559,9 @@ func (i *Interprete) Evaluar(expr sintaxis.Expr) (any, error) {
 	return nil, nil
 }
 
-// =========================
-// Reglas semánticas de Lox.
-// =========================
+// ========================
+// Reglas semánticas de Lox
+// ========================
 
 func (i *Interprete) esVerdadero(objeto any) bool {
 	if objeto == nil {

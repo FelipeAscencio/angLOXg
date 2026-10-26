@@ -15,7 +15,6 @@ func TestEvaluarTernario(t *testing.T) {
 	verdadero := &sintaxis.Literal{Value: "verdad"}
 	falso := &sintaxis.Literal{Value: "mentira"}
 
-	// Caso 1: Condición Verdadera
 	ternarioTrue := &sintaxis.Ternary{
 		Condition: &sintaxis.Literal{Value: true},
 		TrueExpr:  verdadero,
@@ -25,7 +24,6 @@ func TestEvaluarTernario(t *testing.T) {
 		t.Errorf("El ternario con condición true debió retornar la rama verdadera, retornó %v", val)
 	}
 
-	// Caso 2: Condición Falsa
 	ternarioFalse := &sintaxis.Ternary{
 		Condition: &sintaxis.Literal{Value: false},
 		TrueExpr:  verdadero,
@@ -35,7 +33,6 @@ func TestEvaluarTernario(t *testing.T) {
 		t.Errorf("El ternario con condición false debió retornar la rama falsa, retornó %v", val)
 	}
 
-	// Caso 3: Error propagado desde la condición
 	exprMala := &sintaxis.Variable{Name: token.Token{Lexema: "invalida"}}
 	ternarioErr := &sintaxis.Ternary{
 		Condition: exprMala,
@@ -55,7 +52,6 @@ func TestEvaluarArrays(t *testing.T) {
 		&sintaxis.Literal{Value: "texto"},
 	}
 
-	// Creación de ArrayLiteral
 	arrayExpr := &sintaxis.ArrayLiteral{Elements: elementos}
 	val, err := i.Evaluar(arrayExpr)
 	if err != nil {
@@ -71,19 +67,16 @@ func TestEvaluarArrays(t *testing.T) {
 		t.Errorf("El array no se inicializó con los elementos correctos")
 	}
 
-	// Representación de cadena
 	if array.String() != "[10, texto]" {
 		t.Errorf("La representación de cadena del array no es la esperada: %s", array.String())
 	}
 
-	// Error al intentar propagar desde los elementos durante la creación
 	exprMala := &sintaxis.Variable{Name: token.Token{Lexema: "invalida"}}
 	arrayMalo := &sintaxis.ArrayLiteral{Elements: []sintaxis.Expr{exprMala}}
 	if _, err := i.Evaluar(arrayMalo); err == nil {
 		t.Errorf("Se esperaba error al crear un array con un elemento inválido")
 	}
 
-	// Indexado válido
 	indexExpr := &sintaxis.Index{
 		Object:  arrayExpr,
 		Bracket: token.Token{Tipo: token.LEFT_BRACKET},
@@ -94,7 +87,6 @@ func TestEvaluarArrays(t *testing.T) {
 		t.Errorf("El acceso al array falló, esperado 'texto', obtenido %v", valIdx)
 	}
 
-	// Indexado inválido: objeto no es array
 	indexInvalido1 := &sintaxis.Index{
 		Object:  &sintaxis.Literal{Value: "no_soy_array"},
 		Bracket: token.Token{Tipo: token.LEFT_BRACKET},
@@ -104,7 +96,6 @@ func TestEvaluarArrays(t *testing.T) {
 		t.Errorf("Se esperaba error al indexar algo que no es un array")
 	}
 
-	// Indexado inválido: índice no es un número entero
 	indexInvalido2 := &sintaxis.Index{
 		Object:  arrayExpr,
 		Bracket: token.Token{Tipo: token.LEFT_BRACKET},
@@ -114,7 +105,6 @@ func TestEvaluarArrays(t *testing.T) {
 		t.Errorf("Se esperaba error al usar un índice fraccionario")
 	}
 
-	// Indexado fuera de rango
 	indexInvalido3 := &sintaxis.Index{
 		Object:  arrayExpr,
 		Bracket: token.Token{Tipo: token.LEFT_BRACKET},
@@ -154,7 +144,7 @@ func TestPOOCompleto(t *testing.T) {
 		t.Errorf("Aridad de clase sin init debe ser 0")
 	}
 
-	// --- 2. Instanciación y Propiedades (Get / Set) ---
+	// --- 2. Instanciación y Propiedades (Get / Set) --
 	instanciaVal, _ := loxClase.Llamar(i, []any{})
 	instancia, ok := instanciaVal.(*LoxInstance)
 	if !ok {
@@ -165,7 +155,6 @@ func TestPOOCompleto(t *testing.T) {
 		t.Errorf("String() de la instancia falló")
 	}
 
-	// Set de una propiedad
 	setExpr := &sintaxis.Set{
 		Object: &sintaxis.Literal{Value: instancia},
 		Name:   token.Token{Lexema: "edad"},
@@ -176,7 +165,6 @@ func TestPOOCompleto(t *testing.T) {
 		t.Errorf("Set falló al asignar propiedad")
 	}
 
-	// Get de una propiedad
 	getExpr := &sintaxis.Get{
 		Object: &sintaxis.Literal{Value: instancia},
 		Name:   token.Token{Lexema: "edad"},
@@ -186,7 +174,6 @@ func TestPOOCompleto(t *testing.T) {
 		t.Errorf("Get falló al leer propiedad, obtenido: %v", valGet)
 	}
 
-	// Get de una propiedad inexistente
 	getInexistente := &sintaxis.Get{
 		Object: &sintaxis.Literal{Value: instancia},
 		Name:   token.Token{Lexema: "noExiste"},
@@ -195,7 +182,6 @@ func TestPOOCompleto(t *testing.T) {
 		t.Errorf("Se esperaba error al leer propiedad inexistente")
 	}
 
-	// Set/Get sobre algo que no es instancia
 	if _, err := i.Evaluar(&sintaxis.Set{Object: &sintaxis.Literal{Value: 5.0}}); err == nil {
 		t.Errorf("Set sobre un número debe fallar")
 	}
@@ -206,13 +192,12 @@ func TestPOOCompleto(t *testing.T) {
 	// --- 3. Inicializador y This ---
 	thisExpr := &sintaxis.This{Keyword: token.Token{Lexema: "this"}}
 	
-	// Guardamos la referencia exacta en memoria de la variable "x"
 	varXExpr := &sintaxis.Variable{Name: token.Token{Lexema: "x"}} 
 	
 	setThisExpr := &sintaxis.Set{
 		Object: thisExpr,
 		Name:   token.Token{Lexema: "x"},
-		Value:  varXExpr, // Usamos la referencia
+		Value:  varXExpr,
 	}
 	
 	metodoInit := &sintaxis.Function{
@@ -230,7 +215,6 @@ func TestPOOCompleto(t *testing.T) {
 	valClaseInit, _ := i.entorno.Obtener(token.Token{Lexema: "ClaseInit"})
 	loxClaseInit := valClaseInit.(*LoxClass)
 
-	// Inyectamos las distancias usando LAS MISMAS claves en memoria
 	i.ResolverLocal(thisExpr, 1)
 	i.ResolverLocal(varXExpr, 0) 
 

@@ -2,8 +2,7 @@ package parser
 
 import "testing"
 
-// Declaración de clases. En esta etapa el cuerpo tiene que estar vacío: los
-// métodos vienen después.
+// Declaración de clases.
 var casosDeclaracionClase = []casoDePrograma{
 	{
 		nombre:   "clase con cuerpo vacío",
@@ -86,9 +85,6 @@ var casosThis = []casoDePrograma{
 	{
 		nombre: "this no se puede asignar",
 		fuente: "class A { m() { this = 1; } }",
-		// El destino de una asignación tiene que ser una variable o una
-		// propiedad, y this no es ninguna de las dos. El segundo error sale de
-		// la llave que queda huérfana al descartar la clase entera.
 		errores: []string{
 			"destino de asignación inválido",
 			"se esperaba una expresión",
@@ -126,7 +122,6 @@ var casosPropiedades = []casoDePrograma{
 	{
 		nombre: "escritura sobre una propiedad anidada",
 		fuente: "a.b.c = 1;",
-		// Sólo el último punto es una escritura; los de antes son lecturas.
 		esperado: []string{"(expr (set (get a b) c 1))"},
 	},
 	{

@@ -20,8 +20,6 @@ func (c *LoxClass) BuscarMetodo(nombre string) *LoxFunction {
 		return metodo
 	}
 
-	// Si la clase no lo define, se sigue buscando hacia arriba en la cadena de
-	// superclases.
 	if c.Superclase != nil {
 		return c.Superclase.BuscarMetodo(nombre)
 	}
@@ -70,8 +68,7 @@ func NuevaInstancia(clase *LoxClass) *LoxInstance {
 	}
 }
 
-// Devuelve el valor de una propiedad de la instancia, o un método de su clase
-// ligado a esta instancia.
+// Devuelve el valor de una propiedad de la instancia, o un método de su clase ligado a esta instancia.
 func (i *LoxInstance) Obtener(nombre token.Token) (any, error) {
 	if valor, existe := i.propiedades[nombre.Lexema]; existe {
 		return valor, nil

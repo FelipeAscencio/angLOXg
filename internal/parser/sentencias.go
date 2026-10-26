@@ -23,11 +23,8 @@ func (p *Parser) declaration() sintaxis.Stmt {
 }
 
 // Reconoce declaraciones de variables ("var x;" o "var x = expresion;").
-// Reconoce la declaración de una clase con el cuerpo vacío.
 func (p *Parser) classDeclaration() sintaxis.Stmt {
 	nombre := p.consume(token.IDENTIFIER, "se esperaba el nombre de la clase")
-
-	// La superclase es opcional y se escribe con "<" después del nombre.
 	var superclase *sintaxis.Variable
 	if p.match(token.LESS) {
 		nombreSuper := p.consume(token.IDENTIFIER, "se esperaba el nombre de la superclase")

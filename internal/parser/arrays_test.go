@@ -69,7 +69,6 @@ var casosIndexado = []casoDePrograma{
 	{
 		nombre: "lecturas encadenadas",
 		fuente: "m[0][1];",
-		// Para llegar a un array anidado.
 		esperado: []string{"(expr (index (index m 0) 1))"},
 	},
 	{
@@ -95,7 +94,6 @@ var casosIndexado = []casoDePrograma{
 	{
 		nombre: "el indexado liga más fuerte que la aritmética",
 		fuente: "print a[0] + 1;",
-		// Si ligara más flojo, la suma quedaría adentro del índice.
 		esperado: []string{"(print (+ (index a 0) 1))"},
 	},
 	{
@@ -111,7 +109,6 @@ var casosIndexado = []casoDePrograma{
 	{
 		nombre: "no se puede asignar a una posición",
 		fuente: "a[0] = 1;",
-		// En esta versión los arrays son de solo lectura.
 		errores: []string{"destino de asignación inválido"},
 	},
 }

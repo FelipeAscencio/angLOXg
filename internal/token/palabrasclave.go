@@ -1,7 +1,6 @@
 package token
 
-// Mapa de palabras reservadas del lenguaje Lox. Cualquier lexema alfanumérico
-// que no figure en este conjunto se interpreta por defecto como un identificador.
+// Mapa de palabras reservadas del lenguaje Lox.
 var palabrasClave = map[string]TipoDeToken{
 	"and":    AND,
 	"class":  CLASS,
@@ -21,8 +20,7 @@ var palabrasClave = map[string]TipoDeToken{
 	"while":  WHILE,
 }
 
-// Resuelve un lexema alfanumérico para determinar si corresponde a una palabra clave
-// reservada o si se trata de un identificador general.
+// Resuelve un lexema alfanumérico para determinar si corresponde a una palabra clave reservada o si se trata de un identificador general.
 func ResolverIdentificador(lexema string) TipoDeToken {
 	if tipo, ok := palabrasClave[lexema]; ok {
 		return tipo

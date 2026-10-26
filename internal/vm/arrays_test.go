@@ -48,7 +48,6 @@ var casosArraysVM = []casoDeEjecucion{
 	{
 		nombre: "los elementos se evalúan al crear el array",
 		fuente: "var x = 5; var a = [x, x * 2]; x = 99; print a[0]; print a[1];",
-		// El array guarda los valores, no las expresiones.
 		esperado: []string{"5", "10"},
 		exito:    true,
 	},

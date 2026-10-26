@@ -180,7 +180,7 @@ Contiene todos los submódulos lógicos que implementan Lox en Go.
 - **Lox:** Une y administra las distintas fases (Tree-Walk o Bytecode) junto con la gestión centralizada de errores.
 
 ### `tests/` (Pruebas de la cátedra y de rendimiento)
-Agrupa tanto los scripts oficiales provistos por la materia (`.lox`) para validar el comportamiento integral del intérprete, como los tests desarrollados para realizar mediciones de rendimiento contra implementaciones de terceros e implementaciones de casos de uso reales del lenguaje (Tanto la implementación como la justificación de estos mismos se encuentran dentro del directorio `tests/casos_de_uso`).
+Agrupa tanto los scripts oficiales provistos por la materia (`.lox`) para validar el comportamiento integral de la implementación, como los tests desarrollados para realizar mediciones de rendimiento contra implementaciones de terceros e implementaciones de casos de uso reales del lenguaje (Tanto la implementación como la justificación de estos mismos se encuentran dentro del directorio `tests/casos_de_uso`).
 
 ### `web/` (Playground web e interfaz)
 Aloja los recursos estáticos y lógicos de la interfaz visual interactiva. Permite a los usuarios escribir y probar código Lox directamente desde la web utilizando la potencia del motor compilado a WebAssembly.

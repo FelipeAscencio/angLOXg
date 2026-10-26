@@ -39,7 +39,6 @@ var casosDeExpresion = []struct {
 	{
 		nombre: "literal de cadena",
 		arbol:  &Literal{Value: "hola"},
-		// La cadena se representa entre comillas para distinguirla de un identificador.
 		esperado: `"hola"`,
 	},
 	{

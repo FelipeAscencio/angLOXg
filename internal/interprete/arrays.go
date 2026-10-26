@@ -42,9 +42,6 @@ func (a *LoxArray) String() string {
 }
 
 // Convierte un índice de Lox en una posición del array.
-//
-// Los números de Lox son todos de punto flotante, así que hay que descartar
-// los que tengan parte decimal: "a[1.5]" no apunta a ninguna posición.
 func posicionValida(corchete token.Token, indice any) (int, error) {
 	numero, esNumero := indice.(float64)
 	if !esNumero || numero != float64(int(numero)) {

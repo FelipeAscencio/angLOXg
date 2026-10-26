@@ -6,8 +6,6 @@ var casosClases = []casoDeCompilacion{
 	{
 		nombre: "clase sin métodos",
 		fuente: "class P {}",
-		// La clase se define como variable antes de los métodos, y después se
-		// la vuelve a traer a la pila para colgárselos. El OpPop la saca.
 		esperado: []string{
 			`OpClass 0 -> "P"`,
 			`OpDefineGlobal 1 -> "P"`,
@@ -44,9 +42,6 @@ var casosClases = []casoDeCompilacion{
 	{
 		nombre: "una clase local no va a la tabla de globales",
 		fuente: "{ class P {} }",
-		// Sin OpDefineGlobal: la clase se queda en la pila como local. El
-		// primer OpPop saca la copia que se trajo para los métodos y el
-		// segundo cierra el ámbito del bloque.
 		esperado: []string{
 			`OpClass 0 -> "P"`,
 			"OpGetLocal 1",
@@ -84,8 +79,6 @@ var casosHerenciaBytecode = []casoDeCompilacion{
 		nombre:      "clase con superclase",
 		fuente:      "class B < A {}",
 		soloNombres: true,
-		// La superclase se lee y queda en la pila como la local "super". El
-		// OpInherit copia sus métodos y el OpPop del final cierra ese ámbito.
 		esperado: []string{
 			"OpClass", "OpDefineGlobal",
 			"OpGetGlobal", "OpGetGlobal", "OpInherit",
@@ -98,9 +91,6 @@ var casosHerenciaBytecode = []casoDeCompilacion{
 		nombre:      "llamada a super dentro de un método",
 		fuente:      "class B < A { m() { super.m(); } }",
 		soloNombres: true,
-		// Al cerrar el ámbito sale OpCloseUpvalue y no OpPop: el método se
-		// llevó capturada la superclase, así que no alcanza con sacarla de la
-		// pila, hay que dejarla viva en el heap.
 		esperado: []string{
 			"OpClass", "OpDefineGlobal",
 			"OpGetGlobal", "OpGetGlobal", "OpInherit",
@@ -123,8 +113,6 @@ func TestSuperSeCapturaComoUpvalue(t *testing.T) {
 		t.Fatal("el método compilado no quedó en el pool de constantes")
 	}
 
-	// El método captura la superclase: es lo que hace que cada "super" apunte
-	// al nivel donde fue escrito y no a la clase de la instancia.
 	if metodo.UpvalueCount != 1 {
 		t.Errorf("el método captura %d upvalues y se esperaba 1, que es super", metodo.UpvalueCount)
 	}
@@ -146,8 +134,6 @@ func TestCuerpoDeUnMetodo(t *testing.T) {
 		t.Fatal("el método compilado no quedó en el pool de constantes")
 	}
 
-	// "this" es la local del slot cero: la máquina deja ahí el receptor antes
-	// de entrar al método, así que se lee como cualquier otra local.
 	esperado := []string{
 		"OpGetLocal 0",
 		`OpGetProperty 0 -> "x"`,
@@ -189,8 +175,6 @@ func TestRetornoImplicitoDelInicializador(t *testing.T) {
 		t.Fatal("el inicializador compilado no quedó en el pool de constantes")
 	}
 
-	// Un inicializador devuelve la instancia, que vive en el slot cero, en
-	// lugar del nil que devuelve cualquier otro cuerpo.
 	esperado := []string{"OpGetLocal 0", "OpReturn"}
 	obtenidas := desensamblar(init)
 
@@ -207,7 +191,6 @@ func TestRetornoPeladoDentroDelInicializador(t *testing.T) {
 		t.Fatal("el inicializador compilado no quedó en el pool de constantes")
 	}
 
-	// El return pelado también devuelve la instancia, no nil.
 	obtenidas := desensamblar(init)
 	if len(obtenidas) == 0 || obtenidas[0] != "OpGetLocal 0" {
 		t.Errorf("la primera instrucción es %v y se esperaba OpGetLocal 0", obtenidas)
@@ -215,7 +198,6 @@ func TestRetornoPeladoDentroDelInicializador(t *testing.T) {
 }
 
 func TestUpvalueDeThisEnUnaFuncionAnidada(t *testing.T) {
-	// Una función declarada dentro de un método captura "this" como upvalue.
 	programa := compilarFuente(t, "class P { m() { fun interna() { return this.x; } return interna(); } }")
 
 	metodo := funcionConstante(programa, "m")

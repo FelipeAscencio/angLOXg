@@ -6,13 +6,11 @@ var casosArraysBytecode = []casoDeCompilacion{
 	{
 		nombre: "array vacío",
 		fuente: "[];",
-		// El operando de OpArray es la cantidad de elementos a juntar.
 		esperado: []string{"OpArray 0", "OpPop", "OpReturn"},
 	},
 	{
 		nombre: "array con elementos",
 		fuente: "[1, 2, 3];",
-		// Los elementos se apilan en orden y la instrucción se los lleva.
 		esperado: []string{
 			"OpConstant 0 -> 1",
 			"OpConstant 1 -> 2",

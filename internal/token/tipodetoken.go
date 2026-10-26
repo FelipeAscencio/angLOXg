@@ -4,8 +4,7 @@ package token
 type TipoDeToken int
 
 // Categorías léxicas que reconoce angLOXg.
-//
-// El orden de estas constantes debe coincidir con el de "nombresDeTipos".
+// Importante: El orden de estas constantes debe coincidir con el de "nombresDeTipos".
 const (
 	// Tokens de un solo carácter.
 	LEFT_PAREN TipoDeToken = iota
@@ -26,12 +25,8 @@ const (
 	QUESTION
 	COLON
 
-	// El "/" es un token de un solo carácter, salvo cuando viene duplicado
-	// ("//"): ahí arranca un comentario y el escáner descarta el resto de la
-	// línea.
-	SLASH
-
 	// Tokens de uno o dos caracteres.
+	SLASH
 	BANG
 	BANG_EQUAL
 	EQUAL
@@ -116,8 +111,7 @@ var nombresDeTipos = [...]string{
 	EOF:           "EOF",
 }
 
-// Chequeo en tiempo de compilación de que no falte ni sobre ningún nombre en
-// "nombresDeTipos". Si las dos listas se desincronizan, el paquete no compila.
+// Chequeo en tiempo de compilación de que no falte ni sobre ningún nombre en "nombresDeTipos".
 const _ = uint(len(nombresDeTipos) - (int(EOF) + 1))
 const _ = uint((int(EOF) + 1) - len(nombresDeTipos))
 
