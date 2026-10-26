@@ -160,16 +160,6 @@ func (r *Resolver) ResolverSentencia(stmt sintaxis.Stmt) error {
 		}
 
 		return r.ResolverSentencia(s.Body)
-
-	// Operador ternario.
-	case *sintaxis.Ternary:
-		if err := r.ResolverExpresion(e.Condition); err != nil {
-			return err
-		}
-		if err := r.ResolverExpresion(e.TrueExpr); err != nil {
-			return err
-		}
-		return r.ResolverExpresion(e.FalseExpr)
 	}
 
 	return nil
@@ -282,7 +272,19 @@ func (r *Resolver) ResolverExpresion(expr sintaxis.Expr) error {
 
 	// Literales (sin resolución estática requerida).
 	case *sintaxis.Literal:
+
+	// Operador ternario.
+	case *sintaxis.Ternary:
+		if err := r.ResolverExpresion(e.Condition); err != nil {
+			return err
+		}
+		if err := r.ResolverExpresion(e.TrueExpr); err != nil {
+			return err
+		}
+		return r.ResolverExpresion(e.FalseExpr)
+	
 	}
+	
 	return nil
 }
 
