@@ -1,0 +1,82 @@
+========================================
+  RESULTADOS DE RENDIMIENTO - angLOXg   
+  Modo: Bytecode VM                    
+  Fecha: Mon Oct 26 13:45:49 UTC 2026                        
+========================================
+
+----------------------------------------
+Script: bench_closures.lox
+----------------------------------------
+Iniciando benchmark de instanciación de closures...
+Closures evaluados. Resultado:
+2.49995e+09
+
+real	0m0.028s
+user	0m0.021s
+sys	0m0.008s
+
+----------------------------------------
+Script: bench_fib.lox
+----------------------------------------
+Iniciando benchmark de recursividad profunda (Fibonacci 32)...
+Resultado:
+2.178309e+06
+
+real	0m0.848s
+user	0m0.855s
+sys	0m0.035s
+
+----------------------------------------
+Script: bench_logic.lox
+----------------------------------------
+Iniciando benchmark de saltos lógicos (Short-circuit)...
+Lógica finalizada. Contador resultante:
+-100002
+
+real	0m0.102s
+user	0m0.097s
+sys	0m0.004s
+
+----------------------------------------
+Script: bench_loop.lox
+----------------------------------------
+Iniciando benchmark de bucle pesado...
+Bucle finalizado. Resultado:
+4.999995e+11
+
+real	0m0.136s
+user	0m0.121s
+sys	0m0.019s
+
+----------------------------------------
+Script: bench_math.lox
+----------------------------------------
+Iniciando benchmark de recorrido del AST (Matemática compleja)...
+Matemática finalizada. Resultado:
+9.999999999e+09
+
+real	0m0.032s
+user	0m0.024s
+sys	0m0.012s
+
+----------------------------------------
+Script: bench_scopes.lox
+----------------------------------------
+Iniciando benchmark de resolución de entornos anidados...
+Resolución de scopes finalizada. Suma:
+1.5e+06
+
+real	0m0.029s
+user	0m0.029s
+sys	0m0.000s
+
+----------------------------------------
+Script: bench_strings.lox
+----------------------------------------
+Iniciando benchmark de strings (Asignación y GC)...
+Concatenación finalizada exitosamente.
+
+real	0m0.051s
+user	0m0.054s
+sys	0m0.033s
+
